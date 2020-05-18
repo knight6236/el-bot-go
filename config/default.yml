@@ -1,0 +1,13 @@
+global:
+  - when:
+      message:
+        - type: Plain
+          text: hello
+        - type: Plain
+          text: 你好
+    do:
+      message:
+        - type: Plain
+          text: Hello World!
+        - type: Plain
+          text: （你好 世界！）
