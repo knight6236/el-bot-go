@@ -69,6 +69,10 @@ func main() {
 			controller.Commit(bot, e)
 		case "MemberJoinEvent":
 			controller.Commit(bot, e)
+		case "MemberLeaveEventKick":
+			controller.Commit(bot, e)
+		case "MemberLeaveEventQuit":
+			controller.Commit(bot, e)
 		default:
 			// do something
 		}

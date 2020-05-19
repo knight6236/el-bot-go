@@ -71,3 +71,19 @@ group:
       message:
         - type: Plain
           text: 新人进群，群地位-1。
+
+  - when:
+      operation:
+        - type: MemberLeaveByKick
+    do:
+      message:
+        - type: Plain
+          text: 免费飞机票，走好。
+
+  - when:
+      operation:
+        - type: MemberLeaveByQuit
+    do:
+      message:
+        - type: Plain
+          text: 有大佬走了，群地位+1。
