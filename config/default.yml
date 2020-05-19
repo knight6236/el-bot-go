@@ -34,3 +34,17 @@ group:
         - type: Plain
           url: https://v1.hitokoto.cn?encode=json&charset=utf-8
           jtext: '{hitokoto} ——— {from}'
+  - when:
+      operation:
+        - type: MuteMember
+    do:
+      message:
+        - type: Plain
+          text: 有人被禁言啦！！！
+  - when:
+      operation:
+        - type: MemberUnmute
+    do:
+      message:
+        - type: Plain
+          text: 恭喜出狱

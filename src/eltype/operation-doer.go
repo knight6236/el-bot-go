@@ -1,23 +1,23 @@
 package eltype
 
-type EventDoer struct {
+type OperationDoer struct {
 	configHitList      []Config
 	recivedMessageList []Message
 	sendedMessageList  []Message
 }
 
-func NewEventDoer(configHitList []Config, recivedMessageList []Message) (IDoer, error) {
-	var doer EventDoer
+func NewOperationDoer(configHitList []Config, recivedMessageList []Message) (IDoer, error) {
+	var doer OperationDoer
 	doer.configHitList = configHitList
 	doer.recivedMessageList = recivedMessageList
 	doer.getSendedMessageList()
 	return doer, nil
 }
 
-func (doer *EventDoer) getSendedMessageList() {
+func (doer *OperationDoer) getSendedMessageList() {
 
 }
 
-func (doer EventDoer) GetSendedMessageList() []Message {
+func (doer OperationDoer) GetSendedMessageList() []Message {
 	return doer.sendedMessageList
 }

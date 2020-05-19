@@ -4,9 +4,10 @@ type ImageHandler struct {
 	configList    []Config
 	messageList   []Message
 	configHitList []Config
+	operationList []Operation
 }
 
-func NewImageHandler(configList []Config, messageList []Message) (IHandler, error) {
+func NewImageHandler(configList []Config, messageList []Message, operationList []Operation) (IHandler, error) {
 	var handler ImageHandler
 	handler.configList = configList
 	handler.messageList = messageList
