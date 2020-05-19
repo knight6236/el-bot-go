@@ -32,7 +32,7 @@
 
 # 快速开始
 
-## On Unix
+## On Unix Like
 
 1. 安装Golang和JRE
 2. 下载依赖: `./install.sh`

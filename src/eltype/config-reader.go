@@ -12,6 +12,7 @@ import (
 	// "reflect"
 )
 
+// ConfigReader 配置读取对象
 type ConfigReader struct {
 	filePath         string
 	GlobalConfigList []Config
@@ -19,14 +20,17 @@ type ConfigReader struct {
 	GroupConfigList  []Config
 }
 
+// NewConfigReader 使用配置文件路径构造一个 ConfigReader
+// @param	filePath	string			配置文件路径
+// @return				ConfigReader	构造完毕的 ConfigReader
 func NewConfigReader(filePath string) ConfigReader {
 	var reader ConfigReader
 	reader.filePath = filePath
-	reader.ParseYml()
+	reader.parseYml()
 	return reader
 }
 
-func (reader *ConfigReader) ParseYml() {
+func (reader *ConfigReader) parseYml() {
 	buf, err := ioutil.ReadFile(reader.filePath)
 	if err != nil {
 	}

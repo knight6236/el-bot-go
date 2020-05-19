@@ -6,20 +6,39 @@ import (
 	"strconv"
 )
 
+// EventType 事件类型
 type EventType int
 
 const (
+	// EventTypeGroupMessage 群消息事件类型
 	EventTypeGroupMessage EventType = iota
+	// EventTypeFriendMessage 好友消息事件类型
 	EventTypeFriendMessage
+	// EventTypeMemberMute 群成员禁言事件类型
 	EventTypeMemberMute
+	// EventTypeGroupMuteAll 全员禁言事件类型
 	EventTypeGroupMuteAll
+	// EventTypeGroupUnMuteAll 解除全员禁言事件类型
 	EventTypeGroupUnMuteAll
+	// EventTypeMemberUnmute 解除群成员禁言事件类型
 	EventTypeMemberUnmute
+	// EventTypeMemberJoin 新成员入群事件类型
 	EventTypeMemberJoin
+	// EventTypeMemberLeaveByKick 踢人事件类型
 	EventTypeMemberLeaveByKick
+	// EventTypeMemberLeaveByQuit 群成员自行退群事件类型
 	EventTypeMemberLeaveByQuit
 )
 
+// 「」
+
+// Event 事件
+// @property	Type			EventType			事件类型
+// @property	MessageID		int64				接收到的消息ID
+// @property	SenderList		[]Sender			消息发送者列表。如果为群消息则 index=0 为群信息， index=1 为发送消息的成员信息
+// @property	MessageList		[]Message			接收到的消息列表
+// @property	OperationList	[]Operation			接收到的事件/操作列表
+// @property	PreDefVarMap	map[string]string	预定义变量 Map
 type Event struct {
 	Type          EventType
 	MessageID     int64
@@ -29,6 +48,8 @@ type Event struct {
 	PreDefVarMap  map[string]string
 }
 
+// NewEventFromGoMiraiEvent 从 gomirai.InEvent 中构造一个 Event
+// @param	goMiraiEvent	gomirai.InEvent		事件
 func NewEventFromGoMiraiEvent(goMiraiEvent gomirai.InEvent) (Event, error) {
 	var event Event
 	event.PreDefVarMap = make(map[string]string)
@@ -51,7 +72,7 @@ func NewEventFromGoMiraiEvent(goMiraiEvent gomirai.InEvent) (Event, error) {
 	case EventTypeMemberLeaveByQuit:
 		err = event.makeMemberLeaveByQuitEventTemplate(goMiraiEvent)
 	default:
-		return event, fmt.Errorf("%s 是不受支持的事件类型\n", goMiraiEvent.Type)
+		return event, fmt.Errorf("%s 是不受支持的事件类型", goMiraiEvent.Type)
 	}
 
 	if err != nil {
@@ -326,6 +347,7 @@ func (event *Event) addPerDefVar(varName string, value interface{}) {
 	}
 }
 
+// CastGoMiraiEventTypeToEventType 将 GoMiaraiEventType 转化为 EventType
 func CastGoMiraiEventTypeToEventType(goMiaraiEventType string) EventType {
 	switch goMiaraiEventType {
 	case "GroupMessage":

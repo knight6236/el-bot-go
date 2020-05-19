@@ -9,6 +9,11 @@ import (
 	"strings"
 )
 
+// PlainDoer 表情动作生成类
+// @property	configHitList		[]Config			命中的配置列表
+// @property	recivedMessageList	[]Message			接收到的消息列表
+// @property	sendedMessageList	[]Message			将要发送的消息列表
+// @property	preDefVarMap		map[string]string	预定义变量Map
 type PlainDoer struct {
 	configHitList      []Config
 	recivedMessageList []Message
@@ -16,6 +21,11 @@ type PlainDoer struct {
 	preDefVarMap       map[string]string
 }
 
+// NewPlainDoer 构造一个 PlainDoer
+// @param	configHitList		[]Config			命中的配置列表
+// @param	recivedMessageList	[]Message			接收到的消息列表
+// @param	sendedMessageList	[]Message			将要发送的消息列表
+// @param	preDefVarMap		map[string]string	预定义变量Map
 func NewPlainDoer(configHitList []Config, recivedMessageList []Message, preDefVarMap map[string]string) (IDoer, error) {
 	var doer PlainDoer
 	doer.configHitList = configHitList
@@ -37,7 +47,7 @@ func (doer *PlainDoer) getSendedMessageList() {
 					doer.sendedMessageList = append(doer.sendedMessageList, sendedMessage)
 				}
 			} else if doMessage.Value["url"] != "" {
-				sendedMessage, err := doer.getUrlMessage(doMessage)
+				sendedMessage, err := doer.getURLMessage(doMessage)
 				if err == nil {
 					doer.sendedMessageList = append(doer.sendedMessageList, sendedMessage)
 				}
@@ -56,7 +66,7 @@ func (doer *PlainDoer) getTextMessage(message Message) (Message, error) {
 	return sendedMessage, nil
 }
 
-func (doer *PlainDoer) getUrlMessage(message Message) (Message, error) {
+func (doer *PlainDoer) getURLMessage(message Message) (Message, error) {
 	res, err := http.Get(message.Value["url"])
 	if err != nil {
 		return message, err
@@ -75,7 +85,7 @@ func (doer *PlainDoer) getUrlMessage(message Message) (Message, error) {
 	value["text"] = doer.replaceStrByPreDefVarMap(message.Value["text"])
 
 	if message.Value["json"] == "true" {
-		value["text"] = doer.replaceStrByJson(bodyContent, value["text"])
+		value["text"] = doer.replaceStrByJSON(bodyContent, value["text"])
 		if err != nil {
 			return message, err
 		}
@@ -98,7 +108,7 @@ func (doer *PlainDoer) replaceStrByPreDefVarMap(text string) string {
 	return text
 }
 
-func (doer *PlainDoer) replaceStrByJson(jsonByteList []byte, text string) string {
+func (doer *PlainDoer) replaceStrByJSON(jsonByteList []byte, text string) string {
 	var jsonMap interface{}
 	err := json.Unmarshal(jsonByteList, &jsonMap)
 	if err != nil {
@@ -127,6 +137,7 @@ func (doer *PlainDoer) replaceStrByJson(jsonByteList []byte, text string) string
 	return text
 }
 
+// GetSendedMessageList 获取将要发送的信息列表
 func (doer PlainDoer) GetSendedMessageList() []Message {
 	return doer.sendedMessageList
 }

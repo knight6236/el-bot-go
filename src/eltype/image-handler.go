@@ -1,5 +1,11 @@
 package eltype
 
+// ImageHandler 判断是否命中和表情有关的配置
+// @property	configList		[]Config			要判断的配置列表
+// @property	messageList		[]Message			要判断的消息列表
+// @property	operationList	[]Operation			要判断的配置列表
+// @property	configHitList	[]Config			命中的配置列表
+// @property	preDefVarMap	map[string]string	预定义变量 Map
 type ImageHandler struct {
 	configList    []Config
 	messageList   []Message
@@ -8,6 +14,11 @@ type ImageHandler struct {
 	preDefVarMap  map[string]string
 }
 
+// NewImageHandler 构造一个 FaceHandler
+// @param	configList		[]Config			要判断的配置列表
+// @param	messageList		[]Message			要判断的消息列表
+// @param	operationList	[]Operation			要判断的配置列表
+// @param	preDefVarMap	map[string]string	预定义变量 Map
 func NewImageHandler(configList []Config, messageList []Message, operationList []Operation,
 	preDefVarMap map[string]string) (IHandler, error) {
 	var handler ImageHandler
@@ -22,6 +33,7 @@ func (handler *ImageHandler) searchHitConfig() {
 
 }
 
+// GetConfigHitList 获取命中的配置列表
 func (handler ImageHandler) GetConfigHitList() []Config {
 	return handler.configHitList
 }
