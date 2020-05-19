@@ -1,8 +1,12 @@
 package eltype
 
 import (
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
+	"strings"
 )
 
 type PlainDoer struct {
@@ -64,12 +68,52 @@ func (doer *PlainDoer) getUrlMessage(message Message) (Message, error) {
 	}
 
 	value := make(map[string]string)
-	value["text"] = string(bodyContent)
-	sendedMessage, err := NewMessage(MessageTypePlain, value)
-	if err != nil {
-		return message, err
+	var sendedMessage Message
+
+	if message.Value["jtext"] == "" {
+		value["text"] = string(bodyContent)
+		sendedMessage, err = NewMessage(MessageTypePlain, value)
+		if err != nil {
+			return message, err
+		}
+	} else {
+		value["text"] = doer.replaceStrByJson(bodyContent, message.Value["jtext"])
+		sendedMessage, err = NewMessage(MessageTypePlain, value)
+		if err != nil {
+			return message, err
+		}
 	}
+
 	return sendedMessage, nil
+}
+
+func (doer *PlainDoer) replaceStrByJson(jsonByteList []byte, jtext string) string {
+	var jsonMap interface{}
+	err := json.Unmarshal(jsonByteList, &jsonMap)
+	if err != nil {
+		return ""
+	}
+
+	for nativeKey, nativeValue := range jsonMap.(map[string]interface{}) {
+		key := fmt.Sprintf("{%s}", nativeKey)
+		switch nativeValue.(type) {
+		case string:
+			jtext = strings.ReplaceAll(jtext, key, nativeValue.(string))
+		case int:
+			value := strconv.Itoa(nativeValue.(int))
+			jtext = strings.ReplaceAll(jtext, key, value)
+		case int64:
+			value := strconv.FormatInt(nativeValue.(int64), 10)
+			jtext = strings.ReplaceAll(jtext, key, value)
+		case float64:
+			value := fmt.Sprintf("%.6f", nativeValue.(float64))
+			jtext = strings.ReplaceAll(jtext, key, value)
+		case bool:
+			value := strconv.FormatBool(nativeValue.(bool))
+			jtext = strings.ReplaceAll(jtext, key, value)
+		}
+	}
+	return jtext
 }
 
 func (doer PlainDoer) GetSendedMessageList() []Message {
