@@ -3,10 +3,10 @@ package eltype
 type FaceDoer struct {
 	configHitList      []Config
 	recivedMessageList []Message
-	SendedMessageList  []Message
+	sendedMessageList  []Message
 }
 
-func NewFaceDoer(configHitList []Config, recivedMessageList []Message) (FaceDoer, error) {
+func NewFaceDoer(configHitList []Config, recivedMessageList []Message) (IDoer, error) {
 	var doer FaceDoer
 	doer.configHitList = configHitList
 	doer.recivedMessageList = recivedMessageList
@@ -16,4 +16,8 @@ func NewFaceDoer(configHitList []Config, recivedMessageList []Message) (FaceDoer
 
 func (doer *FaceDoer) getSendedMessageList() {
 
+}
+
+func (doer FaceDoer) GetSendedMessageList() []Message {
+	return doer.sendedMessageList
 }
