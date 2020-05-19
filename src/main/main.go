@@ -67,6 +67,8 @@ func main() {
 			controller.Commit(bot, e)
 		case "MemberUnmuteEvent":
 			controller.Commit(bot, e)
+		case "MemberJoinEvent":
+			controller.Commit(bot, e)
 		default:
 			// do something
 		}

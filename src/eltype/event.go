@@ -15,6 +15,7 @@ const (
 	EventTypeGroupMuteAll
 	EventTypeGroupUnMuteAll
 	EventTypeMemberUnmute
+	EventTypeMemberJoin
 )
 
 type Event struct {
@@ -128,6 +129,28 @@ func NewEventFromGoMiraiEvent(goMiraiEvent gomirai.InEvent) (Event, error) {
 
 		}
 		event.OperationList = append(event.OperationList, operation)
+	case EventTypeMemberJoin:
+		event.Type = EventTypeMemberJoin
+		sender, err := NewSender(SenderTypeGroup, goMiraiEvent.Member.Group.ID,
+			goMiraiEvent.Member.Group.Name, goMiraiEvent.Member.Group.Permission)
+		if err != nil {
+
+		}
+		event.SenderList = append(event.SenderList, sender)
+
+		sender, err = NewSender(SenderTypeMember, goMiraiEvent.Member.ID,
+			goMiraiEvent.Member.MemberName, goMiraiEvent.Member.Permission)
+		if err != nil {
+
+		}
+		event.SenderList = append(event.SenderList, sender)
+
+		operation, err = NewOperation(OperationTypeMemberJoin, make(map[string]string))
+
+		if err != nil {
+
+		}
+		event.OperationList = append(event.OperationList, operation)
 
 	default:
 		return event, fmt.Errorf("%s 是不受支持的事件类型\n", goMiraiEvent.Type)
@@ -156,6 +179,8 @@ func CastGoMiraiEventTypeToEventType(goMiaraiEventType string) EventType {
 		return EventTypeMemberMute
 	case "MemberUnmuteEvent":
 		return EventTypeMemberUnmute
+	case "MemberJoinEvent":
+		return EventTypeMemberJoin
 	default:
 		panic("")
 	}
