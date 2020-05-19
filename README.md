@@ -14,36 +14,19 @@
 
 # 快速开始
 
-## 安装Golang和JRE
+## On Unix
 
-## 下载依赖
-
-```bash
-./install.sh
-```
-
-## 启动 mirai-console
-
-```shell
-./start-console.sh
-```
-
-按照提示进行操作
-
-成功登录机器人后修改文件`plugins\MiraiAPIHTTP\setting.yml`为下列内容，并记住`authkey`
-```yml
-authKey: qwertyuiop
-port: 8080
-enableWebsocket: false
-```
-
-## 启动 el-bot-go
-
-在另一个shell运行脚本
-
-```shell
-./start-el-bot.sh 机器人QQ号 AUTHKEY
-```
+1. 安装Golang和JRE
+2. 下载依赖: `./install.sh`
+3. 启动 mirai-console: ` ./start-console.sh`
+4. 按照提示进行操作
+5. 成功登录机器人后修改文件`plugins\MiraiAPIHTTP\setting.yml`为下列内容，并记住`authkey`
+    ```yml
+    authKey: qwertyuiop
+    port: 8080
+    enableWebsocket: false
+    ```
+6. 启动 el-bot-go: 在另一个shell运行脚本：`./start-el-bot.sh 机器人QQ号 AUTHKEY`
 
 # 配置文件说明
 
