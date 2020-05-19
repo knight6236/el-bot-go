@@ -30,7 +30,7 @@
 
 按照提示进行操作
 
-成功登录机器人后修改文件`plugins\MiraiAPIHTTP\setting.yml`为下列内容
+成功登录机器人后修改文件`plugins\MiraiAPIHTTP\setting.yml`为下列内容，并记住`authkey`
 ```yml
 authKey: qwertyuiop
 port: 8080
@@ -101,6 +101,11 @@ group:
 # 许可证
 
 [GNU AFFERO GENERAL PUBLIC LICENSE version 3](https://github.com/ElpsyCN/el-bot-go/blob/master/LICENSE)
+
+# 维护者
+
++ [ADD-SP](https://github.com/ADD-SP)
++ [YunYouJun](https://github.com/YunYouJun)
 
 # 感谢
 
