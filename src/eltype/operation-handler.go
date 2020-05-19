@@ -5,12 +5,15 @@ type OperationHandler struct {
 	messageList   []Message
 	operationList []Operation
 	configHitList []Config
+	preDefVarMap  map[string]string
 }
 
-func NewOperationHandler(configList []Config, messageList []Message, operationList []Operation) (IHandler, error) {
+func NewOperationHandler(configList []Config, messageList []Message, operationList []Operation,
+	preDefVarMap map[string]string) (IHandler, error) {
 	var handler OperationHandler
 	handler.configList = configList
 	handler.operationList = operationList
+	handler.preDefVarMap = preDefVarMap
 	handler.searchHitConfig()
 	return handler, nil
 }

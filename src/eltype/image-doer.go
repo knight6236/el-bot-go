@@ -4,9 +4,10 @@ type ImageDoer struct {
 	configHitList      []Config
 	recivedMessageList []Message
 	sendedMessageList  []Message
+	preDefVarMap       map[string]string
 }
 
-func NewImageDoer(configHitList []Config, recivedMessageList []Message) (IDoer, error) {
+func NewImageDoer(configHitList []Config, recivedMessageList []Message, preDefVarMap map[string]string) (IDoer, error) {
 	var doer ImageDoer
 	doer.configHitList = configHitList
 	doer.recivedMessageList = recivedMessageList

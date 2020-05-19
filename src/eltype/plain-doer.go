@@ -13,12 +13,14 @@ type PlainDoer struct {
 	configHitList      []Config
 	recivedMessageList []Message
 	sendedMessageList  []Message
+	preDefVarMap       map[string]string
 }
 
-func NewPlainDoer(configHitList []Config, recivedMessageList []Message) (IDoer, error) {
+func NewPlainDoer(configHitList []Config, recivedMessageList []Message, preDefVarMap map[string]string) (IDoer, error) {
 	var doer PlainDoer
 	doer.configHitList = configHitList
 	doer.recivedMessageList = recivedMessageList
+	doer.preDefVarMap = preDefVarMap
 	doer.getSendedMessageList()
 	return doer, nil
 }
@@ -29,7 +31,7 @@ func (doer *PlainDoer) getSendedMessageList() {
 			if doMessage.Type != MessageTypePlain {
 				continue
 			}
-			if doMessage.Value["text"] != "" {
+			if doMessage.Value["url"] == "" {
 				sendedMessage, err := doer.getTextMessage(doMessage)
 				if err == nil {
 					doer.sendedMessageList = append(doer.sendedMessageList, sendedMessage)
@@ -46,7 +48,7 @@ func (doer *PlainDoer) getSendedMessageList() {
 
 func (doer *PlainDoer) getTextMessage(message Message) (Message, error) {
 	value := make(map[string]string)
-	value["text"] = message.Value["text"]
+	value["text"] = doer.replaceStrByPreDefVarMap(message.Value["text"])
 	sendedMessage, err := NewMessage(MessageTypePlain, value)
 	if err != nil {
 		return sendedMessage, err
@@ -66,28 +68,37 @@ func (doer *PlainDoer) getUrlMessage(message Message) (Message, error) {
 	if err != nil {
 		return message, err
 	}
+	doer.preDefVarMap["el-url-text"] = string(bodyContent)
 
 	value := make(map[string]string)
-	var sendedMessage Message
 
-	if message.Value["jtext"] == "" {
-		value["text"] = string(bodyContent)
-		sendedMessage, err = NewMessage(MessageTypePlain, value)
-		if err != nil {
-			return message, err
-		}
-	} else {
-		value["text"] = doer.replaceStrByJson(bodyContent, message.Value["jtext"])
-		sendedMessage, err = NewMessage(MessageTypePlain, value)
+	value["text"] = doer.replaceStrByPreDefVarMap(message.Value["text"])
+
+	if message.Value["json"] == "true" {
+		value["text"] = doer.replaceStrByJson(bodyContent, value["text"])
 		if err != nil {
 			return message, err
 		}
 	}
 
+	var sendedMessage Message
+	sendedMessage, err = NewMessage(MessageTypePlain, value)
+	if err != nil {
+		return message, err
+	}
+
 	return sendedMessage, nil
 }
 
-func (doer *PlainDoer) replaceStrByJson(jsonByteList []byte, jtext string) string {
+func (doer *PlainDoer) replaceStrByPreDefVarMap(text string) string {
+	for varName, value := range doer.preDefVarMap {
+		key := fmt.Sprintf("{%s}", varName)
+		text = strings.ReplaceAll(text, key, value)
+	}
+	return text
+}
+
+func (doer *PlainDoer) replaceStrByJson(jsonByteList []byte, text string) string {
 	var jsonMap interface{}
 	err := json.Unmarshal(jsonByteList, &jsonMap)
 	if err != nil {
@@ -98,22 +109,22 @@ func (doer *PlainDoer) replaceStrByJson(jsonByteList []byte, jtext string) strin
 		key := fmt.Sprintf("{%s}", nativeKey)
 		switch nativeValue.(type) {
 		case string:
-			jtext = strings.ReplaceAll(jtext, key, nativeValue.(string))
+			text = strings.ReplaceAll(text, key, nativeValue.(string))
 		case int:
 			value := strconv.Itoa(nativeValue.(int))
-			jtext = strings.ReplaceAll(jtext, key, value)
+			text = strings.ReplaceAll(text, key, value)
 		case int64:
 			value := strconv.FormatInt(nativeValue.(int64), 10)
-			jtext = strings.ReplaceAll(jtext, key, value)
+			text = strings.ReplaceAll(text, key, value)
 		case float64:
 			value := fmt.Sprintf("%.6f", nativeValue.(float64))
-			jtext = strings.ReplaceAll(jtext, key, value)
+			text = strings.ReplaceAll(text, key, value)
 		case bool:
 			value := strconv.FormatBool(nativeValue.(bool))
-			jtext = strings.ReplaceAll(jtext, key, value)
+			text = strings.ReplaceAll(text, key, value)
 		}
 	}
-	return jtext
+	return text
 }
 
 func (doer PlainDoer) GetSendedMessageList() []Message {
