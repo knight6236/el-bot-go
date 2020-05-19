@@ -1,7 +1,10 @@
 package eltype
 
 import (
+	"strconv"
+
 	"gopkg.in/yaml.v2"
+
 	// "io"
 	// "fmt"
 	// "os"
@@ -137,8 +140,17 @@ func (reader *ConfigReader) parseToMessage(nativeMessage map[interface{}]interfa
 
 	msggValue := make(map[string]string)
 
-	for key, value := range nativeMessage {
-		msggValue[key.(string)] = value.(string)
+	for key, nativeValue := range nativeMessage {
+		value := ""
+		switch nativeValue.(type) {
+		case string:
+			value = nativeValue.(string)
+		case int64:
+			value = strconv.FormatInt(nativeValue.(int64), 10)
+		case bool:
+			value = strconv.FormatBool(nativeValue.(bool))
+		}
+		msggValue[key.(string)] = value
 	}
 
 	msg, err := NewMessage(messageType, msggValue)
