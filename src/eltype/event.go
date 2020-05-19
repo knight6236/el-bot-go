@@ -16,6 +16,8 @@ const (
 	EventTypeGroupUnMuteAll
 	EventTypeMemberUnmute
 	EventTypeMemberJoin
+	EventTypeMemberLeaveByKick
+	EventTypeMemberLeaveByQuit
 )
 
 type Event struct {
@@ -55,7 +57,7 @@ func NewEventFromGoMiraiEvent(goMiraiEvent gomirai.InEvent) (Event, error) {
 
 		}
 		event.SenderList = append(event.SenderList, sender)
-	// case "GroupMuteAllEvent":
+
 	case EventTypeMemberMute:
 		event.Type = EventTypeMemberMute
 		sender, err := NewSender(SenderTypeGroup, goMiraiEvent.OperatorGroup.Group.ID,
@@ -152,6 +154,52 @@ func NewEventFromGoMiraiEvent(goMiraiEvent gomirai.InEvent) (Event, error) {
 		}
 		event.OperationList = append(event.OperationList, operation)
 
+	case EventTypeMemberLeaveByKick:
+		event.Type = EventTypeMemberLeaveByKick
+		sender, err := NewSender(SenderTypeGroup, goMiraiEvent.Member.Group.ID,
+			goMiraiEvent.Member.Group.Name, goMiraiEvent.Member.Group.Permission)
+		if err != nil {
+
+		}
+		event.SenderList = append(event.SenderList, sender)
+
+		sender, err = NewSender(SenderTypeMember, goMiraiEvent.Member.ID,
+			goMiraiEvent.Member.MemberName, goMiraiEvent.Member.Permission)
+		if err != nil {
+
+		}
+		event.SenderList = append(event.SenderList, sender)
+
+		operation, err = NewOperation(OperationTypeMemberLeaveByKick, make(map[string]string))
+
+		if err != nil {
+
+		}
+		event.OperationList = append(event.OperationList, operation)
+
+	case EventTypeMemberLeaveByQuit:
+		event.Type = EventTypeMemberLeaveByQuit
+		sender, err := NewSender(SenderTypeGroup, goMiraiEvent.Member.Group.ID,
+			goMiraiEvent.Member.Group.Name, goMiraiEvent.Member.Group.Permission)
+		if err != nil {
+
+		}
+		event.SenderList = append(event.SenderList, sender)
+
+		sender, err = NewSender(SenderTypeMember, goMiraiEvent.Member.ID,
+			goMiraiEvent.Member.MemberName, goMiraiEvent.Member.Permission)
+		if err != nil {
+
+		}
+		event.SenderList = append(event.SenderList, sender)
+
+		operation, err = NewOperation(OperationTypeMemberLeaveByQuit, make(map[string]string))
+
+		if err != nil {
+
+		}
+		event.OperationList = append(event.OperationList, operation)
+
 	default:
 		return event, fmt.Errorf("%s 是不受支持的事件类型\n", goMiraiEvent.Type)
 	}
@@ -181,6 +229,10 @@ func CastGoMiraiEventTypeToEventType(goMiaraiEventType string) EventType {
 		return EventTypeMemberUnmute
 	case "MemberJoinEvent":
 		return EventTypeMemberJoin
+	case "MemberLeaveEventKick":
+		return EventTypeMemberLeaveByKick
+	case "MemberLeaveEventQuit":
+		return EventTypeMemberLeaveByQuit
 	default:
 		panic("")
 	}

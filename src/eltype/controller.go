@@ -33,7 +33,6 @@ func (controller *Controller) Commit(bot *gomirai.Bot, goMiraiEvent gomirai.InEv
 		err = goMiraiEvent.OperatorDetail()
 	case EventTypeMemberUnmute:
 		err = goMiraiEvent.OperatorDetail()
-	case EventTypeMemberJoin:
 	}
 	if err != nil {
 		return
@@ -70,6 +69,12 @@ func (controller *Controller) Commit(bot *gomirai.Bot, goMiraiEvent gomirai.InEv
 		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
 			controller.configReader.GroupConfigList)
 	case EventTypeMemberJoin:
+		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
+			controller.configReader.GroupConfigList)
+	case EventTypeMemberLeaveByKick:
+		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
+			controller.configReader.GroupConfigList)
+	case EventTypeMemberLeaveByQuit:
 		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
 			controller.configReader.GroupConfigList)
 	}
@@ -114,6 +119,10 @@ func (controller *Controller) Commit(bot *gomirai.Bot, goMiraiEvent gomirai.InEv
 	case EventTypeGroupUnMuteAll:
 		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
 	case EventTypeMemberJoin:
+		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
+	case EventTypeMemberLeaveByKick:
+		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
+	case EventTypeMemberLeaveByQuit:
 		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
 	}
 
