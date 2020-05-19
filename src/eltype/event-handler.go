@@ -3,10 +3,10 @@ package eltype
 type EventHandler struct {
 	configList    []Config
 	messageList   []Message
-	ConfigHitList []Config
+	configHitList []Config
 }
 
-func NewEventHandler(configList []Config, messageList []Message) (EventHandler, error) {
+func NewEventHandler(configList []Config, messageList []Message) (IHandler, error) {
 	var handler EventHandler
 	handler.configList = configList
 	handler.messageList = messageList
@@ -16,4 +16,8 @@ func NewEventHandler(configList []Config, messageList []Message) (EventHandler, 
 
 func (handler *EventHandler) searchHitConfig() {
 
+}
+
+func (handler EventHandler) GetConfigHitList() []Config {
+	return handler.configHitList
 }

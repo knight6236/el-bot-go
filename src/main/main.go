@@ -11,7 +11,7 @@ import (
 func main() {
 	// 链接地址
 	address := "http://127.0.0.1:8080"
-	authKey := "AUTHKEY"
+	authKey := "qwertyuiop"
 	// 用于进行网络操作的Client
 	client := gomirai.NewMiraiClient(address, authKey)
 

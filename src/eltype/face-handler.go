@@ -3,10 +3,10 @@ package eltype
 type FaceHandler struct {
 	configList    []Config
 	messageList   []Message
-	ConfigHitList []Config
+	configHitList []Config
 }
 
-func NewFaceHandler(configList []Config, messageList []Message) (FaceHandler, error) {
+func NewFaceHandler(configList []Config, messageList []Message) (IHandler, error) {
 	var handler FaceHandler
 	handler.configList = configList
 	handler.messageList = messageList
@@ -16,4 +16,8 @@ func NewFaceHandler(configList []Config, messageList []Message) (FaceHandler, er
 
 func (handler *FaceHandler) searchHitConfig() {
 
+}
+
+func (handler FaceHandler) GetConfigHitList() []Config {
+	return handler.configHitList
 }

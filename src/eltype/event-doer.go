@@ -3,10 +3,10 @@ package eltype
 type EventDoer struct {
 	configHitList      []Config
 	recivedMessageList []Message
-	SendedMessageList  []Message
+	sendedMessageList  []Message
 }
 
-func NewEventDoer(configHitList []Config, recivedMessageList []Message) (EventDoer, error) {
+func NewEventDoer(configHitList []Config, recivedMessageList []Message) (IDoer, error) {
 	var doer EventDoer
 	doer.configHitList = configHitList
 	doer.recivedMessageList = recivedMessageList
@@ -16,4 +16,8 @@ func NewEventDoer(configHitList []Config, recivedMessageList []Message) (EventDo
 
 func (doer *EventDoer) getSendedMessageList() {
 
+}
+
+func (doer EventDoer) GetSendedMessageList() []Message {
+	return doer.sendedMessageList
 }

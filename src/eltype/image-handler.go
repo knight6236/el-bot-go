@@ -3,10 +3,10 @@ package eltype
 type ImageHandler struct {
 	configList    []Config
 	messageList   []Message
-	ConfigHitList []Config
+	configHitList []Config
 }
 
-func NewImageHandler(configList []Config, messageList []Message) (ImageHandler, error) {
+func NewImageHandler(configList []Config, messageList []Message) (IHandler, error) {
 	var handler ImageHandler
 	handler.configList = configList
 	handler.messageList = messageList
@@ -16,4 +16,8 @@ func NewImageHandler(configList []Config, messageList []Message) (ImageHandler, 
 
 func (handler *ImageHandler) searchHitConfig() {
 
+}
+
+func (handler ImageHandler) GetConfigHitList() []Config {
+	return handler.configHitList
 }

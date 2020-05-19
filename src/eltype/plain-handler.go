@@ -3,10 +3,10 @@ package eltype
 type PlainHandler struct {
 	configList    []Config
 	messageList   []Message
-	ConfigHitList []Config
+	configHitList []Config
 }
 
-func NewPlainHandler(configList []Config, messageList []Message) (PlainHandler, error) {
+func NewPlainHandler(configList []Config, messageList []Message) (IHandler, error) {
 	var handler PlainHandler
 	handler.configList = configList
 	handler.messageList = messageList
@@ -18,7 +18,7 @@ func (handler *PlainHandler) searchHitConfig() {
 	for _, config := range handler.configList {
 		for _, whenMessage := range config.WhenMessageList {
 			if handler.checkText(whenMessage) {
-				handler.ConfigHitList = append(handler.ConfigHitList, config)
+				handler.configHitList = append(handler.configHitList, config)
 				break
 			}
 		}
@@ -39,4 +39,8 @@ func (handler *PlainHandler) checkText(whenMessage Message) bool {
 		}
 	}
 	return false
+}
+
+func (handler PlainHandler) GetConfigHitList() []Config {
+	return handler.configHitList
 }

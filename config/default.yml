@@ -11,3 +11,13 @@ global:
           text: Hello World!
         - type: Plain
           text: （你好 世界！）
+
+friend:
+  - when:
+      message:
+        - type: Plain
+          regex: .*在么.*
+    do:
+      message:
+        - type: Plain
+          text: 不在

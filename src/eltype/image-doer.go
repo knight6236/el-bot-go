@@ -3,10 +3,10 @@ package eltype
 type ImageDoer struct {
 	configHitList      []Config
 	recivedMessageList []Message
-	SendedMessageList  []Message
+	sendedMessageList  []Message
 }
 
-func NewImageDoer(configHitList []Config, recivedMessageList []Message) (ImageDoer, error) {
+func NewImageDoer(configHitList []Config, recivedMessageList []Message) (IDoer, error) {
 	var doer ImageDoer
 	doer.configHitList = configHitList
 	doer.recivedMessageList = recivedMessageList
@@ -16,4 +16,8 @@ func NewImageDoer(configHitList []Config, recivedMessageList []Message) (ImageDo
 
 func (doer *ImageDoer) getSendedMessageList() {
 
+}
+
+func (doer ImageDoer) GetSendedMessageList() []Message {
+	return doer.sendedMessageList
 }
