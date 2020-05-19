@@ -13,6 +13,7 @@ const (
 	EventTypeFriendMessage
 	EventTypeMemberMute
 	EventTypeGroupMuteAll
+	EventTypeGroupUnMuteAll
 	EventTypeMemberUnmute
 )
 
@@ -98,6 +99,35 @@ func NewEventFromGoMiraiEvent(goMiraiEvent gomirai.InEvent) (Event, error) {
 
 		}
 		event.OperationList = append(event.OperationList, operation)
+	case EventTypeGroupMuteAll:
+		if goMiraiEvent.Origin.(bool) {
+			event.Type = EventTypeGroupUnMuteAll
+		} else {
+			event.Type = EventTypeGroupMuteAll
+		}
+		sender, err := NewSender(SenderTypeGroup, goMiraiEvent.OperatorGroup.Group.ID,
+			goMiraiEvent.OperatorGroup.Group.Name, goMiraiEvent.OperatorGroup.Group.Permission)
+		if err != nil {
+
+		}
+		event.SenderList = append(event.SenderList, sender)
+
+		sender, err = NewSender(SenderTypeMember, goMiraiEvent.OperatorGroup.ID,
+			goMiraiEvent.OperatorGroup.MemberName, goMiraiEvent.OperatorGroup.Permission)
+		if err != nil {
+
+		}
+		event.SenderList = append(event.SenderList, sender)
+
+		if event.Type == EventTypeGroupMuteAll {
+			operation, err = NewOperation(OperationTypeGroupMuteAll, make(map[string]string))
+		} else {
+			operation, err = NewOperation(OperationTypeGroupUnMuteAll, make(map[string]string))
+		}
+		if err != nil {
+
+		}
+		event.OperationList = append(event.OperationList, operation)
 
 	default:
 		return event, fmt.Errorf("%s 是不受支持的事件类型\n", goMiraiEvent.Type)
@@ -121,7 +151,7 @@ func CastGoMiraiEventTypeToEventType(goMiaraiEventType string) EventType {
 	case "FriendMessage":
 		return EventTypeFriendMessage
 	case "GroupMuteAllEvent":
-		return EventTypeMemberMute
+		return EventTypeGroupMuteAll
 	case "MemberMuteEvent":
 		return EventTypeMemberMute
 	case "MemberUnmuteEvent":

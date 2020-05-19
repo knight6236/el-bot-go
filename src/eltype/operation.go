@@ -6,6 +6,7 @@ const (
 	OperationTypeMemberMute OperationType = iota
 	OperationTypeMemberUnmute
 	OperationTypeGroupMuteAll
+	OperationTypeGroupUnMuteAll
 )
 
 type Operation struct {
@@ -28,6 +29,8 @@ func CastConfigOperationTypeToOperationType(configEventType string) OperationTyp
 		return OperationTypeMemberUnmute
 	case "GroupMuteAll":
 		return OperationTypeGroupMuteAll
+	case "GroupUnMuteAll":
+		return OperationTypeGroupUnMuteAll
 	default:
 		panic("")
 	}

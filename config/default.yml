@@ -48,3 +48,18 @@ group:
       message:
         - type: Plain
           text: 恭喜出狱
+  - when:
+      operation:
+        - type: GroupMuteAll
+    do:
+      message:
+        - type: Plain
+          text: 砸瓦鲁多！
+
+  - when:
+      operation:
+        - type: GroupUnMuteAll
+    do:
+      message:
+        - type: Plain
+          text: 隐藏着黑暗力量的钥匙啊,在我面前显示你真正的力量！现在以你的主人，小樱之名命令你。封印解除！

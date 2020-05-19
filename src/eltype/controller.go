@@ -62,6 +62,12 @@ func (controller *Controller) Commit(bot *gomirai.Bot, goMiraiEvent gomirai.InEv
 	case EventTypeMemberUnmute:
 		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
 			controller.configReader.GroupConfigList)
+	case EventTypeGroupMuteAll:
+		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
+			controller.configReader.GroupConfigList)
+	case EventTypeGroupUnMuteAll:
+		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
+			controller.configReader.GroupConfigList)
 	}
 
 	for i := 0; i < len(handlerConstructor); i++ {
@@ -98,6 +104,10 @@ func (controller *Controller) Commit(bot *gomirai.Bot, goMiraiEvent gomirai.InEv
 	case EventTypeFriendMessage:
 		bot.SendFriendMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
 	case EventTypeMemberUnmute:
+		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
+	case EventTypeGroupMuteAll:
+		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
+	case EventTypeGroupUnMuteAll:
 		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
 	}
 
