@@ -7,6 +7,7 @@ const (
 	OperationTypeMemberUnmute
 	OperationTypeGroupMuteAll
 	OperationTypeGroupUnMuteAll
+	OperationTypeMemberJoin
 )
 
 type Operation struct {
@@ -31,6 +32,8 @@ func CastConfigOperationTypeToOperationType(configEventType string) OperationTyp
 		return OperationTypeGroupMuteAll
 	case "GroupUnMuteAll":
 		return OperationTypeGroupUnMuteAll
+	case "MemberJoin":
+		return OperationTypeMemberJoin
 	default:
 		panic("")
 	}
