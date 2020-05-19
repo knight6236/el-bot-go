@@ -1,8 +1,13 @@
 # el-bot-go
 
+![GitHub top language](https://img.shields.io/github/languages/top/ElpsyCN/el-bot-go)
+[![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/ElpsyCN/el-bot-go?color=%23e17b34&include_prereleases)](https://github.com/ElpsyCN/el-bot-go/releases)
+[![GitHub issues](https://img.shields.io/github/issues/ElpsyCN/el-bot-go)](https://github.com/ElpsyCN/el-bot-go/issues)
+[![GitHub](https://img.shields.io/github/license/ElpsyCN/el-bot-go?color=%233eb370)](https://github.com/ElpsyCN/el-bot-go/blob/master/LICENSE)
+
 [el-bot](https://github.com/ElpsyCN/el-bot)的 go 版本。
 
-一个基于 Mirai 的可快速配置的机器人模板。
+一个基于 Mirai 的可快速配置的 QQ机器人 模板。
 
 # 文档
 
@@ -10,7 +15,20 @@
 
 # 功能
 
-[开发进度](https://github.com/ElpsyCN/el-bot-go/projects/1)
+只列出已经实现的功能，其它功能见[开发进度](https://github.com/ElpsyCN/el-bot-go/projects/1)。
+
++ 识别文本消息
+  + [x] 识别固定文本消息
+  + [x] 通过正则表达式识别文本消息
++ 发送文本消息
+  + [x] 发送固定文本消息
+  + [x] 原文发送来自网络的文本
+  + [x] 发送解析后的来自网络的 JSON 文本
++ 识别事件
+  + [x] 新成员入群
+  + [x] 踢人/自己退群
+  + [x] 禁言/全员禁言
+  + [x] 全员禁言/解除全员禁言
 
 # 快速开始
 
@@ -49,7 +67,7 @@ global:
           text: （你好 世界！）
 
 group:
-# 当接收到的群消息为 say 时，调用「一言API」，原文发送接口返回的消息
+  # 当接收到的群消息为 say 时，调用「一言API」，原文发送接口返回的消息
   - when:
       message:
         - type: Plain
@@ -58,8 +76,9 @@ group:
       message:
         - type: Plain
           url: https://v1.hitokoto.cn?encode=text
+          text: '{el-url-text}'
 
-# 当接收到的群消息为 jsay 时，调用「一言API」，解析返回后数据并拼接成文本消息发送
+  # 当接收到的群消息为 jsay 时，调用「一言API」，解析返回后数据并拼接成文本消息发送
   - when:
       message:
         - type: Plain
@@ -68,17 +87,90 @@ group:
       message:
         - type: Plain
           url: https://v1.hitokoto.cn?encode=json&charset=utf-8
-          jtext: '{hitokoto} ——— {from}'
+          text: '{hitokoto} ——— {from}'
+          json: true
+  # 当某个成员被禁言时发送「「被禁言成员群昵称」喜提禁言套餐」
+  - when:
+      operation:
+        - type: MuteMember
+    do:
+      message:
+        - type: Plain
+          text: 「{el-target-name}」喜提禁言套餐
+  
+  # 当某个成员被禁言时发送「恭喜「被禁言成员群昵称」出狱」
+  - when:
+      operation:
+        - type: MemberUnmute
+    do:
+      message:
+        - type: Plain
+          text: '恭喜「{el-target-name}」出狱'
+
+  # 当开启全体禁言时发送 「砸瓦鲁多！」
+  - when:
+      operation:
+        - type: GroupMuteAll
+    do:
+      message:
+        - type: Plain
+          text: 砸瓦鲁多！
+  
+  #  当关闭全员禁言时发送「隐藏着黑暗力量的钥匙啊,在我面前显示你真正的力量！现在以你的主人，小樱之名命令你。封印解除！」
+  - when:
+      operation:
+        - type: GroupUnMuteAll
+    do:
+      message:
+        - type: Plain
+          text: 隐藏着黑暗力量的钥匙啊,在我面前显示你真正的力量！现在以你的主人，小樱之名命令你。封印解除！
+  
+  # 当有新成员入群时发送「欢迎「新成员群昵称」进群」
+  - when:
+      operation:
+        - type: MemberJoin
+    do:
+      message:
+        - type: Plain
+          text: 欢迎「{el-target-name}」进群
+
+  # 当某成员被移除群聊时发送「管理员赠送「被移除的成员的群昵称」飞机票一张」
+  - when:
+      operation:
+        - type: MemberLeaveByKick
+    do:
+      message:
+        - type: Plain
+          text: 管理员赠送「{el-target-name}」飞机票一张
+  
+  # 当某成员自行退出群聊是发送「有大佬走了，群地位+1。」
+  - when:
+      operation:
+        - type: MemberLeaveByQuit
+    do:
+      message:
+        - type: Plain
+          text: 有大佬走了，群地位+1。
+  
+  # 当文本消息符合正则表达式时复读本次消息
+  - when:
+      message:
+        - type: Plain
+          regex: repeat\.*
+    do:
+      message:
+        - type: Plain
+          text: '{el-message}'
+
+
+# el-message: 本次的消息
+# el-sender-id: 发送消息的好友/群成员QQ号
+# el-sender-name: 发送消息的好友/群成员的名称
+# el-operator-id: 做出操作的好友/成员的QQ号
+# el-operator-name: 做出操作的还有/群成员的名称
+# el-target-id: 某些事件的目标成员的QQ号，如禁言，新成员进群，移除群成员等
+# el-target-name: 某些事件的目标成员的名称，如禁言，新成员进群，移除群成员等
 ```
-<!-- 
-+ `global`: 表示配置在接收到好友消息和群消息时都会生效。`friend`表示仅好友消息；`group`表仅群消息
-+ `when`: 动作触发条件，满足任意一个即可触发。
-+ `message`: 消息，写在`when`下表示接收到指定消息后触发，写在`do`下表示执行的动作
-    + 写在`when`下: 表示任意一个消息即可触发，如上面的配置表示收到 hello 或 你好 时就触发动作。
-    + 写在`do`下: 表示执行的动作，执行顺序为从上到下，如上面的配置表示动作为发送文本消息 「Hello World！（你好 世界！）」
-+ `type`：消息类型
-    + `Plain`：文本消息
-+ `text`: 当`type`为 `Plain`时代表发送后面的原文。 -->
 
 
 # 许可证
