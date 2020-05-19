@@ -21,3 +21,13 @@ friend:
       message:
         - type: Plain
           text: 不在
+
+group:
+  - when:
+      message:
+        - type: Plain
+          text: say
+    do:
+      message:
+        - type: Plain
+          url: https://v1.hitokoto.cn
