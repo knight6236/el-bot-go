@@ -18,7 +18,7 @@
 
 ## 设置环境变量
 
-将项目录添加到环境变量 `GOPATH` 中。
+将项目目录添加到环境变量 `GOPATH` 中。
 
 ## 建立自定义配置目录
 
@@ -32,6 +32,7 @@ touch config/custom/custom.yml
 config/custom/custom.yml
 
 ```yml
+# 当接收到的群消息或好友消息为 hello 或「你好」时回复「Hello World!（你好 世界！）」
 global:
   - when:
       message:
@@ -45,6 +46,28 @@ global:
           text: Hello World!
         - type: Plain
           text: （你好 世界！）
+
+group:
+# 当接收到的群消息为 say 时，调用「一言API」，原文发送接口返回的消息
+  - when:
+      message:
+        - type: Plain
+          text: say
+    do:
+      message:
+        - type: Plain
+          url: https://v1.hitokoto.cn?encode=text
+
+# 当接收到的群消息为 jsay 时，调用「一言API」，解析返回后数据并拼接成文本消息发送
+  - when:
+      message:
+        - type: Plain
+          text: jsay
+    do:
+      message:
+        - type: Plain
+          url: https://v1.hitokoto.cn?encode=json&charset=utf-8
+          jtext: '{hitokoto} ——— {from}'
 ```
 
 + `global`: 表示配置在接收到好友消息和群消息时都会生效。`friend`表示仅好友消息；`group`表仅群消息
