@@ -37,19 +37,35 @@ func (controller *Controller) Commit(bot *gomirai.Bot, goMiraiEvent gomirai.InEv
 	if err != nil {
 		return
 	}
-	// err = goMiraiEvent.OperatorDetail()
-	if err != nil {
-		return
-	}
+
 	event, err := NewEventFromGoMiraiEvent(goMiraiEvent)
 	if err != nil {
 		return
 	}
 
-	var sendedGoMiraiMessageList []gomirai.Message
-	var configHitList []Config
+	configRelatedList := controller.getConfigRelatedList(event.Type)
+
+	configHitList := controller.getConfigHitList(event, configRelatedList)
+
+	sendedGoMiraiMessageList := controller.getSendedGoMiraiMessageList(event, configHitList)
+
+	controller.sendMessage(bot, event, sendedGoMiraiMessageList)
+
+}
+
+func (controller *Controller) mergeList(args ...[]Config) []Config {
+	targetList := args[0]
+	for i := 1; i < len(args); i++ {
+		for _, item := range args[i] {
+			targetList = append(targetList, item)
+		}
+	}
+	return targetList
+}
+
+func (controller *Controller) getConfigRelatedList(eventType EventType) []Config {
 	var configList []Config
-	switch event.Type {
+	switch eventType {
 	case EventTypeGroupMessage:
 		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
 			controller.configReader.GroupConfigList)
@@ -78,9 +94,13 @@ func (controller *Controller) Commit(bot *gomirai.Bot, goMiraiEvent gomirai.InEv
 		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
 			controller.configReader.GroupConfigList)
 	}
+	return configList
+}
 
+func (controller *Controller) getConfigHitList(event Event, configRelatedList []Config) []Config {
+	var configHitList []Config
 	for i := 0; i < len(handlerConstructor); i++ {
-		handler, err := (handlerConstructor[i](configList, event.MessageList, event.OperationList))
+		handler, err := (handlerConstructor[i](configRelatedList, event.MessageList, event.OperationList))
 		if err != nil {
 			continue
 		}
@@ -89,7 +109,12 @@ func (controller *Controller) Commit(bot *gomirai.Bot, goMiraiEvent gomirai.InEv
 			configHitList = append(configHitList, config)
 		}
 	}
+	return configHitList
 
+}
+
+func (controller *Controller) getSendedGoMiraiMessageList(event Event, configHitList []Config) []gomirai.Message {
+	var sendedGoMiraiMessageList []gomirai.Message
 	for i := 0; i < len(doerConstructor); i++ {
 		doer, err := (doerConstructor[i](configHitList, event.MessageList))
 		if err != nil {
@@ -104,7 +129,10 @@ func (controller *Controller) Commit(bot *gomirai.Bot, goMiraiEvent gomirai.InEv
 			sendedGoMiraiMessageList = append(sendedGoMiraiMessageList, goMiraiMessage)
 		}
 	}
+	return sendedGoMiraiMessageList
+}
 
+func (controller *Controller) sendMessage(bot *gomirai.Bot, event Event, sendedGoMiraiMessageList []gomirai.Message) {
 	switch event.Type {
 	case EventTypeGroupMessage:
 		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
@@ -125,15 +153,4 @@ func (controller *Controller) Commit(bot *gomirai.Bot, goMiraiEvent gomirai.InEv
 	case EventTypeMemberLeaveByQuit:
 		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
 	}
-
-}
-
-func (controller *Controller) mergeList(args ...[]Config) []Config {
-	targetList := args[0]
-	for i := 1; i < len(args); i++ {
-		for _, item := range args[i] {
-			targetList = append(targetList, item)
-		}
-	}
-	return targetList
 }
