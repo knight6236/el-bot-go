@@ -30,4 +30,4 @@ group:
     do:
       message:
         - type: Plain
-          url: https://v1.hitokoto.cn
+          url: https://v1.hitokoto.cn?encode=text
