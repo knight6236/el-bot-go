@@ -5,6 +5,7 @@ import (
 )
 
 type Controller struct {
+	configReader ConfigReader
 }
 
 var handlerConstructor = [...]func(configList []Config, messageList []Message) (IHandler, error){
@@ -13,19 +14,33 @@ var handlerConstructor = [...]func(configList []Config, messageList []Message) (
 var doerConstructor = [...]func(configHitList []Config, recivedMessageList []Message) (IDoer, error){
 	NewPlainDoer, NewImageDoer, NewEventDoer, NewFaceDoer}
 
-func NewController() Controller {
-
+func NewController(configReader ConfigReader) Controller {
 	var controller Controller
-	// controller.configList = configList
+	controller.configReader = configReader
 	return controller
 }
 
-func (controller *Controller) Commit(bot *gomirai.Bot, goMiraiEvent gomirai.InEvent, configList []Config) {
-	goMiraiEvent.SenderDetail()
-	event, err := NewEventFromGoMiraiEvent(goMiraiEvent)
-	var sendedGoMiraiMessageList []gomirai.Message
+func (controller *Controller) Commit(bot *gomirai.Bot, goMiraiEvent gomirai.InEvent) {
+	err := goMiraiEvent.SenderDetail()
 	if err != nil {
 		return
+	}
+	// err = goMiraiEvent.OperatorDetail()
+	if err != nil {
+		return
+	}
+	event, err := NewEventFromGoMiraiEvent(goMiraiEvent)
+	if err != nil {
+		return
+	}
+
+	var sendedGoMiraiMessageList []gomirai.Message
+	var configList []Config
+	switch event.Type {
+	case EventTypeGroupMessage:
+		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList, controller.configReader.GroupConfigList)
+	case EventTypeFriendMessage:
+		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList, controller.configReader.FriendConifgList)
 	}
 
 	for i := 0; i < len(handlerConstructor); i++ {
@@ -46,6 +61,18 @@ func (controller *Controller) Commit(bot *gomirai.Bot, goMiraiEvent gomirai.InEv
 	switch event.Type {
 	case EventTypeGroupMessage:
 		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
+	case EventTypeFriendMessage:
+		bot.SendFriendMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
 	}
 
+}
+
+func (controller *Controller) mergeList(args ...[]Config) []Config {
+	targetList := args[0]
+	for i := 1; i < len(args); i++ {
+		for _, item := range args[i] {
+			targetList = append(targetList, item)
+		}
+	}
+	return targetList
 }

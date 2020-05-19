@@ -28,6 +28,7 @@
 
 
 # custom
+*.bin
 *.jar
 plugins/
 device.json

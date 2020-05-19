@@ -45,15 +45,16 @@ func main() {
 	}()
 
 	reader := eltype.NewConfigReader("../../config/default.yml")
-	controller := eltype.NewController()
+	controller := eltype.NewController(reader)
 
 	// 从bot.MessageChan获取收到事件并处理
 	for {
 		e := <-bot.MessageChan
 		switch e.Type {
 		case "GroupMessage": // do something
-			controller.Commit(bot, e, reader.GlobalConfigList)
+			controller.Commit(bot, e)
 		case "FriendMessage": // do something
+			controller.Commit(bot, e)
 		case "....省略": // do something
 		default:
 			// do something
