@@ -5,12 +5,15 @@ type ImageHandler struct {
 	messageList   []Message
 	configHitList []Config
 	operationList []Operation
+	preDefVarMap  map[string]string
 }
 
-func NewImageHandler(configList []Config, messageList []Message, operationList []Operation) (IHandler, error) {
+func NewImageHandler(configList []Config, messageList []Message, operationList []Operation,
+	preDefVarMap map[string]string) (IHandler, error) {
 	var handler ImageHandler
 	handler.configList = configList
 	handler.messageList = messageList
+	handler.preDefVarMap = preDefVarMap
 	handler.searchHitConfig()
 	return handler, nil
 }

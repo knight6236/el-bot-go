@@ -8,10 +8,12 @@ type Controller struct {
 	configReader ConfigReader
 }
 
-var handlerConstructor = [...]func(configList []Config, messageList []Message, operationList []Operation) (IHandler, error){
+var handlerConstructor = [...]func(configList []Config, messageList []Message, operationList []Operation,
+	preDefVarMap map[string]string) (IHandler, error){
 	NewPlainHandler, NewImageHandler, NewOperationHandler, NewFaceHandler}
 
-var doerConstructor = [...]func(configHitList []Config, recivedMessageList []Message) (IDoer, error){
+var doerConstructor = [...]func(configHitList []Config, recivedMessageList []Message,
+	preDefVarMap map[string]string) (IDoer, error){
 	NewPlainDoer, NewImageDoer, NewOperationDoer, NewFaceDoer}
 
 func NewController(configReader ConfigReader) Controller {
@@ -100,7 +102,7 @@ func (controller *Controller) getConfigRelatedList(eventType EventType) []Config
 func (controller *Controller) getConfigHitList(event Event, configRelatedList []Config) []Config {
 	var configHitList []Config
 	for i := 0; i < len(handlerConstructor); i++ {
-		handler, err := (handlerConstructor[i](configRelatedList, event.MessageList, event.OperationList))
+		handler, err := (handlerConstructor[i](configRelatedList, event.MessageList, event.OperationList, event.PreDefVarMap))
 		if err != nil {
 			continue
 		}
@@ -116,7 +118,7 @@ func (controller *Controller) getConfigHitList(event Event, configRelatedList []
 func (controller *Controller) getSendedGoMiraiMessageList(event Event, configHitList []Config) []gomirai.Message {
 	var sendedGoMiraiMessageList []gomirai.Message
 	for i := 0; i < len(doerConstructor); i++ {
-		doer, err := (doerConstructor[i](configHitList, event.MessageList))
+		doer, err := (doerConstructor[i](configHitList, event.MessageList, event.PreDefVarMap))
 		if err != nil {
 			continue
 		}

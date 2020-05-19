@@ -14,7 +14,7 @@ global:
           text: （你好 世界！）
 
 group:
-# 当接收到的群消息为 say 时，调用「一言API」，原文发送接口返回的消息
+  # 当接收到的群消息为 say 时，调用「一言API」，原文发送接口返回的消息
   - when:
       message:
         - type: Plain
@@ -23,8 +23,9 @@ group:
       message:
         - type: Plain
           url: https://v1.hitokoto.cn?encode=text
+          text: '{el-url-text}'
 
-# 当接收到的群消息为 jsay 时，调用「一言API」，解析返回后数据并拼接成文本消息发送
+  # 当接收到的群消息为 jsay 时，调用「一言API」，解析返回后数据并拼接成文本消息发送
   - when:
       message:
         - type: Plain
@@ -33,21 +34,27 @@ group:
       message:
         - type: Plain
           url: https://v1.hitokoto.cn?encode=json&charset=utf-8
-          jtext: '{hitokoto} ——— {from}'
+          text: '{hitokoto} ——— {from}'
+          json: true
+  # 当某个成员被禁言时发送「「被禁言成员群昵称」喜提禁言套餐」
   - when:
       operation:
         - type: MuteMember
     do:
       message:
         - type: Plain
-          text: 有人被禁言啦！！！
+          text: 「{el-target-name}」喜提禁言套餐
+  
+  # 当某个成员被禁言时发送「恭喜「被禁言成员群昵称」出狱」
   - when:
       operation:
         - type: MemberUnmute
     do:
       message:
         - type: Plain
-          text: 恭喜出狱
+          text: '恭喜「{el-target-name}」出狱'
+
+  # 当开启全体禁言时发送 「砸瓦鲁多！」
   - when:
       operation:
         - type: GroupMuteAll
@@ -55,7 +62,8 @@ group:
       message:
         - type: Plain
           text: 砸瓦鲁多！
-
+  
+  #  当关闭全员禁言时发送「隐藏着黑暗力量的钥匙啊,在我面前显示你真正的力量！现在以你的主人，小樱之名命令你。封印解除！」
   - when:
       operation:
         - type: GroupUnMuteAll
@@ -64,22 +72,25 @@ group:
         - type: Plain
           text: 隐藏着黑暗力量的钥匙啊,在我面前显示你真正的力量！现在以你的主人，小樱之名命令你。封印解除！
   
+  # 当有新成员入群时发送「欢迎「新成员群昵称」进群」
   - when:
       operation:
         - type: MemberJoin
     do:
       message:
         - type: Plain
-          text: 新人进群，群地位-1。
+          text: 欢迎「{el-target-name}」进群
 
+  # 当某成员被移除群聊时发送「管理员赠送「被移除的成员的群昵称」飞机票一张」
   - when:
       operation:
         - type: MemberLeaveByKick
     do:
       message:
         - type: Plain
-          text: 免费飞机票，走好。
-
+          text: 管理员赠送「{el-target-name}」飞机票一张
+  
+  # 当某成员自行退出群聊是发送「有大佬走了，群地位+1。」
   - when:
       operation:
         - type: MemberLeaveByQuit
@@ -87,3 +98,22 @@ group:
       message:
         - type: Plain
           text: 有大佬走了，群地位+1。
+  
+  # 当文本消息符合正则表达式时复读本次消息
+  - when:
+      message:
+        - type: Plain
+          regex: repeat\.*
+    do:
+      message:
+        - type: Plain
+          text: '{el-message}'
+
+
+# el-message: 本次的消息
+# el-sender-id: 发送消息的好友/群成员QQ号
+# el-sender-name: 发送消息的好友/群成员的名称
+# el-operator-id: 做出操作的好友/成员的QQ号
+# el-operator-name: 做出操作的还有/群成员的名称
+# el-target-id: 某些事件的目标成员的QQ号，如禁言，新成员进群，移除群成员等
+# el-target-name: 某些事件的目标成员的名称，如禁言，新成员进群，移除群成员等

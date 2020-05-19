@@ -4,9 +4,10 @@ type FaceDoer struct {
 	configHitList      []Config
 	recivedMessageList []Message
 	sendedMessageList  []Message
+	preDefVarMap       map[string]string
 }
 
-func NewFaceDoer(configHitList []Config, recivedMessageList []Message) (IDoer, error) {
+func NewFaceDoer(configHitList []Config, recivedMessageList []Message, preDefVarMap map[string]string) (IDoer, error) {
 	var doer FaceDoer
 	doer.configHitList = configHitList
 	doer.recivedMessageList = recivedMessageList

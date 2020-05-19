@@ -10,12 +10,15 @@ type PlainHandler struct {
 	messageList   []Message
 	configHitList []Config
 	operationList []Operation
+	preDefVarMap  map[string]string
 }
 
-func NewPlainHandler(configList []Config, messageList []Message, operationList []Operation) (IHandler, error) {
+func NewPlainHandler(configList []Config, messageList []Message, operationList []Operation,
+	preDefVarMap map[string]string) (IHandler, error) {
 	var handler PlainHandler
 	handler.configList = configList
 	handler.messageList = messageList
+	handler.preDefVarMap = preDefVarMap
 	handler.searchHitConfig()
 	return handler, nil
 }
