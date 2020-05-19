@@ -5,6 +5,12 @@ import (
 	"regexp"
 )
 
+// PlainHandler 判断是否命中和表情有关的配置
+// @property	configList		[]Config			要判断的配置列表
+// @property	messageList		[]Message			要判断的消息列表
+// @property	operationList	[]Operation			要判断的配置列表
+// @property	configHitList	[]Config			命中的配置列表
+// @property	preDefVarMap	map[string]string	预定义变量 Map
 type PlainHandler struct {
 	configList    []Config
 	messageList   []Message
@@ -13,6 +19,11 @@ type PlainHandler struct {
 	preDefVarMap  map[string]string
 }
 
+// NewPlainHandler 构造一个 PlainHandler
+// @param	configList		[]Config			要判断的配置列表
+// @param	messageList		[]Message			要判断的消息列表
+// @param	operationList	[]Operation			要判断的配置列表
+// @param	preDefVarMap	map[string]string	预定义变量 Map
 func NewPlainHandler(configList []Config, messageList []Message, operationList []Operation,
 	preDefVarMap map[string]string) (IHandler, error) {
 	var handler PlainHandler
@@ -78,6 +89,7 @@ func (handler *PlainHandler) checkRegex(whenMessage Message) bool {
 	return isMatch
 }
 
+// GetConfigHitList 获取命中的配置列表
 func (handler PlainHandler) GetConfigHitList() []Config {
 	return handler.configHitList
 }

@@ -4,6 +4,10 @@ import (
 	"gomirai"
 )
 
+// 「」
+
+// Controller 控制器类，作为整个机器人的中心调度模块。
+// @property	configReader	ConfigReader	配置读取类
 type Controller struct {
 	configReader ConfigReader
 }
@@ -16,12 +20,17 @@ var doerConstructor = [...]func(configHitList []Config, recivedMessageList []Mes
 	preDefVarMap map[string]string) (IDoer, error){
 	NewPlainDoer, NewImageDoer, NewOperationDoer, NewFaceDoer}
 
+// NewController 构造一个 Controller
+// @param	configReader	ConfigReader	配置读取类
 func NewController(configReader ConfigReader) Controller {
 	var controller Controller
 	controller.configReader = configReader
 	return controller
 }
 
+// Commit 将事件提交给 Controller
+// @param	bot				*gomirai.Bot		机器人
+// @param	goMiraiEvent	gomirai.InEvent		事件
 func (controller *Controller) Commit(bot *gomirai.Bot, goMiraiEvent gomirai.InEvent) {
 	var err error
 	switch CastGoMiraiEventTypeToEventType(goMiraiEvent.Type) {
