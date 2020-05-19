@@ -5,13 +5,15 @@ import (
 	"fmt"
 	"gomirai"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 )
 
 func main() {
 	// 链接地址
 	address := "http://127.0.0.1:8080"
-	authKey := "qwertyuiop"
+	authKey := os.Getenv("AUTHKEY")
 	// 用于进行网络操作的Client
 	client := gomirai.NewMiraiClient(address, authKey)
 
@@ -21,7 +23,11 @@ func main() {
 
 	// 获取Bot，Session信息保存在Bot中
 	// 也可通过Client.Bots[]获取
-	bot, err := client.Verify(123456789)
+	qq, errqq := strconv.ParseInt(os.Getenv("QQ"), 10, 64)
+	if errqq != nil {
+		fmt.Println("获取QQ号失败，请检查环境变量设置是否是否正确。")
+	}
+	bot, err := client.Verify(qq)
 	if err != nil {
 		fmt.Println(err)
 		return
