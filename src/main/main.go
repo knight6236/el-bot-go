@@ -61,7 +61,12 @@ func main() {
 			controller.Commit(bot, e)
 		case "FriendMessage": // do something
 			controller.Commit(bot, e)
-		case "....省略": // do something
+		case "GroupMuteAllEvent": // do something
+			controller.Commit(bot, e)
+		case "MemberMuteEvent":
+			controller.Commit(bot, e)
+		case "MemberUnmuteEvent":
+			controller.Commit(bot, e)
 		default:
 			// do something
 		}

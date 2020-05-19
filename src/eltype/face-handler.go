@@ -3,10 +3,11 @@ package eltype
 type FaceHandler struct {
 	configList    []Config
 	messageList   []Message
+	operationList []Operation
 	configHitList []Config
 }
 
-func NewFaceHandler(configList []Config, messageList []Message) (IHandler, error) {
+func NewFaceHandler(configList []Config, messageList []Message, operationList []Operation) (IHandler, error) {
 	var handler FaceHandler
 	handler.configList = configList
 	handler.messageList = messageList

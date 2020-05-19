@@ -9,9 +9,10 @@ type PlainHandler struct {
 	configList    []Config
 	messageList   []Message
 	configHitList []Config
+	operationList []Operation
 }
 
-func NewPlainHandler(configList []Config, messageList []Message) (IHandler, error) {
+func NewPlainHandler(configList []Config, messageList []Message, operationList []Operation) (IHandler, error) {
 	var handler PlainHandler
 	handler.configList = configList
 	handler.messageList = messageList

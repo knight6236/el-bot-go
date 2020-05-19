@@ -3,7 +3,9 @@ package eltype
 type OperationType int
 
 const (
-	OperationTypeMute OperationType = iota
+	OperationTypeMemberMute OperationType = iota
+	OperationTypeMemberUnmute
+	OperationTypeGroupMuteAll
 )
 
 type Operation struct {
@@ -16,4 +18,17 @@ func NewOperation(operationType OperationType, value map[string]string) (Operati
 	operation.Type = operationType
 	operation.Value = value
 	return operation, nil
+}
+
+func CastConfigOperationTypeToOperationType(configEventType string) OperationType {
+	switch configEventType {
+	case "MuteMember":
+		return OperationTypeMemberMute
+	case "MemberUnmute":
+		return OperationTypeMemberUnmute
+	case "GroupMuteAll":
+		return OperationTypeGroupMuteAll
+	default:
+		panic("")
+	}
 }

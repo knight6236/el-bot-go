@@ -8,11 +8,11 @@ type Controller struct {
 	configReader ConfigReader
 }
 
-var handlerConstructor = [...]func(configList []Config, messageList []Message) (IHandler, error){
-	NewPlainHandler, NewImageHandler, NewEventHandler, NewFaceHandler}
+var handlerConstructor = [...]func(configList []Config, messageList []Message, operationList []Operation) (IHandler, error){
+	NewPlainHandler, NewImageHandler, NewOperationHandler, NewFaceHandler}
 
 var doerConstructor = [...]func(configHitList []Config, recivedMessageList []Message) (IDoer, error){
-	NewPlainDoer, NewImageDoer, NewEventDoer, NewFaceDoer}
+	NewPlainDoer, NewImageDoer, NewOperationDoer, NewFaceDoer}
 
 func NewController(configReader ConfigReader) Controller {
 	var controller Controller
@@ -21,7 +21,19 @@ func NewController(configReader ConfigReader) Controller {
 }
 
 func (controller *Controller) Commit(bot *gomirai.Bot, goMiraiEvent gomirai.InEvent) {
-	err := goMiraiEvent.SenderDetail()
+	var err error
+	switch CastGoMiraiEventTypeToEventType(goMiraiEvent.Type) {
+	case EventTypeFriendMessage:
+		err = goMiraiEvent.SenderDetail()
+	case EventTypeGroupMessage:
+		err = goMiraiEvent.SenderDetail()
+	case EventTypeGroupMuteAll:
+		err = goMiraiEvent.OperatorDetail()
+	case EventTypeMemberMute:
+		err = goMiraiEvent.OperatorDetail()
+	case EventTypeMemberUnmute:
+		err = goMiraiEvent.OperatorDetail()
+	}
 	if err != nil {
 		return
 	}
@@ -35,20 +47,40 @@ func (controller *Controller) Commit(bot *gomirai.Bot, goMiraiEvent gomirai.InEv
 	}
 
 	var sendedGoMiraiMessageList []gomirai.Message
+	var configHitList []Config
 	var configList []Config
 	switch event.Type {
 	case EventTypeGroupMessage:
-		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList, controller.configReader.GroupConfigList)
+		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
+			controller.configReader.GroupConfigList)
 	case EventTypeFriendMessage:
-		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList, controller.configReader.FriendConifgList)
+		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
+			controller.configReader.FriendConifgList)
+	case EventTypeMemberMute:
+		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
+			controller.configReader.GroupConfigList)
+	case EventTypeMemberUnmute:
+		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
+			controller.configReader.GroupConfigList)
 	}
 
 	for i := 0; i < len(handlerConstructor); i++ {
-		handler, err := (handlerConstructor[i](configList, event.MessageList))
+		handler, err := (handlerConstructor[i](configList, event.MessageList, event.OperationList))
 		if err != nil {
 			continue
 		}
-		doer, err := (doerConstructor[i](handler.GetConfigHitList(), event.MessageList))
+
+		for _, config := range handler.GetConfigHitList() {
+			configHitList = append(configHitList, config)
+		}
+	}
+
+	for i := 0; i < len(doerConstructor); i++ {
+		doer, err := (doerConstructor[i](configHitList, event.MessageList))
+		if err != nil {
+			continue
+		}
+
 		for _, message := range doer.GetSendedMessageList() {
 			goMiraiMessage, err := message.ToGoMiraiMessage()
 			if err != nil {
@@ -61,8 +93,12 @@ func (controller *Controller) Commit(bot *gomirai.Bot, goMiraiEvent gomirai.InEv
 	switch event.Type {
 	case EventTypeGroupMessage:
 		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
+	case EventTypeMemberMute:
+		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
 	case EventTypeFriendMessage:
 		bot.SendFriendMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
+	case EventTypeMemberUnmute:
+		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
 	}
 
 }

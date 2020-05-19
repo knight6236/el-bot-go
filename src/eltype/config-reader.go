@@ -162,13 +162,9 @@ func (reader *ConfigReader) parseToMessage(nativeMessage map[interface{}]interfa
 
 func (reader *ConfigReader) parseToOperation(natvieOperation map[interface{}]interface{}) Operation {
 	var operationType OperationType
-	switch natvieOperation["type"] {
-	case "mute":
-		operationType = OperationTypeMute
-	}
+	operationType = CastConfigOperationTypeToOperationType(natvieOperation["type"].(string))
 
 	operationValue := make(map[string]string)
-
 	for key, value := range natvieOperation {
 		operationValue[key.(string)] = value.(string)
 	}
