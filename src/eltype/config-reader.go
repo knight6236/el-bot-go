@@ -6,7 +6,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	// "io"
-	// "fmt"
+
 	// "os"
 	"io/ioutil"
 	// "reflect"
@@ -99,6 +99,13 @@ func (reader *ConfigReader) parseToOperationList(nativeOperationLisst []interfac
 func (reader *ConfigReader) parseToConfig(configType ConfigType,
 	nativeWhen map[interface{}]interface{},
 	nativeDo map[interface{}]interface{}) Config {
+
+	nativeSenderList := nativeWhen["sender"]
+	var senderList []Sender
+	if nativeSenderList != nil {
+		senderList = reader.parseToSenderOrReciverList(nativeSenderList.(map[interface{}]interface{}))
+	}
+
 	nativeWhenMessageList := nativeWhen["message"]
 	var whenMessageList []Message
 	if nativeWhenMessageList != nil {
@@ -109,6 +116,12 @@ func (reader *ConfigReader) parseToConfig(configType ConfigType,
 	var whenOperationList []Operation
 	if nativeWhenOperation != nil {
 		whenOperationList = reader.parseToOperationList(nativeWhenOperation.([]interface{}))
+	}
+
+	nativeReceiverList := nativeDo["receiver"]
+	var receiverList []Sender
+	if nativeReceiverList != nil {
+		receiverList = reader.parseToSenderOrReciverList(nativeReceiverList.(map[interface{}]interface{}))
 	}
 
 	nativeDoMessageList := nativeDo["message"]
@@ -122,12 +135,45 @@ func (reader *ConfigReader) parseToConfig(configType ConfigType,
 	if nativeDoOperation != nil {
 		doOperationList = reader.parseToOperationList(nativeDoOperation.([]interface{}))
 	}
-	config, err := NewConfig(configType, whenMessageList, whenOperationList, doMessageList, doOperationList)
+	config, err := NewConfig(configType, whenMessageList, whenOperationList,
+		doMessageList, doOperationList, senderList, receiverList)
 	if err != nil {
 
 	}
 	return config
 }
+
+func (reader *ConfigReader) parseToSenderOrReciverList(nativeSender map[interface{}]interface{}) []Sender {
+	var senderOrReciverList []Sender
+
+	groupList := nativeSender["group"]
+	if groupList != nil {
+		for _, groupID := range groupList.([]interface{}) {
+			sender, err := NewSender(SenderTypeGroup, int64(groupID.(int)), "", "")
+			if err != nil {
+				return nil
+			}
+			senderOrReciverList = append(senderOrReciverList, sender)
+		}
+	}
+
+	userList := nativeSender["user"]
+	if userList != nil {
+		for _, userID := range userList.([]interface{}) {
+			sender, err := NewSender(SenderTypeUser, int64(userID.(int)), "", "")
+			if err != nil {
+				return nil
+			}
+			senderOrReciverList = append(senderOrReciverList, sender)
+		}
+	}
+	return senderOrReciverList
+}
+
+// func (reader *ConfigReader) parseToSender(nativeSender []interface{}) Sender {
+// 	var sender Sender
+// 	return sender
+// }
 
 func (reader *ConfigReader) parseToMessage(nativeMessage map[interface{}]interface{}) Message {
 	var messageType MessageType
@@ -140,6 +186,8 @@ func (reader *ConfigReader) parseToMessage(nativeMessage map[interface{}]interfa
 		messageType = MessageTypeFace
 	case "Event":
 		messageType = MessageTypeEvent
+	case "Xml":
+		messageType = MessageTypeXML
 	}
 
 	msgValue := make(map[string]string)

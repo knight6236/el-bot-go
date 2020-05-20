@@ -1,11 +1,13 @@
 package eltype
 
 import (
+	"fmt"
 	"io"
 	"math/rand"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 )
 
 // ImageDoer 表情动作生成类
@@ -80,6 +82,14 @@ func (doer *ImageDoer) downloadImage(url string) (string, error) {
 
 	io.Copy(file, res.Body)
 	return filename, nil
+}
+
+func (doer ImageDoer) replaceStrByPreDefVarMap(text string) string {
+	for varName, value := range doer.preDefVarMap {
+		key := fmt.Sprintf("{%s}", varName)
+		text = strings.ReplaceAll(text, key, value)
+	}
+	return text
 }
 
 // GetSendedMessageList 获取将要发送的信息列表

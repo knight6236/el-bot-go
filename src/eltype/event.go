@@ -350,12 +350,16 @@ func (event *Event) parseGoMiraiMessageListToMessageList(goMiraiEvent gomirai.In
 
 func (event *Event) addSomePreDefVar() {
 	text := ""
+	xml := ""
 	for _, message := range event.MessageList {
 		if message.Type == MessageTypePlain {
 			text = text + message.Value["text"]
+		} else if message.Type == MessageTypeXML {
+			xml = xml + message.Value["xml"]
 		}
 	}
 	event.addPerDefVar("el-message-text", text)
+	event.addPerDefVar("el-message-xml", xml)
 }
 
 func (event *Event) addPerDefVar(varName string, value interface{}) {

@@ -14,11 +14,11 @@ type Controller struct {
 
 var handlerConstructor = [...]func(configList []Config, messageList []Message, operationList []Operation,
 	preDefVarMap map[string]string) (IHandler, error){
-	NewPlainHandler, NewImageHandler, NewOperationHandler, NewFaceHandler}
+	NewPlainHandler, NewImageHandler, NewOperationHandler, NewFaceHandler, NewXMLHandler}
 
 var doerConstructor = [...]func(configHitList []Config, recivedMessageList []Message,
 	preDefVarMap map[string]string) (IDoer, error){
-	NewPlainDoer, NewImageDoer, NewOperationDoer, NewFaceDoer}
+	NewPlainDoer, NewImageDoer, NewOperationDoer, NewFaceDoer, NewXMLDoer}
 
 // NewController 构造一个 Controller
 // @param	configReader	ConfigReader	配置读取类
@@ -54,13 +54,13 @@ func (controller *Controller) Commit(bot *gomirai.Bot, goMiraiEvent gomirai.InEv
 		return
 	}
 
-	configRelatedList := controller.getConfigRelatedList(event.Type)
+	configRelatedList := controller.getConfigRelatedList(event)
 
 	configHitList := controller.getConfigHitList(event, configRelatedList)
 
 	sendedGoMiraiMessageList := controller.getSendedGoMiraiMessageList(event, configHitList)
 
-	controller.sendMessage(bot, event, sendedGoMiraiMessageList)
+	controller.sendMessage(bot, event, configHitList, sendedGoMiraiMessageList)
 
 }
 
@@ -74,15 +74,17 @@ func (controller *Controller) mergeList(args ...[]Config) []Config {
 	return targetList
 }
 
-func (controller *Controller) getConfigRelatedList(eventType EventType) []Config {
+func (controller *Controller) getConfigRelatedList(event Event) []Config {
 	var configList []Config
-	switch eventType {
+	switch event.Type {
 	case EventTypeGroupMessage:
-		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
-			controller.configReader.GroupConfigList)
+		configList = controller.mergeList(configList,
+			controller.getConfigRelatedListByWhenSenderList(controller.configReader.GlobalConfigList, event.SenderList),
+			controller.getConfigRelatedListByWhenSenderList(controller.configReader.GroupConfigList, event.SenderList))
 	case EventTypeFriendMessage:
-		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
-			controller.configReader.FriendConifgList)
+		configList = controller.mergeList(configList,
+			controller.getConfigRelatedListByWhenSenderList(controller.configReader.GlobalConfigList, event.SenderList),
+			controller.getConfigRelatedListByWhenSenderList(controller.configReader.FriendConifgList, event.SenderList))
 	case EventTypeMemberMute:
 		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
 			controller.configReader.GroupConfigList)
@@ -106,6 +108,20 @@ func (controller *Controller) getConfigRelatedList(eventType EventType) []Config
 			controller.configReader.GroupConfigList)
 	}
 	return configList
+}
+
+func (controller *Controller) getConfigRelatedListByWhenSenderList(configList []Config, senderList []Sender) []Config {
+	var ret []Config
+	for _, config := range configList {
+		for _, sender := range config.SenderList {
+			if (sender.Type == SenderTypeGroup && sender.ID == senderList[0].ID) ||
+				(sender.Type == SenderTypeUser && sender.ID == senderList[1].ID) {
+				ret = append(ret, config)
+				break
+			}
+		}
+	}
+	return ret
 }
 
 func (controller *Controller) getConfigHitList(event Event, configRelatedList []Config) []Config {
@@ -143,7 +159,7 @@ func (controller *Controller) getSendedGoMiraiMessageList(event Event, configHit
 	return sendedGoMiraiMessageList
 }
 
-func (controller *Controller) sendMessage(bot *gomirai.Bot, event Event, sendedGoMiraiMessageList []gomirai.Message) {
+func (controller *Controller) sendMessage(bot *gomirai.Bot, event Event, configHitList []Config, sendedGoMiraiMessageList []gomirai.Message) {
 	switch event.Type {
 	case EventTypeGroupMessage:
 		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
@@ -163,5 +179,16 @@ func (controller *Controller) sendMessage(bot *gomirai.Bot, event Event, sendedG
 		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
 	case EventTypeMemberLeaveByQuit:
 		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
+	}
+
+	for _, config := range configHitList {
+		for _, receiver := range config.Receiver {
+			switch receiver.Type {
+			case SenderTypeGroup:
+				bot.SendGroupMessage(receiver.ID, 0, sendedGoMiraiMessageList)
+			case SenderTypeUser:
+				bot.SendFriendMessage(receiver.ID, 0, sendedGoMiraiMessageList)
+			}
+		}
 	}
 }

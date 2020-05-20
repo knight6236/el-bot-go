@@ -17,8 +17,10 @@ const (
 	MessageTypeImage
 	// MessageTypeFace 表情消息类型
 	MessageTypeFace
-	// MessageTypeEvent 事件小类型
+	// MessageTypeEvent 事件消息类型
 	MessageTypeEvent
+	// MessageTypeXML XML消息类型
+	MessageTypeXML
 )
 
 // Message 消息
@@ -52,6 +54,9 @@ func NewMessageFromGoMiraiMessage(goMiraiMessage gomirai.Message) (Message, erro
 		message.Type = MessageTypeFace
 		message.Value["id"] = strconv.FormatInt(goMiraiMessage.FaceID, 10)
 		message.Value["name"] = goMiraiMessage.Name
+	case "Xml":
+		message.Type = MessageTypeXML
+		message.Value["xml"] = goMiraiMessage.XML
 	default:
 		return message, fmt.Errorf("%s 是不受支持的消息类型", goMiraiMessage.Type)
 	}
@@ -76,6 +81,9 @@ func (message *Message) ToGoMiraiMessage() (gomirai.Message, error) {
 	case MessageTypeImage:
 		goMiraiMessage.Type = "Image"
 		goMiraiMessage.Path = message.Value["path"]
+	case MessageTypeXML:
+		goMiraiMessage.Type = "Xml"
+		goMiraiMessage.XML = message.Value["xml"]
 	default:
 		return goMiraiMessage, errors.New("暂不支持的消息类型")
 	}

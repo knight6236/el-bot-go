@@ -24,6 +24,8 @@ type Config struct {
 	WhenOperationList []Operation
 	DoMessageList     []Message
 	DoOperationList   []Operation
+	SenderList        []Sender
+	Receiver          []Sender
 }
 
 // NewConfig 构造一个新的配置对象
@@ -36,12 +38,16 @@ func NewConfig(configType ConfigType,
 	whenMessageList []Message,
 	whenOperationList []Operation,
 	doMessageList []Message,
-	doOperationList []Operation) (Config, error) {
+	doOperationList []Operation,
+	SenderList []Sender,
+	Receiver []Sender) (Config, error) {
 	var config Config
 	config.Type = configType
 	config.WhenMessageList = whenMessageList
 	config.WhenOperationList = whenOperationList
 	config.DoMessageList = doMessageList
 	config.DoOperationList = doOperationList
+	config.SenderList = SenderList
+	config.Receiver = Receiver
 	return config, nil
 }
