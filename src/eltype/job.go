@@ -1,10 +1,12 @@
 package eltype
 
+// Job TODO
 type Job struct {
 	controller *Controller
 	config     Config
 }
 
+// Run TODO
 func (job Job) Run() {
 	var event Event
 	var configHitList []Config

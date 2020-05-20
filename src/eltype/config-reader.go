@@ -23,7 +23,6 @@ type ConfigReader struct {
 
 // NewConfigReader 使用配置文件路径构造一个 ConfigReader
 // @param	filePath	string			配置文件路径
-// @return				ConfigReader	构造完毕的 ConfigReader
 func NewConfigReader(filePath string) ConfigReader {
 	var reader ConfigReader
 	reader.filePath = filePath

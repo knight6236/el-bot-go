@@ -20,6 +20,7 @@ const (
 // @property	WhenOperationList		[]Operation	作为触发条件的「事件/操作」
 // @property	DoMessageList			[]Message	作为动作的「消息」
 // @property	DoOperationList			[]Operation 作为动作的「操作」
+// @property	Cron					string 		Cron 字符串
 type Config struct {
 	Type              ConfigType
 	Cron              string
@@ -37,6 +38,7 @@ type Config struct {
 // @param	WhenOperationList		[]Operation	作为触发条件的「事件/操作」
 // @param	DoMessageList			[]Message	作为动作的「消息」
 // @param	DoOperationList			[]Operation 作为动作的「操作」
+// @param	Cron					string 		Cron 字符串
 func NewConfig(configType ConfigType,
 	whenMessageList []Message,
 	whenOperationList []Operation,
