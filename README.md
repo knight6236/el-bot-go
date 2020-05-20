@@ -21,6 +21,7 @@
   + [x] 识别固定文本消息
   + [x] 通过正则表达式识别文本消息
 + 发送文本消息
+  + [x] 文本消息中支持嵌入一些预定义变量例如消息发送者昵称
   + [x] 发送固定文本消息
   + [x] 原文发送来自网络的文本
   + [x] 发送解析后的来自网络的 JSON 文本
@@ -29,6 +30,10 @@
   + [x] 踢人/自己退群
   + [x] 禁言/全员禁言
   + [x] 全员禁言/解除全员禁言
++ 发送表情消息
+  + [x] 发送固定表情
++ 识别表情消息
+  + [x] 识别固定表情消息
 
 # 快速开始
 
@@ -49,6 +54,9 @@
 # 配置文件说明
 
 <!-- config/custom/custom.yml -->
+
+<details>
+  <summary>点击查看</summary>
 
 ```yml
 # 当接收到的群消息或好友消息为 hello 或「你好」时回复「Hello World!（你好 世界！）」
@@ -156,14 +164,24 @@ group:
   - when:
       message:
         - type: Plain
-          regex: repeat\.*
+          regex: 复读
     do:
       message:
         - type: Plain
-          text: '{el-message}'
+          text: '{el-message-text}'
+
+  # 当收到的表情消息为 「撇嘴」时发送表情「微笑」
+  - when:
+      message:
+        - type: Face
+          name: piezui
+    do:
+      message:
+        - type: Face
+          name: weixiao
 
 
-# el-message: 本次的消息
+# el-message-text: 本次的文本消息
 # el-sender-id: 发送消息的好友/群成员QQ号
 # el-sender-name: 发送消息的好友/群成员的名称
 # el-operator-id: 做出操作的好友/成员的QQ号
@@ -171,6 +189,7 @@ group:
 # el-target-id: 某些事件的目标成员的QQ号，如禁言，新成员进群，移除群成员等
 # el-target-name: 某些事件的目标成员的名称，如禁言，新成员进群，移除群成员等
 ```
+</details>
 
 
 # 许可证
@@ -188,3 +207,4 @@ group:
 + [mirai-console](https://github.com/mamoe/mirai-console)
 + [mirai-console-wrapper](https://github.com/mamoe/mirai-console-wrapper)
 + [gomirai](https://github.com/Logiase/gomirai)
++ [一言开发者中心](https://developer.hitokoto.cn/)
