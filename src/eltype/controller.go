@@ -132,6 +132,9 @@ func (controller *Controller) getConfigRelatedList(event Event) []Config {
 func (controller *Controller) getConfigRelatedListByWhenSenderList(configList []Config, senderList []Sender) []Config {
 	var ret []Config
 	for _, config := range configList {
+		if config.SenderList == nil {
+			ret = append(ret, config)
+		}
 		for _, sender := range config.SenderList {
 			if (sender.Type == SenderTypeGroup && sender.ID == senderList[0].ID) ||
 				(sender.Type == SenderTypeUser && sender.ID == senderList[1].ID) {
