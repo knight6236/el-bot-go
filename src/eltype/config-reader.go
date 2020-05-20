@@ -142,7 +142,7 @@ func (reader *ConfigReader) parseToMessage(nativeMessage map[interface{}]interfa
 		messageType = MessageTypeEvent
 	}
 
-	msggValue := make(map[string]string)
+	msgValue := make(map[string]string)
 
 	for key, nativeValue := range nativeMessage {
 		value := ""
@@ -154,10 +154,23 @@ func (reader *ConfigReader) parseToMessage(nativeMessage map[interface{}]interfa
 		case bool:
 			value = strconv.FormatBool(nativeValue.(bool))
 		}
-		msggValue[key.(string)] = value
+		msgValue[key.(string)] = value
 	}
 
-	msg, err := NewMessage(messageType, msggValue)
+	buf, err := ioutil.ReadFile("../../config/face-map.yml")
+	if err != nil {
+	}
+
+	faceMap := make(map[string]interface{})
+	err = yaml.Unmarshal(buf, &faceMap)
+	if err != nil {
+	}
+
+	if messageType == MessageTypeFace {
+		msgValue["id"] = strconv.Itoa(faceMap[msgValue["name"]].(int))
+	}
+
+	msg, err := NewMessage(messageType, msgValue)
 	if err != nil {
 
 	}

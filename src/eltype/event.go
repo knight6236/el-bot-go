@@ -331,7 +331,7 @@ func (event *Event) addSomePreDefVar() {
 			text = text + message.Value["text"]
 		}
 	}
-	event.addPerDefVar("el-message", text)
+	event.addPerDefVar("el-message-text", text)
 }
 
 func (event *Event) addPerDefVar(varName string, value interface{}) {

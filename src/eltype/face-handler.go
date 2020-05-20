@@ -30,7 +30,22 @@ func NewFaceHandler(configList []Config, messageList []Message, operationList []
 }
 
 func (handler *FaceHandler) searchHitConfig() {
-
+	for _, config := range handler.configList {
+		goto SECOND_LOOP
+	TOP_LOOP:
+		continue
+	SECOND_LOOP:
+		for _, message := range handler.messageList {
+			for _, whenMessage := range config.WhenMessageList {
+				if message.Type == MessageTypeFace &&
+					whenMessage.Type == MessageTypeFace &&
+					whenMessage.Value["name"] == message.Value["name"] {
+					handler.configHitList = append(handler.configHitList, config)
+					goto TOP_LOOP
+				}
+			}
+		}
+	}
 }
 
 // GetConfigHitList 获取命中的配置列表
