@@ -121,6 +121,7 @@ group:
 
 
 # el-message-text: 本次的文本消息
+# el-message-xml: 本次的 XML 消息
 # el-sender-id: 发送消息的好友/群成员QQ号
 # el-sender-name: 发送消息的好友/群成员的名称
 # el-operator-id: 做出操作的好友/成员的QQ号
