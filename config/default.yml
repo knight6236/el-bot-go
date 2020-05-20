@@ -39,7 +39,7 @@ group:
   # 当某个成员被禁言时发送「「被禁言成员群昵称」喜提禁言套餐」
   - when:
       operation:
-        - type: MuteMember
+        - type: MemberMute
     do:
       message:
         - type: Plain
@@ -120,10 +120,10 @@ group:
           name: weixiao
 
 
-# el-message-text: 本次的文本消息
-# el-sender-id: 发送消息的好友/群成员QQ号
-# el-sender-name: 发送消息的好友/群成员的名称
-# el-operator-id: 做出操作的好友/成员的QQ号
-# el-operator-name: 做出操作的还有/群成员的名称
-# el-target-id: 某些事件的目标成员的QQ号，如禁言，新成员进群，移除群成员等
-# el-target-name: 某些事件的目标成员的名称，如禁言，新成员进群，移除群成员等
+el-message-text: 本次的文本消息
+el-sender-id: 发送消息的好友/群成员QQ号
+el-sender-name: 发送消息的好友/群成员的名称
+el-operator-id: 做出操作的好友/成员的QQ号
+el-operator-name: 做出操作的还有/群成员的名称
+el-target-id: 某些事件的目标成员的QQ号，如禁言，新成员进群，移除群成员等
+el-target-name: 某些事件的目标成员的名称，如禁言，新成员进群，移除群成员等

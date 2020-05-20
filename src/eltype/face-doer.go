@@ -8,10 +8,11 @@ package eltype
 // @property	sendedMessageList	[]Message			将要发送的消息列表
 // @property	preDefVarMap		map[string]string	预定义变量Map
 type FaceDoer struct {
-	configHitList      []Config
-	recivedMessageList []Message
-	sendedMessageList  []Message
-	preDefVarMap       map[string]string
+	configHitList       []Config
+	recivedMessageList  []Message
+	sendedMessageList   []Message
+	sendedOperationList []Operation
+	preDefVarMap        map[string]string
 }
 
 // NewFaceDoer 构造一个 FaceDoer
@@ -46,4 +47,9 @@ func (doer *FaceDoer) getSendedMessageList() {
 // GetSendedMessageList 获取将要发送的信息列表
 func (doer FaceDoer) GetSendedMessageList() []Message {
 	return doer.sendedMessageList
+}
+
+// GetSendedOperationList 获取将要执行的动作列表
+func (doer FaceDoer) GetSendedOperationList() []Operation {
+	return doer.sendedOperationList
 }
