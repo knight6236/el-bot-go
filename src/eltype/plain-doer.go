@@ -15,10 +15,11 @@ import (
 // @property	sendedMessageList	[]Message			将要发送的消息列表
 // @property	preDefVarMap		map[string]string	预定义变量Map
 type PlainDoer struct {
-	configHitList      []Config
-	recivedMessageList []Message
-	sendedMessageList  []Message
-	preDefVarMap       map[string]string
+	configHitList       []Config
+	recivedMessageList  []Message
+	sendedMessageList   []Message
+	sendedOperationList []Operation
+	preDefVarMap        map[string]string
 }
 
 // NewPlainDoer 构造一个 PlainDoer
@@ -140,4 +141,9 @@ func (doer *PlainDoer) replaceStrByJSON(jsonByteList []byte, text string) string
 // GetSendedMessageList 获取将要发送的信息列表
 func (doer PlainDoer) GetSendedMessageList() []Message {
 	return doer.sendedMessageList
+}
+
+// GetSendedOperationList 获取将要执行的动作列表
+func (doer PlainDoer) GetSendedOperationList() []Operation {
+	return doer.sendedOperationList
 }

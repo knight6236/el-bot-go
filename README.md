@@ -100,7 +100,7 @@ group:
   # 当某个成员被禁言时发送「「被禁言成员群昵称」喜提禁言套餐」
   - when:
       operation:
-        - type: MuteMember
+        - type: MemberMute
     do:
       message:
         - type: Plain

@@ -6,10 +6,11 @@ package eltype
 // @property	sendedMessageList	[]Message			将要发送的消息列表
 // @property	preDefVarMap		map[string]string	预定义变量Map
 type OperationDoer struct {
-	configHitList      []Config
-	recivedMessageList []Message
-	sendedMessageList  []Message
-	preDefVarMap       map[string]string
+	configHitList       []Config
+	recivedMessageList  []Message
+	sendedMessageList   []Message
+	sendedOperationList []Operation
+	preDefVarMap        map[string]string
 }
 
 // NewOperationDoer 构造一个 OperationDoer
@@ -22,14 +23,27 @@ func NewOperationDoer(configHitList []Config, recivedMessageList []Message, preD
 	doer.configHitList = configHitList
 	doer.recivedMessageList = recivedMessageList
 	doer.getSendedMessageList()
+	doer.getSendedOperationList()
 	return doer, nil
 }
 
 func (doer *OperationDoer) getSendedMessageList() {
+}
 
+func (doer OperationDoer) getSendedOperationList() {
+	for _, config := range doer.configHitList {
+		for _, doOperation := range config.DoOperationList {
+			doer.sendedOperationList = append(doer.sendedOperationList, doOperation)
+		}
+	}
 }
 
 // GetSendedMessageList 获取将要发送的信息列表
 func (doer OperationDoer) GetSendedMessageList() []Message {
 	return doer.sendedMessageList
+}
+
+// GetSendedOperationList 获取将要执行的动作列表
+func (doer OperationDoer) GetSendedOperationList() []Operation {
+	return doer.sendedOperationList
 }

@@ -4,4 +4,5 @@ package eltype
 // @method	GetSendedMessageList	[]Message	获取将要发送的消息列表
 type IDoer interface {
 	GetSendedMessageList() []Message
+	GetSendedOperationList() []Operation
 }

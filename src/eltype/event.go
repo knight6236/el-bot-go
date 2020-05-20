@@ -141,17 +141,22 @@ func (event *Event) makeMemberMuteEventTemplate(goMiraiEvent gomirai.InEvent) er
 	}
 	event.SenderList = append(event.SenderList, sender)
 
-	sender, err = NewSender(SenderTypeMember, goMiraiEvent.Member.ID,
-		goMiraiEvent.Member.MemberName, goMiraiEvent.Member.Permission)
+	sender, err = NewSender(SenderTypeMember, goMiraiEvent.OperatorGroup.ID,
+		goMiraiEvent.OperatorGroup.MemberName, goMiraiEvent.OperatorGroup.Permission)
 	if err != nil {
 		return err
 	}
 	event.SenderList = append(event.SenderList, sender)
-	event.addPerDefVar("el-target-id", sender.ID)
-	event.addPerDefVar("el-target-name", sender.Name)
+	event.addPerDefVar("el-operator-id", sender.ID)
+	event.addPerDefVar("el-operator-name", sender.Name)
+
+	event.addPerDefVar("el-target-id", goMiraiEvent.Member.ID)
+	event.addPerDefVar("el-target-name", goMiraiEvent.Member.MemberName)
 
 	value := make(map[string]string)
-	value["muteDurationSecond"] = strconv.FormatInt(goMiraiEvent.DurationSeconds, 10)
+	value["id"] = event.PreDefVarMap["el-target-id"]
+	value["name"] = event.PreDefVarMap["el-target-name"]
+	value["second"] = strconv.FormatInt(goMiraiEvent.DurationSeconds, 10)
 	operation, err = NewOperation(OperationTypeMemberMute, value)
 	if err != nil {
 		return err
@@ -172,16 +177,23 @@ func (event *Event) makeMemberUnmuteEventTemplate(goMiraiEvent gomirai.InEvent) 
 	}
 	event.SenderList = append(event.SenderList, sender)
 
-	sender, err = NewSender(SenderTypeMember, goMiraiEvent.Member.ID,
-		goMiraiEvent.Member.MemberName, goMiraiEvent.Member.Permission)
+	sender, err = NewSender(SenderTypeMember, goMiraiEvent.OperatorGroup.ID,
+		goMiraiEvent.OperatorGroup.MemberName, goMiraiEvent.OperatorGroup.Permission)
 	if err != nil {
 		return err
 	}
 	event.SenderList = append(event.SenderList, sender)
-	event.addPerDefVar("el-target-id", sender.ID)
-	event.addPerDefVar("el-target-name", sender.Name)
+	event.addPerDefVar("el-operator-id", sender.ID)
+	event.addPerDefVar("el-operator-name", sender.Name)
 
-	operation, err = NewOperation(OperationTypeMemberUnmute, make(map[string]string))
+	event.addPerDefVar("el-target-id", goMiraiEvent.Member.ID)
+	event.addPerDefVar("el-target-name", goMiraiEvent.Member.MemberName)
+
+	value := make(map[string]string)
+	value["id"] = event.PreDefVarMap["el-target-id"]
+	value["name"] = event.PreDefVarMap["el-target-name"]
+
+	operation, err = NewOperation(OperationTypeMemberUnmute, value)
 	if err != nil {
 		return err
 	}
@@ -245,7 +257,11 @@ func (event *Event) makeMemberJoinEventTemplate(goMiraiEvent gomirai.InEvent) er
 	event.addPerDefVar("el-target-id", sender.ID)
 	event.addPerDefVar("el-target-name", sender.Name)
 
-	operation, err = NewOperation(OperationTypeMemberJoin, make(map[string]string))
+	value := make(map[string]string)
+	value["id"] = event.PreDefVarMap["el-target-id"]
+	value["name"] = event.PreDefVarMap["el-target-name"]
+
+	operation, err = NewOperation(OperationTypeMemberJoin, value)
 
 	if err != nil {
 		return err
@@ -266,16 +282,22 @@ func (event *Event) makeMemberLeaveByKickEventTemplate(goMiraiEvent gomirai.InEv
 	}
 	event.SenderList = append(event.SenderList, sender)
 
-	sender, err = NewSender(SenderTypeMember, goMiraiEvent.Member.ID,
-		goMiraiEvent.Member.MemberName, goMiraiEvent.Member.Permission)
+	sender, err = NewSender(SenderTypeMember, goMiraiEvent.OperatorGroup.ID,
+		goMiraiEvent.OperatorGroup.MemberName, goMiraiEvent.OperatorGroup.Permission)
 	if err != nil {
 		return err
 	}
 	event.SenderList = append(event.SenderList, sender)
-	event.addPerDefVar("el-target-id", sender.ID)
-	event.addPerDefVar("el-target-name", sender.Name)
+	event.addPerDefVar("el-operator-id", sender.ID)
+	event.addPerDefVar("el-operator-name", sender.Name)
 
-	operation, err = NewOperation(OperationTypeMemberLeaveByKick, make(map[string]string))
+	event.addPerDefVar("el-target-id", goMiraiEvent.Member.ID)
+	event.addPerDefVar("el-target-name", goMiraiEvent.Member.MemberName)
+
+	value := make(map[string]string)
+	value["id"] = event.PreDefVarMap["el-target-id"]
+	value["name"] = event.PreDefVarMap["el-target-name"]
+	operation, err = NewOperation(OperationTypeMemberLeaveByKick, value)
 
 	if err != nil {
 		return err
@@ -305,8 +327,10 @@ func (event *Event) makeMemberLeaveByQuitEventTemplate(goMiraiEvent gomirai.InEv
 	event.addPerDefVar("el-target-id", sender.ID)
 	event.addPerDefVar("el-target-name", sender.Name)
 
-	operation, err = NewOperation(OperationTypeMemberLeaveByQuit, make(map[string]string))
-
+	value := make(map[string]string)
+	value["id"] = event.PreDefVarMap["el-target-id"]
+	value["name"] = event.PreDefVarMap["el-target-name"]
+	operation, err = NewOperation(OperationTypeMemberLeaveByQuit, value)
 	if err != nil {
 		return err
 	}

@@ -41,7 +41,7 @@ func NewOperation(operationType OperationType, value map[string]string) (Operati
 // CastConfigOperationTypeToOperationType 将 ConfigOperationType 转换为 OperationType
 func CastConfigOperationTypeToOperationType(configEventType string) OperationType {
 	switch configEventType {
-	case "MuteMember":
+	case "MemberMute":
 		return OperationTypeMemberMute
 	case "MemberUnmute":
 		return OperationTypeMemberUnmute
