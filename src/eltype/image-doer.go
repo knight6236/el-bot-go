@@ -17,6 +17,7 @@ type ImageDoer struct {
 // @param	configHitList		[]Config			命中的配置列表
 // @param	recivedMessageList	[]Message			接收到的消息列表
 // @param	sendedMessageList	[]Message			将要发送的消息列表
+// @property	sendedOperationList	[]Operation			将要执行的动作列表
 // @param	preDefVarMap		map[string]string	预定义变量Map
 func NewImageDoer(configHitList []Config, recivedMessageList []Message, preDefVarMap map[string]string) (IDoer, error) {
 	var doer ImageDoer

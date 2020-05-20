@@ -6,6 +6,7 @@ package eltype
 // @property	configHitList		[]Config			命中的配置列表
 // @property	recivedMessageList	[]Message			接收到的消息列表
 // @property	sendedMessageList	[]Message			将要发送的消息列表
+// @property	sendedOperationList	[]Operation			将要执行的动作列表
 // @property	preDefVarMap		map[string]string	预定义变量Map
 type FaceDoer struct {
 	configHitList       []Config
