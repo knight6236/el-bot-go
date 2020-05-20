@@ -14,10 +14,11 @@ import (
 
 // ConfigReader 配置读取对象
 type ConfigReader struct {
-	filePath         string
-	GlobalConfigList []Config
-	FriendConifgList []Config
-	GroupConfigList  []Config
+	filePath          string
+	GlobalConfigList  []Config
+	FriendConifgList  []Config
+	GroupConfigList   []Config
+	CrontabConfigList []Config
 }
 
 // NewConfigReader 使用配置文件路径构造一个 ConfigReader
@@ -49,6 +50,38 @@ func (reader *ConfigReader) parseYml() {
 }
 
 func (reader *ConfigReader) parseToConfigList(ymlObject map[string]interface{}) {
+	nativeCrontab := ymlObject["crontab"]
+	// fmt.Printf("%v", nativeCrontab)
+	if nativeCrontab != nil {
+		for _, item := range nativeCrontab.([]interface{}) {
+			cron := item.(map[interface{}]interface{})["cron"].(string)
+			nativeDo := item.(map[interface{}]interface{})["do"].(map[interface{}]interface{})
+			nativeReceiverList := nativeDo["receiver"]
+			var receiverList []Sender
+			if nativeReceiverList != nil {
+				receiverList = reader.parseToSenderOrReciverList(nativeReceiverList.(map[interface{}]interface{}))
+			}
+
+			nativeDoMessageList := nativeDo["message"]
+			var doMessageList []Message
+			if nativeDoMessageList != nil {
+				doMessageList = reader.parseToMessageList(nativeDoMessageList.([]interface{}))
+			}
+
+			nativeDoOperation := nativeDo["operation"]
+			var doOperationList []Operation
+			if nativeDoOperation != nil {
+				doOperationList = reader.parseToOperationList(nativeDoOperation.([]interface{}))
+			}
+
+			config, err := NewConfig(ConfigTypeCrontab, nil, nil, doMessageList, doOperationList, nil, receiverList, cron)
+			if err != nil {
+				continue
+			}
+			reader.CrontabConfigList = append(reader.CrontabConfigList, config)
+		}
+	}
+
 	nativeGlobal := ymlObject["global"]
 	if nativeGlobal != nil {
 		for _, item := range nativeGlobal.([]interface{}) {
@@ -136,7 +169,7 @@ func (reader *ConfigReader) parseToConfig(configType ConfigType,
 		doOperationList = reader.parseToOperationList(nativeDoOperation.([]interface{}))
 	}
 	config, err := NewConfig(configType, whenMessageList, whenOperationList,
-		doMessageList, doOperationList, senderList, receiverList)
+		doMessageList, doOperationList, senderList, receiverList, "")
 	if err != nil {
 
 	}
@@ -169,11 +202,6 @@ func (reader *ConfigReader) parseToSenderOrReciverList(nativeSender map[interfac
 	}
 	return senderOrReciverList
 }
-
-// func (reader *ConfigReader) parseToSender(nativeSender []interface{}) Sender {
-// 	var sender Sender
-// 	return sender
-// }
 
 func (reader *ConfigReader) parseToMessage(nativeMessage map[interface{}]interface{}) Message {
 	var messageType MessageType

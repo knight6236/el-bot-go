@@ -10,6 +10,8 @@ const (
 	ConfigTypeFriend
 	// ConfigTypeGroup 仅对群消息生效的配置类型
 	ConfigTypeGroup
+	//ConfigTypeCrontab 定时执行的配置
+	ConfigTypeCrontab
 )
 
 // Config 配置对象
@@ -20,6 +22,7 @@ const (
 // @property	DoOperationList			[]Operation 作为动作的「操作」
 type Config struct {
 	Type              ConfigType
+	Cron              string
 	WhenMessageList   []Message
 	WhenOperationList []Operation
 	DoMessageList     []Message
@@ -40,7 +43,8 @@ func NewConfig(configType ConfigType,
 	doMessageList []Message,
 	doOperationList []Operation,
 	SenderList []Sender,
-	Receiver []Sender) (Config, error) {
+	Receiver []Sender,
+	Cron string) (Config, error) {
 	var config Config
 	config.Type = configType
 	config.WhenMessageList = whenMessageList
@@ -49,5 +53,6 @@ func NewConfig(configType ConfigType,
 	config.DoOperationList = doOperationList
 	config.SenderList = SenderList
 	config.Receiver = Receiver
+	config.Cron = Cron
 	return config, nil
 }
