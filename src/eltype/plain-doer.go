@@ -102,7 +102,7 @@ func (doer *PlainDoer) getURLMessage(message Message) (Message, error) {
 	return sendedMessage, nil
 }
 
-func (doer *PlainDoer) replaceStrByPreDefVarMap(text string) string {
+func (doer PlainDoer) replaceStrByPreDefVarMap(text string) string {
 	for varName, value := range doer.preDefVarMap {
 		key := fmt.Sprintf("{%s}", varName)
 		text = strings.ReplaceAll(text, key, value)

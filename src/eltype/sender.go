@@ -10,6 +10,8 @@ const (
 	SenderTypeGroup
 	// SenderTypeMember Sender 是群成员
 	SenderTypeMember
+	// SenderTypeUser Sender 是QQ用户
+	SenderTypeUser
 )
 
 // Sender ...

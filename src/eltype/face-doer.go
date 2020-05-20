@@ -1,5 +1,10 @@
 package eltype
 
+import (
+	"fmt"
+	"strings"
+)
+
 // 「」
 
 // FaceDoer 表情动作生成类
@@ -43,6 +48,14 @@ func (doer *FaceDoer) getSendedMessageList() {
 			}
 		}
 	}
+}
+
+func (doer FaceDoer) replaceStrByPreDefVarMap(text string) string {
+	for varName, value := range doer.preDefVarMap {
+		key := fmt.Sprintf("{%s}", varName)
+		text = strings.ReplaceAll(text, key, value)
+	}
+	return text
 }
 
 // GetSendedMessageList 获取将要发送的信息列表
