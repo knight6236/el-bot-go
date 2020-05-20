@@ -1,5 +1,13 @@
 package eltype
 
+import (
+	"io"
+	"math/rand"
+	"net/http"
+	"os"
+	"strconv"
+)
+
 // ImageDoer 表情动作生成类
 // @property	configHitList		[]Config			命中的配置列表
 // @property	recivedMessageList	[]Message			接收到的消息列表
@@ -28,7 +36,50 @@ func NewImageDoer(configHitList []Config, recivedMessageList []Message, preDefVa
 }
 
 func (doer *ImageDoer) getSendedMessageList() {
+	for _, config := range doer.configHitList {
+		for _, doMessage := range config.DoMessageList {
+			if doMessage.Type == MessageTypeImage {
+				if doMessage.Value["url"] != "" {
+					value := make(map[string]string)
+					filename, err := doer.downloadImage(doMessage.Value["url"])
+					if err != nil {
+						continue
+					}
+					value["path"] = filename
+					message, err := NewMessage(MessageTypeImage, value)
+					if err != nil {
+						continue
+					}
+					doer.sendedMessageList = append(doer.sendedMessageList, message)
+				} else if doMessage.Value["path"] != "" {
+					message, err := NewMessage(MessageTypeImage, doMessage.Value)
+					if err != nil {
+						continue
+					}
+					doer.sendedMessageList = append(doer.sendedMessageList, message)
+				}
 
+			}
+		}
+	}
+}
+
+func (doer *ImageDoer) downloadImage(url string) (string, error) {
+	filename := strconv.FormatInt(rand.Int63(), 10) + ".jpg"
+	file, err := os.Create("../../plugins/MiraiAPIHTTP/images/" + filename)
+	if err != nil {
+		return "", err
+	}
+
+	defer file.Close()
+
+	res, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+
+	io.Copy(file, res.Body)
+	return filename, nil
 }
 
 // GetSendedMessageList 获取将要发送的信息列表

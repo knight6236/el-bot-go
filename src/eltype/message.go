@@ -73,6 +73,9 @@ func (message *Message) ToGoMiraiMessage() (gomirai.Message, error) {
 			return goMiraiMessage, err
 		}
 		goMiraiMessage.Name = message.Value["name"]
+	case MessageTypeImage:
+		goMiraiMessage.Type = "Image"
+		goMiraiMessage.Path = message.Value["path"]
 	default:
 		return goMiraiMessage, errors.New("暂不支持的消息类型")
 	}
