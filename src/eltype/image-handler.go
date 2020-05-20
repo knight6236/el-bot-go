@@ -30,7 +30,16 @@ func NewImageHandler(configList []Config, messageList []Message, operationList [
 }
 
 func (handler *ImageHandler) searchHitConfig() {
-
+	for _, config := range handler.configList {
+		for _, whenMessage := range config.WhenMessageList {
+			for _, message := range handler.messageList {
+				if whenMessage.Type == MessageTypeImage &&
+					message.Type == MessageTypeImage {
+					handler.configHitList = append(handler.configHitList, config)
+				}
+			}
+		}
+	}
 }
 
 // GetConfigHitList 获取命中的配置列表

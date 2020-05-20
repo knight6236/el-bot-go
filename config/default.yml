@@ -121,6 +121,7 @@ group:
 
 
 # el-message-text: 本次的文本消息
+# el-message-image-url-n：第 n 个图片的 url
 # el-message-xml: 本次的 XML 消息
 # el-sender-id: 发送消息的好友/群成员QQ号
 # el-sender-name: 发送消息的好友/群成员的名称

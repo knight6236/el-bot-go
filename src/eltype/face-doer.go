@@ -29,6 +29,7 @@ func NewFaceDoer(configHitList []Config, recivedMessageList []Message, preDefVar
 	var doer FaceDoer
 	doer.configHitList = configHitList
 	doer.recivedMessageList = recivedMessageList
+	doer.preDefVarMap = preDefVarMap
 	doer.getSendedMessageList()
 	return doer, nil
 }
