@@ -11,6 +11,7 @@ import (
 
 // Controller 控制器类，作为整个机器人的中心调度模块。
 // @property	configReader	ConfigReader	配置读取类
+// @property	bot				*gomirai.Bot	机器人
 type Controller struct {
 	configReader ConfigReader
 	bot          *gomirai.Bot
@@ -177,7 +178,6 @@ func (controller *Controller) getSendedGoMiraiMessageList(event Event, configHit
 	return sendedGoMiraiMessageList
 }
 
-// SendMessage 内部使用，请勿调用。
 func (controller *Controller) sendMessage(event Event, configHitList []Config, sendedGoMiraiMessageList []gomirai.Message) {
 	hasReceiver := false
 	groupIDSet := make(map[int64]string)
