@@ -103,14 +103,24 @@ group:
   - when:
       message:
         - type: Plain
-          regex: 你好，我是你亲友为你点的520祝福青蛙，现在我要开始叫了:寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡寡。
+          regex: 复读
     do:
       message:
         - type: Plain
-          text: '{el-message}'
+          text: '{el-message-text}'
+
+  # 当收到的表情消息为 「撇嘴」时发送表情「微笑」
+  - when:
+      message:
+        - type: Face
+          name: piezui
+    do:
+      message:
+        - type: Face
+          name: weixiao
 
 
-# el-message: 本次的消息
+# el-message-text: 本次的文本消息
 # el-sender-id: 发送消息的好友/群成员QQ号
 # el-sender-name: 发送消息的好友/群成员的名称
 # el-operator-id: 做出操作的好友/成员的QQ号

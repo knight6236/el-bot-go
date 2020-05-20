@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"gomirai"
+	"strconv"
 )
 
 // MessageType 消息类型
@@ -47,6 +48,10 @@ func NewMessageFromGoMiraiMessage(goMiraiMessage gomirai.Message) (Message, erro
 	case "Plain":
 		message.Type = MessageTypePlain
 		message.Value["text"] = goMiraiMessage.Text
+	case "Face":
+		message.Type = MessageTypeFace
+		message.Value["id"] = strconv.FormatInt(goMiraiMessage.FaceID, 10)
+		message.Value["name"] = goMiraiMessage.Name
 	default:
 		return message, fmt.Errorf("%s 是不受支持的消息类型", goMiraiMessage.Type)
 	}
@@ -56,10 +61,18 @@ func NewMessageFromGoMiraiMessage(goMiraiMessage gomirai.Message) (Message, erro
 // ToGoMiraiMessage 将 Message 转换为 gomirai.Message
 func (message *Message) ToGoMiraiMessage() (gomirai.Message, error) {
 	var goMiraiMessage gomirai.Message
+	var err error
 	switch message.Type {
 	case MessageTypePlain:
 		goMiraiMessage.Type = "Plain"
 		goMiraiMessage.Text = message.Value["text"]
+	case MessageTypeFace:
+		goMiraiMessage.Type = "Face"
+		goMiraiMessage.FaceID, err = strconv.ParseInt(message.Value["id"], 10, 64)
+		if err != nil {
+			return goMiraiMessage, err
+		}
+		goMiraiMessage.Name = message.Value["name"]
 	default:
 		return goMiraiMessage, errors.New("暂不支持的消息类型")
 	}

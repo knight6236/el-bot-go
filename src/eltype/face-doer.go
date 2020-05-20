@@ -27,7 +27,20 @@ func NewFaceDoer(configHitList []Config, recivedMessageList []Message, preDefVar
 }
 
 func (doer *FaceDoer) getSendedMessageList() {
-
+	for _, config := range doer.configHitList {
+		for _, doMessage := range config.DoMessageList {
+			if doMessage.Type == MessageTypeFace {
+				value := make(map[string]string)
+				value["id"] = doMessage.Value["id"]
+				value["name"] = doMessage.Value["name"]
+				message, err := NewMessage(MessageTypeFace, value)
+				if err != nil {
+					continue
+				}
+				doer.sendedMessageList = append(doer.sendedMessageList, message)
+			}
+		}
+	}
 }
 
 // GetSendedMessageList 获取将要发送的信息列表
