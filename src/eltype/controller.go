@@ -1,7 +1,10 @@
 package eltype
 
 import (
+	"fmt"
 	"gomirai"
+
+	"github.com/robfig/cron"
 )
 
 // 「」
@@ -10,6 +13,7 @@ import (
 // @property	configReader	ConfigReader	配置读取类
 type Controller struct {
 	configReader ConfigReader
+	bot          *gomirai.Bot
 }
 
 var handlerConstructor = [...]func(configList []Config, messageList []Message, operationList []Operation,
@@ -22,16 +26,18 @@ var doerConstructor = [...]func(configHitList []Config, recivedMessageList []Mes
 
 // NewController 构造一个 Controller
 // @param	configReader	ConfigReader	配置读取类
-func NewController(configReader ConfigReader) Controller {
+func NewController(configReader ConfigReader, bot *gomirai.Bot) Controller {
 	var controller Controller
 	controller.configReader = configReader
+	controller.bot = bot
+	go controller.doCrontabConfig()
 	return controller
 }
 
 // Commit 将事件提交给 Controller
 // @param	bot				*gomirai.Bot		机器人
 // @param	goMiraiEvent	gomirai.InEvent		事件
-func (controller *Controller) Commit(bot *gomirai.Bot, goMiraiEvent gomirai.InEvent) {
+func (controller *Controller) Commit(goMiraiEvent gomirai.InEvent) {
 	var err error
 	switch CastGoMiraiEventTypeToEventType(goMiraiEvent.Type) {
 	case EventTypeFriendMessage:
@@ -60,8 +66,20 @@ func (controller *Controller) Commit(bot *gomirai.Bot, goMiraiEvent gomirai.InEv
 
 	sendedGoMiraiMessageList := controller.getSendedGoMiraiMessageList(event, configHitList)
 
-	controller.sendMessage(bot, event, configHitList, sendedGoMiraiMessageList)
+	controller.sendMessage(event, configHitList, sendedGoMiraiMessageList)
 
+}
+
+func (controller *Controller) doCrontabConfig() {
+	c := cron.New()
+	for _, config := range controller.configReader.CrontabConfigList {
+		id, err := c.AddJob(config.Cron, Job{controller: controller, config: config})
+		if err != nil {
+			fmt.Println(id)
+		}
+	}
+	c.Start()
+	select {}
 }
 
 func (controller *Controller) mergeList(args ...[]Config) []Config {
@@ -159,7 +177,8 @@ func (controller *Controller) getSendedGoMiraiMessageList(event Event, configHit
 	return sendedGoMiraiMessageList
 }
 
-func (controller *Controller) sendMessage(bot *gomirai.Bot, event Event, configHitList []Config, sendedGoMiraiMessageList []gomirai.Message) {
+// SendMessage 内部使用，请勿调用。
+func (controller *Controller) sendMessage(event Event, configHitList []Config, sendedGoMiraiMessageList []gomirai.Message) {
 	hasReceiver := false
 	groupIDSet := make(map[int64]string)
 	friendIDSet := make(map[int64]string)
@@ -169,12 +188,12 @@ func (controller *Controller) sendMessage(bot *gomirai.Bot, event Event, configH
 			switch receiver.Type {
 			case SenderTypeGroup:
 				if groupIDSet[receiver.ID] == "" {
-					bot.SendGroupMessage(receiver.ID, 0, sendedGoMiraiMessageList)
+					controller.bot.SendGroupMessage(receiver.ID, 0, sendedGoMiraiMessageList)
 					groupIDSet[receiver.ID] = "sent"
 				}
 			case SenderTypeUser:
 				if friendIDSet[receiver.ID] == "" {
-					bot.SendGroupMessage(receiver.ID, 0, sendedGoMiraiMessageList)
+					controller.bot.SendGroupMessage(receiver.ID, 0, sendedGoMiraiMessageList)
 					friendIDSet[receiver.ID] = "sent"
 				}
 			}
@@ -186,22 +205,22 @@ func (controller *Controller) sendMessage(bot *gomirai.Bot, event Event, configH
 
 	switch event.Type {
 	case EventTypeGroupMessage:
-		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
+		controller.bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
 	case EventTypeMemberMute:
-		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
+		controller.bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
 	case EventTypeFriendMessage:
-		bot.SendFriendMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
+		controller.bot.SendFriendMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
 	case EventTypeMemberUnmute:
-		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
+		controller.bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
 	case EventTypeGroupMuteAll:
-		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
+		controller.bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
 	case EventTypeGroupUnMuteAll:
-		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
+		controller.bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
 	case EventTypeMemberJoin:
-		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
+		controller.bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
 	case EventTypeMemberLeaveByKick:
-		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
+		controller.bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
 	case EventTypeMemberLeaveByQuit:
-		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
+		controller.bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
 	}
 }

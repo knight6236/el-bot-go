@@ -51,28 +51,28 @@ func main() {
 	}()
 
 	reader := eltype.NewConfigReader("../../config/default.yml")
-	controller := eltype.NewController(reader)
+	controller := eltype.NewController(reader, bot)
 
 	// 从bot.MessageChan获取收到事件并处理
 	for {
 		e := <-bot.MessageChan
 		switch e.Type {
 		case "GroupMessage": // do something
-			controller.Commit(bot, e)
+			controller.Commit(e)
 		case "FriendMessage": // do something
-			controller.Commit(bot, e)
+			controller.Commit(e)
 		case "GroupMuteAllEvent": // do something
-			controller.Commit(bot, e)
+			controller.Commit(e)
 		case "MemberMuteEvent":
-			controller.Commit(bot, e)
+			controller.Commit(e)
 		case "MemberUnmuteEvent":
-			controller.Commit(bot, e)
+			controller.Commit(e)
 		case "MemberJoinEvent":
-			controller.Commit(bot, e)
+			controller.Commit(e)
 		case "MemberLeaveEventKick":
-			controller.Commit(bot, e)
+			controller.Commit(e)
 		case "MemberLeaveEventQuit":
-			controller.Commit(bot, e)
+			controller.Commit(e)
 		default:
 			// do something
 		}
