@@ -1,8 +1,8 @@
 # el-bot-go
 
-![GitHub top language](https://img.shields.io/github/languages/top/ElpsyCN/el-bot-go)
-[![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/ElpsyCN/el-bot-go?color=%23e17b34&include_prereleases)](https://github.com/ElpsyCN/el-bot-go/releases)
+[![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/ElpsyCN/el-bot-go?color=blue&include_prereleases)](https://github.com/ElpsyCN/el-bot-go/releases)
 [![GitHub issues](https://img.shields.io/github/issues/ElpsyCN/el-bot-go)](https://github.com/ElpsyCN/el-bot-go/issues)
+[![GitHub closed issues](https://img.shields.io/github/issues-closed/ElpsyCN/el-bot-go?color=success)](https://github.com/ElpsyCN/el-bot-go/issues)
 [![GitHub](https://img.shields.io/github/license/ElpsyCN/el-bot-go?color=%233eb370)](https://github.com/ElpsyCN/el-bot-go/blob/master/LICENSE)
 
 [el-bot](https://github.com/ElpsyCN/el-bot)的 go 版本。
