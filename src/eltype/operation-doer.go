@@ -28,6 +28,7 @@ func NewOperationDoer(configHitList []Config, recivedMessageList []Message, preD
 	var doer OperationDoer
 	doer.configHitList = configHitList
 	doer.recivedMessageList = recivedMessageList
+	doer.preDefVarMap = preDefVarMap
 	doer.getSendedMessageList()
 	doer.getSendedOperationList()
 	return doer, nil

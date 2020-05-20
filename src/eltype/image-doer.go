@@ -33,6 +33,7 @@ func NewImageDoer(configHitList []Config, recivedMessageList []Message, preDefVa
 	var doer ImageDoer
 	doer.configHitList = configHitList
 	doer.recivedMessageList = recivedMessageList
+	doer.preDefVarMap = preDefVarMap
 	doer.getSendedMessageList()
 	return doer, nil
 }
@@ -41,26 +42,26 @@ func (doer *ImageDoer) getSendedMessageList() {
 	for _, config := range doer.configHitList {
 		for _, doMessage := range config.DoMessageList {
 			if doMessage.Type == MessageTypeImage {
+				value := make(map[string]string)
 				if doMessage.Value["url"] != "" {
-					value := make(map[string]string)
-					filename, err := doer.downloadImage(doMessage.Value["url"])
-					if err != nil {
-						continue
+					if doMessage.Value["direct"] == "true" {
+						filename, err := doer.downloadImage(doMessage.Value["url"])
+						if err != nil {
+							continue
+						}
+						value["path"] = filename
+					} else {
+						value["url"] = doer.replaceStrByPreDefVarMap(doMessage.Value["url"])
 					}
-					value["path"] = filename
-					message, err := NewMessage(MessageTypeImage, value)
-					if err != nil {
-						continue
-					}
-					doer.sendedMessageList = append(doer.sendedMessageList, message)
-				} else if doMessage.Value["path"] != "" {
-					message, err := NewMessage(MessageTypeImage, doMessage.Value)
-					if err != nil {
-						continue
-					}
-					doer.sendedMessageList = append(doer.sendedMessageList, message)
-				}
 
+				} else if doMessage.Value["path"] != "" {
+					value = doMessage.Value
+				}
+				message, err := NewMessage(MessageTypeImage, value)
+				if err != nil {
+					continue
+				}
+				doer.sendedMessageList = append(doer.sendedMessageList, message)
 			}
 		}
 	}

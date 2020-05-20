@@ -160,6 +160,30 @@ func (controller *Controller) getSendedGoMiraiMessageList(event Event, configHit
 }
 
 func (controller *Controller) sendMessage(bot *gomirai.Bot, event Event, configHitList []Config, sendedGoMiraiMessageList []gomirai.Message) {
+	hasReceiver := false
+	groupIDSet := make(map[int64]string)
+	friendIDSet := make(map[int64]string)
+	for _, config := range configHitList {
+		for _, receiver := range config.Receiver {
+			hasReceiver = true
+			switch receiver.Type {
+			case SenderTypeGroup:
+				if groupIDSet[receiver.ID] == "" {
+					bot.SendGroupMessage(receiver.ID, 0, sendedGoMiraiMessageList)
+					groupIDSet[receiver.ID] = "sent"
+				}
+			case SenderTypeUser:
+				if friendIDSet[receiver.ID] == "" {
+					bot.SendGroupMessage(receiver.ID, 0, sendedGoMiraiMessageList)
+					friendIDSet[receiver.ID] = "sent"
+				}
+			}
+		}
+	}
+	if hasReceiver {
+		return
+	}
+
 	switch event.Type {
 	case EventTypeGroupMessage:
 		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
@@ -179,16 +203,5 @@ func (controller *Controller) sendMessage(bot *gomirai.Bot, event Event, configH
 		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
 	case EventTypeMemberLeaveByQuit:
 		bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
-	}
-
-	for _, config := range configHitList {
-		for _, receiver := range config.Receiver {
-			switch receiver.Type {
-			case SenderTypeGroup:
-				bot.SendGroupMessage(receiver.ID, 0, sendedGoMiraiMessageList)
-			case SenderTypeUser:
-				bot.SendFriendMessage(receiver.ID, 0, sendedGoMiraiMessageList)
-			}
-		}
 	}
 }

@@ -351,11 +351,15 @@ func (event *Event) parseGoMiraiMessageListToMessageList(goMiraiEvent gomirai.In
 func (event *Event) addSomePreDefVar() {
 	text := ""
 	xml := ""
+	imageIndex := 0
 	for _, message := range event.MessageList {
 		if message.Type == MessageTypePlain {
 			text = text + message.Value["text"]
 		} else if message.Type == MessageTypeXML {
 			xml = xml + message.Value["xml"]
+		} else if message.Type == MessageTypeImage {
+			event.addPerDefVar(fmt.Sprintf("el-message-image-url-%d", imageIndex), message.Value["url"])
+			imageIndex++
 		}
 	}
 	event.addPerDefVar("el-message-text", text)

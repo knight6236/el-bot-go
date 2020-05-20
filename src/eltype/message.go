@@ -47,6 +47,9 @@ func NewMessageFromGoMiraiMessage(goMiraiMessage gomirai.Message) (Message, erro
 	var message Message
 	message.Value = make(map[string]string)
 	switch goMiraiMessage.Type {
+	case "Image":
+		message.Type = MessageTypeImage
+		message.Value["url"] = goMiraiMessage.URL
 	case "Plain":
 		message.Type = MessageTypePlain
 		message.Value["text"] = goMiraiMessage.Text
@@ -81,6 +84,7 @@ func (message *Message) ToGoMiraiMessage() (gomirai.Message, error) {
 	case MessageTypeImage:
 		goMiraiMessage.Type = "Image"
 		goMiraiMessage.Path = message.Value["path"]
+		goMiraiMessage.URL = message.Value["url"]
 	case MessageTypeXML:
 		goMiraiMessage.Type = "Xml"
 		goMiraiMessage.XML = message.Value["xml"]
