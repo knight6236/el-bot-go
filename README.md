@@ -45,17 +45,40 @@
 
 ## On Unix Like
 
+
 1. 安装Golang和JRE
-2. 下载依赖: `./install.sh`
-3. 启动 mirai-console: ` ./start-console.sh`
-4. 按照提示进行操作
-5. 成功登录机器人后修改文件`plugins/MiraiAPIHTTP/setting.yml`为下列内容，并记住`authkey`
+2. clone: `git clone git@github.com:ElpsyCN/el-bot-go.git`
+3. 下载依赖: `./install.sh`
+4. 创建文件`plugins/MiraiAPIHTTP/setting.yml`并填入下列内容
     ```yml
     authKey: qwertyuiop
     port: 8080
     enableWebsocket: false
     ```
-6. 启动 el-bot-go: 在另一个shell运行脚本：`./start-el-bot.sh 机器人QQ号 AUTHKEY`
+5. 启动 mirai-console: ` ./start-console.sh`并按照提示进行操作
+6. 启动 el-bot-go: 在另一个 shell 运行脚本：`./start-el-bot.sh 机器人QQ号 AUTHKEY`
+
+## On Windows
+
+1. 安装Golang和JRE
+2. clone: `git clone git@github.com:ElpsyCN/el-bot-go.git`
+3. Clone Submodule
+    ```cmd
+    git submodule init
+    git submodule update
+    ```
+4. 下载依赖：
+    + 下载[mirai-console-wrapper-1.2.0-all](https://github.com/mamoe/mirai-console-wrapper/releases/download/1.2.0/mirai-console-wrapper-1.2.0-all.jar)到项目根目录
+    + 下载[mirai-api-http-v1.7.0](https://github.com/mamoe/mirai-api-http/releases/download/v1.7.0/mirai-api-http-v1.7.0.jar)到`plugins/`
+5. 创建文件`plugins/MiraiAPIHTTP/setting.yml`并填入下列内容
+    ```yml
+    authKey: qwertyuiop
+    port: 8080
+    enableWebsocket: false
+    ```
+6. 启动 mirai-console: `./start-console.bat`
+7. 将本项目路径添加到环境变量`GOPATH`中
+8. 启动 el-bot-go: 在另一个 cmd 执行命令 `start-el-bot.bat`
 
 # 配置文件说明
 

@@ -52,6 +52,7 @@ func main() {
 
 	reader := eltype.NewConfigReader("../../config/default.yml")
 	controller := eltype.NewController(reader, bot)
+	fmt.Println("启动成功")
 
 	// 从bot.MessageChan获取收到事件并处理
 	for {
