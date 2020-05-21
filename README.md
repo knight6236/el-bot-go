@@ -11,7 +11,7 @@
 
 # 文档
 
-项目处于早期，暂无文档。
+[如何编写配置](docs/config-syntax.md)
 
 # 功能
 
@@ -49,7 +49,7 @@
 2. 下载依赖: `./install.sh`
 3. 启动 mirai-console: ` ./start-console.sh`
 4. 按照提示进行操作
-5. 成功登录机器人后修改文件`plugins\MiraiAPIHTTP\setting.yml`为下列内容，并记住`authkey`
+5. 成功登录机器人后修改文件`plugins/MiraiAPIHTTP/setting.yml`为下列内容，并记住`authkey`
     ```yml
     authKey: qwertyuiop
     port: 8080
