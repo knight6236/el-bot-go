@@ -1,13 +1,17 @@
 package eltype
 
+import (
+	"fmt"
+)
+
 // OperationType 操作/事件类型
 type OperationType int
 
 const (
 	// OperationTypeMemberMute 禁言群成员操作类型
 	OperationTypeMemberMute OperationType = iota
-	// OperationTypeMemberUnmute 解除群成员禁言操作类型
-	OperationTypeMemberUnmute
+	// OperationTypeMemberUnMute 解除群成员禁言操作类型
+	OperationTypeMemberUnMute
 	// OperationTypeGroupMuteAll 全员禁言操作类型
 	OperationTypeGroupMuteAll
 	// OperationTypeGroupUnMuteAll 解除全员禁言操作类型
@@ -44,7 +48,7 @@ func CastConfigOperationTypeToOperationType(configEventType string) OperationTyp
 	case "MemberMute":
 		return OperationTypeMemberMute
 	case "MemberUnmute":
-		return OperationTypeMemberUnmute
+		return OperationTypeMemberUnMute
 	case "GroupMuteAll":
 		return OperationTypeGroupMuteAll
 	case "GroupUnMuteAll":
@@ -57,5 +61,23 @@ func CastConfigOperationTypeToOperationType(configEventType string) OperationTyp
 		return OperationTypeMemberLeaveByQuit
 	default:
 		panic("")
+	}
+}
+
+// ToString ...
+func (operation Operation) ToString() string {
+	switch operation.Type {
+	case OperationTypeMemberJoin:
+		return fmt.Sprintf("Operation: {Type: %s, Member: {id: %s, name: %s}}",
+			"MemberJoin", operation.Value["id"], operation.Value["name"])
+	case OperationTypeMemberMute:
+		return fmt.Sprintf("Operation: {Type: %s, Member: {id: %s, name: %s}, Second: %s}",
+			"MemberMute", operation.Value["id"], operation.Value["name"], operation.Value["second"])
+	case OperationTypeMemberUnMute:
+		return fmt.Sprintf("Operation: {Type: %s, Member: {id: %s, name: %s}}",
+			"MemberUnMute", operation.Value["id"], operation.Value["name"])
+	default:
+		// TODO
+		return ""
 	}
 }

@@ -104,8 +104,8 @@ func (event *Event) makeGroupMessageEventTemplate(goMiraiEvent gomirai.InEvent) 
 		return err
 	}
 	event.SenderList = append(event.SenderList, sender)
-	event.addPerDefVar("el-sender-id", sender.ID)
-	event.addPerDefVar("el-sender-name", sender.Name)
+	event.AddPerDefVar("el-sender-id", sender.ID)
+	event.AddPerDefVar("el-sender-name", sender.Name)
 	return nil
 }
 
@@ -118,8 +118,8 @@ func (event *Event) makeFriendMessageEventTemplate(goMiraiEvent gomirai.InEvent)
 		return err
 	}
 	event.SenderList = append(event.SenderList, sender)
-	event.addPerDefVar("el-sender-id", sender.ID)
-	event.addPerDefVar("el-sender-name", sender.Name)
+	event.AddPerDefVar("el-sender-id", sender.ID)
+	event.AddPerDefVar("el-sender-name", sender.Name)
 	return nil
 }
 
@@ -148,11 +148,11 @@ func (event *Event) makeMemberMuteEventTemplate(goMiraiEvent gomirai.InEvent) er
 		return err
 	}
 	event.SenderList = append(event.SenderList, sender)
-	event.addPerDefVar("el-operator-id", sender.ID)
-	event.addPerDefVar("el-operator-name", sender.Name)
+	event.AddPerDefVar("el-operator-id", sender.ID)
+	event.AddPerDefVar("el-operator-name", sender.Name)
 
-	event.addPerDefVar("el-target-id", goMiraiEvent.Member.ID)
-	event.addPerDefVar("el-target-name", goMiraiEvent.Member.MemberName)
+	event.AddPerDefVar("el-target-id", goMiraiEvent.Member.ID)
+	event.AddPerDefVar("el-target-name", goMiraiEvent.Member.MemberName)
 
 	value := make(map[string]string)
 	value["id"] = event.PreDefVarMap["el-target-id"]
@@ -184,17 +184,17 @@ func (event *Event) makeMemberUnmuteEventTemplate(goMiraiEvent gomirai.InEvent) 
 		return err
 	}
 	event.SenderList = append(event.SenderList, sender)
-	event.addPerDefVar("el-operator-id", sender.ID)
-	event.addPerDefVar("el-operator-name", sender.Name)
+	event.AddPerDefVar("el-operator-id", sender.ID)
+	event.AddPerDefVar("el-operator-name", sender.Name)
 
-	event.addPerDefVar("el-target-id", goMiraiEvent.Member.ID)
-	event.addPerDefVar("el-target-name", goMiraiEvent.Member.MemberName)
+	event.AddPerDefVar("el-target-id", goMiraiEvent.Member.ID)
+	event.AddPerDefVar("el-target-name", goMiraiEvent.Member.MemberName)
 
 	value := make(map[string]string)
 	value["id"] = event.PreDefVarMap["el-target-id"]
 	value["name"] = event.PreDefVarMap["el-target-name"]
 
-	operation, err = NewOperation(OperationTypeMemberUnmute, value)
+	operation, err = NewOperation(OperationTypeMemberUnMute, value)
 	if err != nil {
 		return err
 	}
@@ -255,8 +255,8 @@ func (event *Event) makeMemberJoinEventTemplate(goMiraiEvent gomirai.InEvent) er
 		return err
 	}
 	event.SenderList = append(event.SenderList, sender)
-	event.addPerDefVar("el-target-id", sender.ID)
-	event.addPerDefVar("el-target-name", sender.Name)
+	event.AddPerDefVar("el-target-id", sender.ID)
+	event.AddPerDefVar("el-target-name", sender.Name)
 
 	value := make(map[string]string)
 	value["id"] = event.PreDefVarMap["el-target-id"]
@@ -289,11 +289,11 @@ func (event *Event) makeMemberLeaveByKickEventTemplate(goMiraiEvent gomirai.InEv
 		return err
 	}
 	event.SenderList = append(event.SenderList, sender)
-	event.addPerDefVar("el-operator-id", sender.ID)
-	event.addPerDefVar("el-operator-name", sender.Name)
+	event.AddPerDefVar("el-operator-id", sender.ID)
+	event.AddPerDefVar("el-operator-name", sender.Name)
 
-	event.addPerDefVar("el-target-id", goMiraiEvent.Member.ID)
-	event.addPerDefVar("el-target-name", goMiraiEvent.Member.MemberName)
+	event.AddPerDefVar("el-target-id", goMiraiEvent.Member.ID)
+	event.AddPerDefVar("el-target-name", goMiraiEvent.Member.MemberName)
 
 	value := make(map[string]string)
 	value["id"] = event.PreDefVarMap["el-target-id"]
@@ -325,8 +325,8 @@ func (event *Event) makeMemberLeaveByQuitEventTemplate(goMiraiEvent gomirai.InEv
 		return err
 	}
 	event.SenderList = append(event.SenderList, sender)
-	event.addPerDefVar("el-target-id", sender.ID)
-	event.addPerDefVar("el-target-name", sender.Name)
+	event.AddPerDefVar("el-target-id", sender.ID)
+	event.AddPerDefVar("el-target-name", sender.Name)
 
 	value := make(map[string]string)
 	value["id"] = event.PreDefVarMap["el-target-id"]
@@ -359,15 +359,15 @@ func (event *Event) addSomePreDefVar() {
 		} else if message.Type == MessageTypeXML {
 			xml = xml + message.Value["xml"]
 		} else if message.Type == MessageTypeImage {
-			event.addPerDefVar(fmt.Sprintf("el-message-image-url-%d", imageIndex), message.Value["url"])
+			event.AddPerDefVar(fmt.Sprintf("el-message-image-url-%d", imageIndex), message.Value["url"])
 			imageIndex++
 		}
 	}
-	event.addPerDefVar("el-message-text", text)
-	event.addPerDefVar("el-message-xml", xml)
+	event.AddPerDefVar("el-message-text", text)
+	event.AddPerDefVar("el-message-xml", xml)
 }
 
-func (event *Event) addPerDefVar(varName string, value interface{}) {
+func (event *Event) AddPerDefVar(varName string, value interface{}) {
 	switch value.(type) {
 	case string:
 		event.PreDefVarMap[varName] = value.(string)

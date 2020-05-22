@@ -2,6 +2,7 @@ package eltype
 
 import (
 	"fmt"
+	"strings"
 
 	"el-bot-go/src/gomirai"
 
@@ -16,6 +17,7 @@ import (
 type Controller struct {
 	configReader ConfigReader
 	bot          *gomirai.Bot
+	countMap     map[string]int
 }
 
 var handlerConstructor = [...]func(configList []Config, messageList []Message, operationList []Operation,
@@ -32,6 +34,7 @@ func NewController(configReader ConfigReader, bot *gomirai.Bot) Controller {
 	var controller Controller
 	controller.configReader = configReader
 	controller.bot = bot
+	controller.countMap = make(map[string]int)
 	go controller.doCrontabConfig()
 	return controller
 }
@@ -66,10 +69,22 @@ func (controller *Controller) Commit(goMiraiEvent gomirai.InEvent) {
 
 	configHitList := controller.getConfigHitList(event, configRelatedList)
 
+	controller.doCount(configHitList)
+	event.AddPerDefVar("el-count-overall",
+		strings.Replace(fmt.Sprintf("%v", controller.countMap), "map", "统计概要", 1))
+
 	sendedGoMiraiMessageList := controller.getSendedGoMiraiMessageList(event, configHitList)
 
 	controller.sendMessage(event, configHitList, sendedGoMiraiMessageList)
 
+}
+
+func (controller *Controller) doCount(configHitList []Config) {
+	for _, config := range configHitList {
+		if config.IsCount {
+			controller.countMap[config.CountID]++
+		}
+	}
 }
 
 func (controller *Controller) doCrontabConfig() {
@@ -189,12 +204,12 @@ func (controller *Controller) sendMessage(event Event, configHitList []Config, s
 		for _, receiver := range config.Receiver {
 			hasReceiver = true
 			switch receiver.Type {
-			case SenderTypeGroup:
+			case ReceiverTypeGroup:
 				if groupIDSet[receiver.ID] == "" {
 					controller.bot.SendGroupMessage(receiver.ID, 0, sendedGoMiraiMessageList)
 					groupIDSet[receiver.ID] = "sent"
 				}
-			case SenderTypeUser:
+			case ReceiverTypeUser:
 				if friendIDSet[receiver.ID] == "" {
 					controller.bot.SendGroupMessage(receiver.ID, 0, sendedGoMiraiMessageList)
 					friendIDSet[receiver.ID] = "sent"

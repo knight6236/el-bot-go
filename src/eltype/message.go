@@ -94,3 +94,16 @@ func (message *Message) ToGoMiraiMessage() (gomirai.Message, error) {
 	}
 	return goMiraiMessage, nil
 }
+
+// ToString ...
+func (message Message) ToString() string {
+	switch message.Type {
+	case MessageTypePlain:
+		return fmt.Sprintf("Message: {Type: %s, Text: %s}", "Plain", message.Value["text"])
+	case MessageTypeFace:
+		return fmt.Sprintf("Message: {Type: %s, Name: %s}", "Face", message.Value["name"])
+	default:
+		// TODO
+		return ""
+	}
+}
