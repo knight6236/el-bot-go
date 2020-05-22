@@ -4,16 +4,30 @@ import (
 	"el-bot-go/src/eltype"
 	"el-bot-go/src/gomirai"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
+
+	"gopkg.in/yaml.v2"
 )
 
 func main() {
 	// 链接地址
-	address := "http://127.0.0.1:8080"
-	authKey := os.Getenv("AUTHKEY")
+	buf, err := ioutil.ReadFile("../../plugins/MiraiAPIHTTP/setting.yml")
+	if err != nil {
+		fmt.Println("读取 plugins/MiraiAPIHTTP/setting.yml 失败")
+		return
+	}
+	var settingMap map[string]interface{}
+	yaml.Unmarshal(buf, &settingMap)
+	if settingMap["enableWebsocket"] != false {
+		fmt.Println("enableWebsocket 应设置为 false")
+		return
+	}
+	address := "http://127.0.0.1:" + strconv.Itoa(settingMap["port"].(int))
+	authKey := settingMap["authKey"].(string)
 	// 用于进行网络操作的Client
 	client := gomirai.NewMiraiClient(address, authKey)
 
