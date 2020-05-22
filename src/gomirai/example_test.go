@@ -1,21 +1,18 @@
-package main
+package gomirai
 
 import (
-	"el-bot-go/src/eltype"
-	"el-bot-go/src/gomirai"
 	"fmt"
 	"net/http"
-	"os"
-	"strconv"
+	"testing"
 	"time"
 )
 
-func main() {
+func TestMain(m *testing.M) {
 	// 链接地址
 	address := "http://127.0.0.1:8080"
-	authKey := os.Getenv("AUTHKEY")
+	authKey := "12345678"
 	// 用于进行网络操作的Client
-	client := gomirai.NewMiraiClient(address, authKey)
+	client := NewMiraiClient(address, authKey)
 
 	// 可对Client做出自定义修改，该修改会应用于所有使用该client的网络请求
 	// 如使用Proxy
@@ -23,11 +20,7 @@ func main() {
 
 	// 获取Bot，Session信息保存在Bot中
 	// 也可通过Client.Bots[]获取
-	qq, errqq := strconv.ParseInt(os.Getenv("QQ"), 10, 64)
-	if errqq != nil {
-		fmt.Println("获取QQ号失败，请检查环境变量设置是否是否正确。")
-	}
-	bot, err := client.Verify(qq)
+	bot, err := client.Verify(123456789)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -50,30 +43,14 @@ func main() {
 		}
 	}()
 
-	reader := eltype.NewConfigReader("../../config/default.yml")
-	controller := eltype.NewController(reader, bot)
-	fmt.Println("启动成功")
-
 	// 从bot.MessageChan获取收到事件并处理
 	for {
 		e := <-bot.MessageChan
 		switch e.Type {
 		case "GroupMessage": // do something
-			controller.Commit(e)
+			// some func(e)
 		case "FriendMessage": // do something
-			controller.Commit(e)
-		case "GroupMuteAllEvent": // do something
-			controller.Commit(e)
-		case "MemberMuteEvent":
-			controller.Commit(e)
-		case "MemberUnmuteEvent":
-			controller.Commit(e)
-		case "MemberJoinEvent":
-			controller.Commit(e)
-		case "MemberLeaveEventKick":
-			controller.Commit(e)
-		case "MemberLeaveEventQuit":
-			controller.Commit(e)
+		case "....省略": // do something
 		default:
 			// do something
 		}

@@ -3,8 +3,9 @@ package eltype
 import (
 	"errors"
 	"fmt"
-	"gomirai"
 	"strconv"
+
+	"el-bot-go/src/gomirai"
 )
 
 // MessageType 消息类型
