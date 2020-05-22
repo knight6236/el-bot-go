@@ -1,6 +1,7 @@
 package eltype
 
 import (
+	"fmt"
 	"strconv"
 
 	"gopkg.in/yaml.v2"
@@ -12,40 +13,83 @@ import (
 	// "reflect"
 )
 
+const (
+	settingFullPath       = "../../plugins/MiraiAPIHTTP/setting.yml"
+	faceMapFullPath       = "../../config/face-map.yml"
+	defaultConfigFullPath = "../../config/default.yml"
+)
+
 // ConfigReader 配置读取对象
 type ConfigReader struct {
-	filePath          string
+	Port              string
+	EnableWebsocket   bool
+	folder            string
+	AuthKey           string
 	GlobalConfigList  []Config
 	FriendConifgList  []Config
 	GroupConfigList   []Config
 	CrontabConfigList []Config
+	CounterConfigList []Config
 }
 
 // NewConfigReader 使用配置文件路径构造一个 ConfigReader
 // @param	filePath	string			配置文件路径
-func NewConfigReader(filePath string) ConfigReader {
+func NewConfigReader(folder string) ConfigReader {
 	var reader ConfigReader
-	reader.filePath = filePath
+	reader.folder = folder
 	reader.parseYml()
 	return reader
 }
 
 func (reader *ConfigReader) parseYml() {
-	buf, err := ioutil.ReadFile(reader.filePath)
-	if err != nil {
-	}
+	reader.parseToSetting()
 
+	if reader.folder == "" {
+		reader.parseThisFile(defaultConfigFullPath)
+	} else {
+		files, err := ioutil.ReadDir(reader.folder)
+		if err != nil {
+			reader.parseThisFile(defaultConfigFullPath)
+		}
+
+		for _, file := range files {
+			if !file.IsDir() {
+				reader.parseThisFile(fmt.Sprintf("%s/%s", reader.folder, file.Name()))
+			}
+		}
+	}
+}
+
+func (reader *ConfigReader) parseThisFile(fileFullPath string) {
+	buf, err := ioutil.ReadFile(fileFullPath)
+	if err != nil {
+		fmt.Printf("跳过 %s, 因为未能打开文件。\n", fileFullPath)
+		return
+	}
 	result := make(map[string]interface{})
 	err = yaml.Unmarshal(buf, &result)
 	if err != nil {
+		fmt.Printf("跳过 %s, 因为解析失败，配置文件可能存在语法错误。\n", fileFullPath)
+		return
 	}
-
-	// temp := result ["global"].([]interface{})[0].(map[interface{}]interface{}) ["when"].(map[interface{}]interface{}) ["message"].([]interface{})[0]
-
-	// fmt.Printf("\n\n%v\n\n", temp)
-	// fmt.Println(reflect.TypeOf(temp))
-
 	reader.parseToConfigList(result)
+}
+
+func (reader *ConfigReader) parseToSetting() {
+	buf, err := ioutil.ReadFile(settingFullPath)
+	if err != nil {
+		fmt.Printf("跳过 %s, 因为未能打开文件。\n", settingFullPath)
+		return
+	}
+	result := make(map[string]interface{})
+	err = yaml.Unmarshal(buf, &result)
+	if err != nil {
+		fmt.Printf("跳过 %s, 因为解析失败，配置文件可能存在语法错误。\n", settingFullPath)
+		return
+	}
+	reader.Port = strconv.Itoa(result["port"].(int))
+	reader.AuthKey = result["authKey"].(string)
+	reader.EnableWebsocket = result["enableWebsocket"].(bool)
 }
 
 func (reader *ConfigReader) parseToConfigList(ymlObject map[string]interface{}) {
@@ -56,9 +100,9 @@ func (reader *ConfigReader) parseToConfigList(ymlObject map[string]interface{}) 
 			cron := item.(map[interface{}]interface{})["cron"].(string)
 			nativeDo := item.(map[interface{}]interface{})["do"].(map[interface{}]interface{})
 			nativeReceiverList := nativeDo["receiver"]
-			var receiverList []Sender
+			var receiverList []Receiver
 			if nativeReceiverList != nil {
-				receiverList = reader.parseToSenderOrReciverList(nativeReceiverList.(map[interface{}]interface{}))
+				receiverList = reader.parseToReceiverList(nativeReceiverList.(map[interface{}]interface{}))
 			}
 
 			nativeDoMessageList := nativeDo["message"]
@@ -73,7 +117,8 @@ func (reader *ConfigReader) parseToConfigList(ymlObject map[string]interface{}) 
 				doOperationList = reader.parseToOperationList(nativeDoOperation.([]interface{}))
 			}
 
-			config, err := NewConfig(ConfigTypeCrontab, nil, nil, doMessageList, doOperationList, nil, receiverList, cron)
+			config, err := NewConfig(ConfigTypeCrontab, nil, nil, doMessageList,
+				doOperationList, nil, receiverList, cron, false, "")
 			if err != nil {
 				continue
 			}
@@ -83,29 +128,25 @@ func (reader *ConfigReader) parseToConfigList(ymlObject map[string]interface{}) 
 
 	nativeGlobal := ymlObject["global"]
 	if nativeGlobal != nil {
-		for _, item := range nativeGlobal.([]interface{}) {
-			nativeWhen := item.(map[interface{}]interface{})["when"].(map[interface{}]interface{})
-			nativeDo := item.(map[interface{}]interface{})["do"].(map[interface{}]interface{})
+		for _, nativeConfig := range nativeGlobal.([]interface{}) {
 			reader.GlobalConfigList = append(reader.GlobalConfigList,
-				reader.parseToConfig(ConfigTypeGlobal, nativeWhen, nativeDo))
+				reader.parseToConfig(ConfigTypeGlobal, nativeConfig))
 		}
 	}
 
 	natvieFriend := ymlObject["friend"]
 	if natvieFriend != nil {
-		for _, item := range natvieFriend.([]interface{}) {
-			nativeWhen := item.(map[interface{}]interface{})["when"].(map[interface{}]interface{})
-			nativeDo := item.(map[interface{}]interface{})["do"].(map[interface{}]interface{})
-			reader.FriendConifgList = append(reader.FriendConifgList, reader.parseToConfig(ConfigTypeFriend, nativeWhen, nativeDo))
+		for _, nativeConfig := range natvieFriend.([]interface{}) {
+			reader.GlobalConfigList = append(reader.GlobalConfigList,
+				reader.parseToConfig(ConfigTypeFriend, nativeConfig))
 		}
 	}
 
 	nativeGroup := ymlObject["group"]
 	if nativeGroup != nil {
-		for _, item := range nativeGroup.([]interface{}) {
-			nativeWhen := item.(map[interface{}]interface{})["when"].(map[interface{}]interface{})
-			nativeDo := item.(map[interface{}]interface{})["do"].(map[interface{}]interface{})
-			reader.GroupConfigList = append(reader.GroupConfigList, reader.parseToConfig(ConfigTypeGroup, nativeWhen, nativeDo))
+		for _, nativeConfig := range nativeGroup.([]interface{}) {
+			reader.GlobalConfigList = append(reader.GlobalConfigList,
+				reader.parseToConfig(ConfigTypeGroup, nativeConfig))
 		}
 	}
 }
@@ -128,14 +169,28 @@ func (reader *ConfigReader) parseToOperationList(nativeOperationLisst []interfac
 	return operationList
 }
 
-func (reader *ConfigReader) parseToConfig(configType ConfigType,
-	nativeWhen map[interface{}]interface{},
-	nativeDo map[interface{}]interface{}) Config {
+func (reader *ConfigReader) parseToConfig(configType ConfigType, nativeConfig interface{}) Config {
+
+	nativeWhen := nativeConfig.(map[interface{}]interface{})["when"].(map[interface{}]interface{})
+	nativeDo := nativeConfig.(map[interface{}]interface{})["do"].(map[interface{}]interface{})
+	var isCount bool
+	if nativeDo["count"] == "" || nativeDo["count"] == nil {
+		isCount = false
+	} else {
+		isCount = nativeDo["count"].(bool)
+	}
+	var countID string
+	if nativeConfig.(map[interface{}]interface{})["countID"] == "" ||
+		nativeConfig.(map[interface{}]interface{})["countID"] == nil {
+		countID = ""
+	} else {
+		countID = nativeConfig.(map[interface{}]interface{})["countID"].(string)
+	}
 
 	nativeSenderList := nativeWhen["sender"]
 	var senderList []Sender
 	if nativeSenderList != nil {
-		senderList = reader.parseToSenderOrReciverList(nativeSenderList.(map[interface{}]interface{}))
+		senderList = reader.parseToSenderList(nativeSenderList.(map[interface{}]interface{}))
 	}
 
 	nativeWhenMessageList := nativeWhen["message"]
@@ -151,9 +206,9 @@ func (reader *ConfigReader) parseToConfig(configType ConfigType,
 	}
 
 	nativeReceiverList := nativeDo["receiver"]
-	var receiverList []Sender
+	var receiverList []Receiver
 	if nativeReceiverList != nil {
-		receiverList = reader.parseToSenderOrReciverList(nativeReceiverList.(map[interface{}]interface{}))
+		receiverList = reader.parseToReceiverList(nativeReceiverList.(map[interface{}]interface{}))
 	}
 
 	nativeDoMessageList := nativeDo["message"]
@@ -168,15 +223,15 @@ func (reader *ConfigReader) parseToConfig(configType ConfigType,
 		doOperationList = reader.parseToOperationList(nativeDoOperation.([]interface{}))
 	}
 	config, err := NewConfig(configType, whenMessageList, whenOperationList,
-		doMessageList, doOperationList, senderList, receiverList, "")
+		doMessageList, doOperationList, senderList, receiverList, "", isCount, countID)
 	if err != nil {
 
 	}
 	return config
 }
 
-func (reader *ConfigReader) parseToSenderOrReciverList(nativeSender map[interface{}]interface{}) []Sender {
-	var senderOrReciverList []Sender
+func (reader *ConfigReader) parseToSenderList(nativeSender map[interface{}]interface{}) []Sender {
+	var senderList []Sender
 
 	groupList := nativeSender["group"]
 	if groupList != nil {
@@ -185,21 +240,48 @@ func (reader *ConfigReader) parseToSenderOrReciverList(nativeSender map[interfac
 			if err != nil {
 				return nil
 			}
-			senderOrReciverList = append(senderOrReciverList, sender)
+			senderList = append(senderList, sender)
+		}
+	}
+
+	friendList := nativeSender["friend"]
+	if friendList != nil {
+		for _, userID := range friendList.([]interface{}) {
+			sender, err := NewSender(SenderTypeFriend, int64(userID.(int)), "", "")
+			if err != nil {
+				return nil
+			}
+			senderList = append(senderList, sender)
+		}
+	}
+	return senderList
+}
+
+func (reader *ConfigReader) parseToReceiverList(nativeSender map[interface{}]interface{}) []Receiver {
+	var reciverList []Receiver
+
+	groupList := nativeSender["group"]
+	if groupList != nil {
+		for _, groupID := range groupList.([]interface{}) {
+			receiver, err := NewReceiver(ReceiverTypeGroup, int64(groupID.(int)), "", "")
+			if err != nil {
+				return nil
+			}
+			reciverList = append(reciverList, receiver)
 		}
 	}
 
 	userList := nativeSender["user"]
 	if userList != nil {
 		for _, userID := range userList.([]interface{}) {
-			sender, err := NewSender(SenderTypeUser, int64(userID.(int)), "", "")
+			receiver, err := NewReceiver(ReceiverTypeUser, int64(userID.(int)), "", "")
 			if err != nil {
 				return nil
 			}
-			senderOrReciverList = append(senderOrReciverList, sender)
+			reciverList = append(reciverList, receiver)
 		}
 	}
-	return senderOrReciverList
+	return reciverList
 }
 
 func (reader *ConfigReader) parseToMessage(nativeMessage map[interface{}]interface{}) Message {
@@ -224,6 +306,8 @@ func (reader *ConfigReader) parseToMessage(nativeMessage map[interface{}]interfa
 		switch nativeValue.(type) {
 		case string:
 			value = nativeValue.(string)
+		case int:
+			value = strconv.Itoa(nativeValue.(int))
 		case int64:
 			value = strconv.FormatInt(nativeValue.(int64), 10)
 		case bool:
@@ -232,7 +316,7 @@ func (reader *ConfigReader) parseToMessage(nativeMessage map[interface{}]interfa
 		msgValue[key.(string)] = value
 	}
 
-	buf, err := ioutil.ReadFile("../../config/face-map.yml")
+	buf, err := ioutil.ReadFile(faceMapFullPath)
 	if err != nil {
 	}
 

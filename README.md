@@ -56,7 +56,8 @@
     enableWebsocket: false
     ```
 5. 启动 mirai-console: ` ./start-console.sh`并按照提示进行操作
-6. 启动 el-bot-go: 在另一个 shell 运行脚本：`./start-el-bot.sh 机器人QQ号`
+6. 启动 el-bot-go: 在另一个 shell 运行脚本：`./start-el-bot.sh 机器人QQ号 配置所在路径`
+  + 配置所在路径: 是相对于 `src/main` 的路径，如果使用默认配置则为 `./start-el-bot.sh 机器人QQ号 ""`
 
 ## On Windows
 
@@ -72,7 +73,8 @@
     enableWebsocket: false
     ```
 5. 启动 mirai-console: `./start-console.bat`
-6. 启动 el-bot-go: 在另一个 cmd 执行命令 `start-el-bot.bat 机器人的QQ号`
+6. 启动 el-bot-go: 在另一个 cmd 执行命令 `start-el-bot.bat 机器人的QQ号 配置所在路径`
+  + 配置所在路径: 是相对于 `src/main` 的路径，如果使用默认配置则为 `./start-el-bot.sh 机器人QQ号 ""`
 
 # 配置文件说明
 

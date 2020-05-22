@@ -12,6 +12,8 @@ const (
 	ConfigTypeGroup
 	//ConfigTypeCrontab 定时执行的配置
 	ConfigTypeCrontab
+	// ConfigTypeCounter 词频统计配置
+	ConfigTypeCounter
 )
 
 // Config 配置对象
@@ -21,15 +23,19 @@ const (
 // @property	DoMessageList			[]Message	作为动作的「消息」
 // @property	DoOperationList			[]Operation 作为动作的「操作」
 // @property	Cron					string 		Cron 字符串
+// @property	SenderList				[]Sender 	发送者列表
+// @property	Receiver				[]Receiver 	接收者列表
 type Config struct {
 	Type              ConfigType
+	IsCount           bool
+	CountID           string
 	Cron              string
 	WhenMessageList   []Message
 	WhenOperationList []Operation
 	DoMessageList     []Message
 	DoOperationList   []Operation
 	SenderList        []Sender
-	Receiver          []Sender
+	Receiver          []Receiver
 }
 
 // NewConfig 构造一个新的配置对象
@@ -45,8 +51,10 @@ func NewConfig(configType ConfigType,
 	doMessageList []Message,
 	doOperationList []Operation,
 	SenderList []Sender,
-	Receiver []Sender,
-	Cron string) (Config, error) {
+	Receiver []Receiver,
+	Cron string,
+	isCount bool,
+	countID string) (Config, error) {
 	var config Config
 	config.Type = configType
 	config.WhenMessageList = whenMessageList
@@ -56,5 +64,7 @@ func NewConfig(configType ConfigType,
 	config.SenderList = SenderList
 	config.Receiver = Receiver
 	config.Cron = Cron
+	config.IsCount = isCount
+	config.CountID = countID
 	return config, nil
 }
