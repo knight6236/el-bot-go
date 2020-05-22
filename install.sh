@@ -1,6 +1,3 @@
-git submodule init
-git submodule update
-
 mkdir plugins
 
 wget https://github.com/mamoe/mirai-console-wrapper/releases/download/1.2.0/mirai-console-wrapper-1.2.0-all.jar
