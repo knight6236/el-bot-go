@@ -1,4 +1,0 @@
-[submodule "src/gomirai"]
-	path = src/gomirai
-	url = git@github.com:Logiase/gomirai.git
-

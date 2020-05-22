@@ -2,8 +2,9 @@ package eltype
 
 import (
 	"fmt"
-	"gomirai"
 	"strconv"
+
+	"el-bot-go/src/gomirai"
 )
 
 // EventType 事件类型

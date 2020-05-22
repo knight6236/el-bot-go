@@ -2,7 +2,8 @@ package eltype
 
 import (
 	"fmt"
-	"gomirai"
+
+	"el-bot-go/src/gomirai"
 
 	"github.com/robfig/cron"
 )
@@ -74,9 +75,8 @@ func (controller *Controller) Commit(goMiraiEvent gomirai.InEvent) {
 func (controller *Controller) doCrontabConfig() {
 	c := cron.New()
 	for _, config := range controller.configReader.CrontabConfigList {
-		id, err := c.AddJob(config.Cron, Job{controller: controller, config: config})
-		if err != nil {
-			fmt.Println(id)
+		if c.AddJob(config.Cron, Job{controller: controller, config: config}) != nil {
+			fmt.Println("定时任务创建失败")
 		}
 	}
 	c.Start()
