@@ -3,6 +3,8 @@
 [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/ElpsyCN/el-bot-go?color=blue&include_prereleases)](https://github.com/ElpsyCN/el-bot-go/releases)
 [![GitHub issues](https://img.shields.io/github/issues/ElpsyCN/el-bot-go)](https://github.com/ElpsyCN/el-bot-go/issues)
 [![GitHub closed issues](https://img.shields.io/github/issues-closed/ElpsyCN/el-bot-go?color=success)](https://github.com/ElpsyCN/el-bot-go/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/ElpsyCN/el-bot-go)](https://github.com/ElpsyCN/el-bot-go/pulls)
+[![GitHub closed pull requests](https://img.shields.io/github/issues-pr-closed/ElpsyCN/el-bot-go?color=success)](https://github.com/ElpsyCN/el-bot-go/pulls?q=is%3Apr+is%3Aclosed)
 [![GitHub](https://img.shields.io/github/license/ElpsyCN/el-bot-go?color=%233eb370)](https://github.com/ElpsyCN/el-bot-go/blob/master/LICENSE)
 
 [el-bot](https://github.com/ElpsyCN/el-bot)的 go 版本。
@@ -207,7 +209,6 @@ group:
       message:
         - type: Face
           name: weixiao
-
 
 # el-message-text: 本次的文本消息
 # el-sender-id: 发送消息的好友/群成员QQ号
