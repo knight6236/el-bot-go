@@ -65,7 +65,7 @@ area:
     + Image：图片消息
         + url：图片来自 GET 请求
         + path: 图片来自本地，图片路径相对于 plugins\MiraiAPIHTTP\setting.yml
-        + direct: 如果 URL 会重定向到另外一个 URL则为 ture，反之可以忽略。
+        + reDirect: 如果 URL 会重定向到另外一个 URL则为 ture，反之可以忽略。
     + Face: 表情消息
         + name: 表情名称
     + Xml: XML 消息

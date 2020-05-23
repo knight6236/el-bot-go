@@ -36,6 +36,7 @@ func NewConfigReader(folder string) ConfigReader {
 	var reader ConfigReader
 	reader.folder = folder
 	reader.parseYml()
+	// fmt.Printf("%v\n", reader.GroupConfigList)
 	return reader
 }
 
@@ -43,16 +44,19 @@ func (reader *ConfigReader) parseYml() {
 	reader.parseToSetting()
 
 	if reader.folder == "" {
+		// fmt.Println("使用默认配置，不使用" + reader.folder + "\n")
 		reader.parseThisFile(DefaultConfigFullPath)
 	} else {
 		files, err := ioutil.ReadDir(reader.folder)
 		if err != nil {
+			// fmt.Println("使用默认配置，不使用" + reader.folder + "\n")
 			reader.parseThisFile(DefaultConfigFullPath)
 		}
 
+		// fmt.Println("使用自定义配置: " + reader.folder + "\n")
 		for _, file := range files {
 			if !file.IsDir() {
-				fmt.Printf("正在读取配置：%s/%s", reader.folder, file.Name())
+				// fmt.Printf("正在读取配置：%s/%s\n", reader.folder, file.Name())
 				reader.parseThisFile(fmt.Sprintf("%s/%s", reader.folder, file.Name()))
 			}
 		}
@@ -144,7 +148,7 @@ func (reader *ConfigReader) parseToConfigList(ymlObject map[string]interface{}) 
 	nativeGroup := ymlObject["group"]
 	if nativeGroup != nil {
 		for _, nativeConfig := range nativeGroup.([]interface{}) {
-			reader.GlobalConfigList = append(reader.GlobalConfigList,
+			reader.GroupConfigList = append(reader.GroupConfigList,
 				reader.parseToConfig(ConfigTypeGroup, nativeConfig))
 		}
 	}

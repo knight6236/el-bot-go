@@ -13,5 +13,5 @@ export LINUX_ARM=bin/main-linux-arm.bin
 if [ -d $DARWIN_386 ];then
 ./$DARWIN_386 $1 $2
 else
-go run src/main/main.go $1 $DEFAULT_FILE
+go run src/main/main.go $1 $2
 fi

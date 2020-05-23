@@ -69,6 +69,8 @@ func (controller *Controller) Commit(goMiraiEvent gomirai.InEvent) {
 
 	configHitList := controller.getConfigHitList(event, configRelatedList)
 
+	// fmt.Printf("%v\n", configHitList)
+
 	controller.doCount(configHitList)
 	event.AddPerDefVar("el-count-overall",
 		strings.Replace(fmt.Sprintf("%v", controller.countMap), "map", "统计概要", 1))
@@ -197,6 +199,8 @@ func (controller *Controller) getSendedGoMiraiMessageList(event Event, configHit
 }
 
 func (controller *Controller) sendMessage(event Event, configHitList []Config, sendedGoMiraiMessageList []gomirai.Message) {
+	// fmt.Printf("%v\n", sendedGoMiraiMessageList)
+
 	hasReceiver := false
 	groupIDSet := make(map[int64]string)
 	friendIDSet := make(map[int64]string)

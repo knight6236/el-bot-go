@@ -44,9 +44,11 @@ func (doer *ImageDoer) getSendedMessageList() {
 			if doMessage.Type == MessageTypeImage {
 				value := make(map[string]string)
 				if doMessage.Value["url"] != "" {
-					if doMessage.Value["direct"] == "true" {
+					if doMessage.Value["reDirect"] == "true" {
+						// fmt.Println("reDirect")
 						filename, err := doer.downloadImage(doMessage.Value["url"])
 						if err != nil {
+							fmt.Println(err)
 							continue
 						}
 						value["path"] = filename
@@ -69,7 +71,7 @@ func (doer *ImageDoer) getSendedMessageList() {
 
 func (doer *ImageDoer) downloadImage(url string) (string, error) {
 	filename := strconv.FormatInt(rand.Int63(), 10) + ".jpg"
-	file, err := os.Create("../../plugins/MiraiAPIHTTP/images/" + filename)
+	file, err := os.Create("plugins/MiraiAPIHTTP/images/" + filename)
 	if err != nil {
 		return "", err
 	}
