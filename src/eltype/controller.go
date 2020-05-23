@@ -21,7 +21,7 @@ type Controller struct {
 }
 
 var handlerConstructor = [...]func(configList []Config, messageList []Message, operationList []Operation,
-	preDefVarMap map[string]string) (IHandler, error){
+	preDefVarMap *map[string]string) (IHandler, error){
 	NewPlainHandler, NewImageHandler, NewOperationHandler, NewFaceHandler, NewXMLHandler}
 
 var doerConstructor = [...]func(configHitList []Config, recivedMessageList []Message,
@@ -72,7 +72,7 @@ func (controller *Controller) Commit(goMiraiEvent gomirai.InEvent) {
 	// fmt.Printf("%v\n", configHitList)
 
 	controller.doCount(configHitList)
-	event.AddPerDefVar("el-count-overall",
+	event.addPerDefVar("el-count-overall",
 		strings.Replace(fmt.Sprintf("%v", controller.countMap), "map", "统计概要", 1))
 
 	sendedGoMiraiMessageList := controller.getSendedGoMiraiMessageList(event, configHitList)
@@ -166,7 +166,7 @@ func (controller *Controller) getConfigRelatedListByWhenSenderList(configList []
 func (controller *Controller) getConfigHitList(event Event, configRelatedList []Config) []Config {
 	var configHitList []Config
 	for i := 0; i < len(handlerConstructor); i++ {
-		handler, err := (handlerConstructor[i](configRelatedList, event.MessageList, event.OperationList, event.PreDefVarMap))
+		handler, err := (handlerConstructor[i](configRelatedList, event.MessageList, event.OperationList, &event.PreDefVarMap))
 		if err != nil {
 			continue
 		}

@@ -11,7 +11,7 @@ type ImageHandler struct {
 	messageList   []Message
 	configHitList []Config
 	operationList []Operation
-	preDefVarMap  map[string]string
+	preDefVarMap  *map[string]string
 }
 
 // NewImageHandler 构造一个 FaceHandler
@@ -20,7 +20,7 @@ type ImageHandler struct {
 // @param	operationList	[]Operation			要判断的配置列表
 // @param	preDefVarMap	map[string]string	预定义变量 Map
 func NewImageHandler(configList []Config, messageList []Message, operationList []Operation,
-	preDefVarMap map[string]string) (IHandler, error) {
+	preDefVarMap *map[string]string) (IHandler, error) {
 	var handler ImageHandler
 	handler.configList = configList
 	handler.messageList = messageList

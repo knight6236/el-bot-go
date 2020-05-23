@@ -11,7 +11,7 @@ type OperationHandler struct {
 	messageList   []Message
 	operationList []Operation
 	configHitList []Config
-	preDefVarMap  map[string]string
+	preDefVarMap  *map[string]string
 }
 
 // NewOperationHandler 构造一个 OperationHandler
@@ -20,7 +20,7 @@ type OperationHandler struct {
 // @param	operationList	[]Operation			要判断的配置列表
 // @param	preDefVarMap	map[string]string	预定义变量 Map
 func NewOperationHandler(configList []Config, messageList []Message, operationList []Operation,
-	preDefVarMap map[string]string) (IHandler, error) {
+	preDefVarMap *map[string]string) (IHandler, error) {
 	var handler OperationHandler
 	handler.configList = configList
 	handler.operationList = operationList

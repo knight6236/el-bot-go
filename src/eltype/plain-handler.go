@@ -2,7 +2,9 @@ package eltype
 
 import (
 	"bytes"
+	"fmt"
 	"regexp"
+	"strconv"
 )
 
 // PlainHandler 判断是否命中和表情有关的配置
@@ -16,7 +18,7 @@ type PlainHandler struct {
 	messageList   []Message
 	configHitList []Config
 	operationList []Operation
-	preDefVarMap  map[string]string
+	preDefVarMap  *map[string]string
 }
 
 // NewPlainHandler 构造一个 PlainHandler
@@ -25,7 +27,7 @@ type PlainHandler struct {
 // @param	operationList	[]Operation			要判断的配置列表
 // @param	preDefVarMap	map[string]string	预定义变量 Map
 func NewPlainHandler(configList []Config, messageList []Message, operationList []Operation,
-	preDefVarMap map[string]string) (IHandler, error) {
+	preDefVarMap *map[string]string) (IHandler, error) {
 	var handler PlainHandler
 	handler.configList = configList
 	handler.messageList = messageList
@@ -66,9 +68,9 @@ func (handler *PlainHandler) checkRegex(whenMessage Message) bool {
 	if whenMessage.Type != MessageTypePlain {
 		return false
 	}
-	regex := whenMessage.Value["regex"]
+	pattern := whenMessage.Value["regex"]
 
-	if regex == "" {
+	if pattern == "" {
 		return false
 	}
 
@@ -80,13 +82,34 @@ func (handler *PlainHandler) checkRegex(whenMessage Message) bool {
 		}
 	}
 
-	isMatch, err := regexp.MatchString(regex, buf.String())
-
+	regex, err := regexp.Compile(pattern)
 	if err != nil {
+		fmt.Println(err)
 		return false
 	}
 
-	return isMatch
+	matches := regex.FindStringSubmatch(buf.String())
+	if matches == nil {
+		return false
+	}
+	for i := 1; i < len(matches); i++ {
+		varName := fmt.Sprintf("el-regex-%d", i-1)
+		handler.addPerDefVar(varName, matches[i])
+	}
+	return true
+}
+
+func (handler *PlainHandler) addPerDefVar(varName string, value interface{}) {
+	switch value.(type) {
+	case string:
+		(*(handler.preDefVarMap))[varName] = value.(string)
+	case int:
+		(*(handler.preDefVarMap))[varName] = strconv.Itoa(value.(int))
+	case int64:
+		(*(handler.preDefVarMap))[varName] = strconv.FormatInt(value.(int64), 10)
+	case float64:
+		(*(handler.preDefVarMap))[varName] = fmt.Sprintf("%.2f", value.(float64))
+	}
 }
 
 // GetConfigHitList 获取命中的配置列表
