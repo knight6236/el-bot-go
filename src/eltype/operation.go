@@ -1,7 +1,10 @@
 package eltype
 
 import (
+	"el-bot-go/src/gomirai"
+	"errors"
 	"fmt"
+	"strconv"
 )
 
 // OperationType 操作/事件类型
@@ -22,6 +25,10 @@ const (
 	OperationTypeMemberLeaveByKick
 	// OperationTypeMemberLeaveByQuit 成员自行退运事件类型
 	OperationTypeMemberLeaveByQuit
+	// OperationTypeAt At某人
+	OperationTypeAt
+	// OperationTypeAtAll At全体成员
+	OperationTypeAtAll
 )
 
 // Operation 操作/事件
@@ -59,9 +66,31 @@ func CastConfigOperationTypeToOperationType(configEventType string) OperationTyp
 		return OperationTypeMemberLeaveByKick
 	case "MemberLeaveByQuit":
 		return OperationTypeMemberLeaveByQuit
+	case "At":
+		return OperationTypeAt
+	case "AtAll":
+		return OperationTypeAtAll
 	default:
 		panic("")
 	}
+}
+
+func (operation *Operation) ToGoMiraiMessage() (gomirai.Message, error) {
+	var goMiraiMessage gomirai.Message
+	switch operation.Type {
+	case OperationTypeAt:
+		goMiraiMessage.Type = "At"
+		id, err := strconv.ParseInt(operation.Value["id"], 10, 64)
+		if err != nil {
+			return goMiraiMessage, err
+		}
+		goMiraiMessage.Target = id
+	case OperationTypeAtAll:
+		goMiraiMessage.Type = "AtAll"
+	default:
+		return goMiraiMessage, errors.New("不受支持的 Operation 类型")
+	}
+	return goMiraiMessage, nil
 }
 
 // ToString ...

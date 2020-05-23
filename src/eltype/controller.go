@@ -194,6 +194,14 @@ func (controller *Controller) getSendedGoMiraiMessageList(event Event, configHit
 			}
 			sendedGoMiraiMessageList = append(sendedGoMiraiMessageList, goMiraiMessage)
 		}
+
+		for _, operation := range doer.GetSendedOperationList() {
+			goMiraiMessage, err := operation.ToGoMiraiMessage()
+			if err != nil {
+				continue
+			}
+			sendedGoMiraiMessageList = append(sendedGoMiraiMessageList, goMiraiMessage)
+		}
 	}
 	return sendedGoMiraiMessageList
 }

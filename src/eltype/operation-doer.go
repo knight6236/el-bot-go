@@ -37,9 +37,12 @@ func NewOperationDoer(configHitList []Config, recivedMessageList []Message, preD
 func (doer *OperationDoer) getSendedMessageList() {
 }
 
-func (doer OperationDoer) getSendedOperationList() {
+func (doer *OperationDoer) getSendedOperationList() {
 	for _, config := range doer.configHitList {
 		for _, doOperation := range config.DoOperationList {
+			if doOperation.Type == OperationTypeAt {
+				doOperation.Value["id"] = doer.replaceStrByPreDefVarMap(doOperation.Value["id"])
+			}
 			doer.sendedOperationList = append(doer.sendedOperationList, doOperation)
 		}
 	}
