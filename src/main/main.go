@@ -11,7 +11,10 @@ import (
 )
 
 func main() {
-	reader := eltype.NewConfigReader(os.Getenv("CONFIG_FOLDER"))
+	eltype.DefaultConfigFullPath = os.Getenv("DEFAULT_FILE")
+	eltype.SettingFullPath = os.Getenv("SETTING_FILE")
+	eltype.FaceMapFullPath = os.Getenv("FACE_MAP_FILE")
+	reader := eltype.NewConfigReader(os.Args[2])
 
 	address := "http://127.0.0.1:" + reader.Port
 	authKey := reader.AuthKey
@@ -24,9 +27,9 @@ func main() {
 
 	// 获取Bot，Session信息保存在Bot中
 	// 也可通过Client.Bots[]获取
-	qq, errqq := strconv.ParseInt(os.Getenv("QQ"), 10, 64)
-	if errqq != nil {
-		fmt.Println("获取QQ号失败，请检查环境变量设置是否是否正确。")
+	qq, err := strconv.ParseInt(os.Args[1], 10, 64)
+	if err != nil {
+		fmt.Println("获取 QQ 号失败")
 	}
 	bot, err := client.Verify(qq)
 	if err != nil {
