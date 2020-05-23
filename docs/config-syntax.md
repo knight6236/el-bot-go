@@ -152,3 +152,52 @@ group:
 ```
 
 更多例子见 `config/default.yml`
+
+# 定时任务
+
+定时任务举例
+
+```yml
+crontab:
+  - cron: '0 * * * * *'
+    do:
+      receiver:
+        group:
+          - 群号
+        friend:
+          - QQ号
+      message:
+        - type: Plain
+          url: 一分钟过去了
+```
+
+# 配置触发统计
+
+配置触发统计举例
+
+```yml
+  - countID: 打招呼
+    when:
+      message:
+        - type: Plain
+          text: hello
+        - type: Plain
+          text: 你好
+    do:
+      count: true
+      message:
+        - type: Plain
+          text: Hello World!
+        - type: Plain
+          text: （你好 世界！）
+
+   - when:
+      message:
+        - type: Plain
+          text: 统计结果
+    do:
+      count: true
+      message:
+        - type: Plain
+          text: '{el-bot-overall}'
+```
