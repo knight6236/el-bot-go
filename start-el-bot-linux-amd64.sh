@@ -1,5 +1,5 @@
 export DEFAULT_FILE=config/default.yml
-export SETTING_FILE=plugins/MiraiAPIHTTP/exportting.yml
+export SETTING_FILE=plugins/MiraiAPIHTTP/setting.yml
 export FACE_MAP_FILE=config/face-map.yml
 
 export WIN_AMD64=bin/main-windows-amd64.exe
@@ -11,7 +11,7 @@ export LINUX_386=bin/main-linux-386.bin
 export LINUX_ARM=bin/main-linux-arm.bin
 
 if [ -d $LINUX_AMD64 ];then
-go run src/main/main.go $1 $DEFAULT_FILE
+./$LINUX_AMD64 $1 $2
 else
-./$LINUX_AMD64 $1
+go run src/main/main.go $1 $DEFAULT_FILE
 fi

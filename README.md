@@ -58,7 +58,7 @@
 6. 启动 mirai-console: ` ./start-console.sh`并按照提示进行操作
 7. 启动 el-bot-go: 在另一个 shell 运行脚本：
     1. 选择合适的 shell 脚本 `start-el-bot-xxx-yyy.sh`
-    2. `sh start-el-bot-xxx-yyy.sh 机器人QQ号`
+    2. `sh start-el-bot-xxx-yyy.sh 机器人QQ号 自定义配置路径`，如果不使用自定义配置则为`""`
 
 ## On Windows
 
@@ -77,7 +77,7 @@
 6. 启动 mirai-console: `./start-console.bat`
 7. 启动 el-bot-go: 在另一个 cmd 执行命令 `start-el-bot-xxxx.bat 机器人的QQ号 配置所在路径`
     1. 选择合适的 shell 脚本 `start-el-bot-xxx-yyy.sh`
-    2. `start-el-bot-xxx.bat 机器人QQ号`
+    2. `start-el-bot-xxx.bat 机器人QQ号 自定义配置路径`，如果不使用自定义配置则为`""`
 
 # 配置文件说明
 

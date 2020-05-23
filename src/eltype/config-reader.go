@@ -52,6 +52,7 @@ func (reader *ConfigReader) parseYml() {
 
 		for _, file := range files {
 			if !file.IsDir() {
+				fmt.Printf("正在读取配置：%s/%s", reader.folder, file.Name())
 				reader.parseThisFile(fmt.Sprintf("%s/%s", reader.folder, file.Name()))
 			}
 		}

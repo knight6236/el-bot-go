@@ -14,5 +14,5 @@ set LINUX_ARM=bin/main-linux-arm.bin
 if not exist %WIN_AMD64% (
     go run src/main/main.go %1 %DEFAULT_FILE%
 ) else (
-    %WIN_AMD64%.exe
+    %WIN_AMD64%.exe %1 %2
 )
