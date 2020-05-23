@@ -13,11 +13,9 @@ import (
 	// "reflect"
 )
 
-const (
-	settingFullPath       = "../../plugins/MiraiAPIHTTP/setting.yml"
-	faceMapFullPath       = "../../config/face-map.yml"
-	defaultConfigFullPath = "../../config/default.yml"
-)
+var SettingFullPath string = "../../plugins/MiraiAPIHTTP/setting.yml"
+var FaceMapFullPath string = "../../config/face-map.yml"
+var DefaultConfigFullPath string = "../../config/default.yml"
 
 // ConfigReader 配置读取对象
 type ConfigReader struct {
@@ -45,11 +43,11 @@ func (reader *ConfigReader) parseYml() {
 	reader.parseToSetting()
 
 	if reader.folder == "" {
-		reader.parseThisFile(defaultConfigFullPath)
+		reader.parseThisFile(DefaultConfigFullPath)
 	} else {
 		files, err := ioutil.ReadDir(reader.folder)
 		if err != nil {
-			reader.parseThisFile(defaultConfigFullPath)
+			reader.parseThisFile(DefaultConfigFullPath)
 		}
 
 		for _, file := range files {
@@ -76,15 +74,15 @@ func (reader *ConfigReader) parseThisFile(fileFullPath string) {
 }
 
 func (reader *ConfigReader) parseToSetting() {
-	buf, err := ioutil.ReadFile(settingFullPath)
+	buf, err := ioutil.ReadFile(SettingFullPath)
 	if err != nil {
-		fmt.Printf("跳过 %s, 因为未能打开文件。\n", settingFullPath)
+		fmt.Printf("跳过 %s, 因为未能打开文件。\n", SettingFullPath)
 		return
 	}
 	result := make(map[string]interface{})
 	err = yaml.Unmarshal(buf, &result)
 	if err != nil {
-		fmt.Printf("跳过 %s, 因为解析失败，配置文件可能存在语法错误。\n", settingFullPath)
+		fmt.Printf("跳过 %s, 因为解析失败，配置文件可能存在语法错误。\n", SettingFullPath)
 		return
 	}
 	reader.Port = strconv.Itoa(result["port"].(int))
@@ -316,7 +314,7 @@ func (reader *ConfigReader) parseToMessage(nativeMessage map[interface{}]interfa
 		msgValue[key.(string)] = value
 	}
 
-	buf, err := ioutil.ReadFile(faceMapFullPath)
+	buf, err := ioutil.ReadFile(FaceMapFullPath)
 	if err != nil {
 	}
 
