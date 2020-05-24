@@ -13,7 +13,7 @@
 
 # 文档
 
-[如何编写配置](docs/config-syntax.md)
+[使用文档 & 开发文档](docs/dir.md)
 
 # 功能
 
