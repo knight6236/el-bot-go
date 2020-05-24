@@ -1,6 +1,7 @@
 # el-bot-go
 
 [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/ElpsyCN/el-bot-go?color=blue&include_prereleases)](https://github.com/ElpsyCN/el-bot-go/releases)
+[![docs passing](https://img.shields.io/badge/docs-passing-brightgreen)](https://github.com/ElpsyCN/el-bot-go/blob/master/docs/dir.md)
 [![GitHub issues](https://img.shields.io/github/issues/ElpsyCN/el-bot-go)](https://github.com/ElpsyCN/el-bot-go/issues)
 [![GitHub closed issues](https://img.shields.io/github/issues-closed/ElpsyCN/el-bot-go?color=success)](https://github.com/ElpsyCN/el-bot-go/issues)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/ElpsyCN/el-bot-go)](https://github.com/ElpsyCN/el-bot-go/pulls)
@@ -13,7 +14,7 @@
 
 # 文档
 
-[如何编写配置](docs/config-syntax.md)
+[使用文档 & 开发文档](docs/dir.md)
 
 # 功能
 
@@ -27,11 +28,13 @@
   + [x] 发送固定文本消息
   + [x] 原文发送来自网络的文本
   + [x] 发送解析后的来自网络的 JSON 文本
+  + [x] 发送通过`预定义变量`修饰的文本消息
 + 识别事件
   + [x] 新成员入群
-  + [x] 踢人/自己退群
-  + [x] 禁言/全员禁言
-  + [x] 全员禁言/解除全员禁言
+  + [x] 踢人 & 自己退群
+  + [x] 禁言 & 全员禁言
+  + [x] 全员禁言 & 解除全员禁言
+  + [x] At & AtAll
 + 发送表情消息
   + [x] 发送固定表情
 + 识别表情消息
@@ -220,6 +223,9 @@ group:
 ```
 </details>
 
+# 已知问题
+
+[无法处理好友消息](https://github.com/ElpsyCN/el-bot-go/issues/10)
 
 # 许可证
 
