@@ -2,83 +2,135 @@
 
 # 通用配置
 
-## 结构说明
-
-通用配置通常具有下面这种结构
+## 生效范围
 
 ```yml
-area:
-    - when:
-        sender: 
-            group:
-                - 群号
-            user:
-                - 好友/群成员QQ号
-        message:
-            - type: Plain
-              text: 文本消息
-              regex: 正则表达式
-            - type: Image
-              path: 图片路径（相对于 plugins\MiraiAPIHTTP\setting.yml）
-              url: 图片 URL
-              direct: true | false
-            - type: Face
-              path: piezui
-            - type: Xml
-              text: '{el-message-xml}'
-        operation:
-            - type: MemberMute | MemberUnmute | GroupMuteAll | GroupUnMuteAll
-      do:
-        receiver:
-          group:
-                - 群号
-          user:
-                - 好友/群成员QQ号
-        message:
-          - type: Plain
-            text: 文本消息
-            regex: 正则表达式
-          - type: Image
-            path: 图片路径（相对于 plugins\MiraiAPIHTTP\setting.yml）
-            url: 图片 URL
-            direct: true | false
-          - type: Face
-            path: piezui
-          - type: Xml
-            text: '{el-message-xml}'
+global:
+friend:
+group:
 ```
 
-+ area: 表示配置的生效范围，取值只能为下面所列 
-    + global: 接收到「好友消息」和「群消息」时均生效
-    + friend：仅对接收到的「好友消息」生效
-    + group: 仅对接收到「群消息」生效
-+ when: 所有 when 下的配置均作为配置的触发条件，当且仅当 `sender`、`message`和`operation`均返回 true 是触发配置，执行动作。
-+ sender: 表示消息的发送者，其下包含
-    + group: 可包含一个或多个群号，表示接收到的消息所在的群号。满足任意一个 sender 就返回 true
-    + user: 可包含一个或多个 QQ 号，表示接收到的消息的发送者的 QQ 号。满足任意一个 sender 就返回 true
-+ message: 表示消息。当 `when`下的`message`中存在多个类型的消息时，符合任意一个均返回 true
-    + Plain: 文本消息
-        + text：文本消息的内容
-        + regex：尝试使用给定的正则表达式匹配文本消息
-        + url: 文本来自 GET 请求
-        + json: GET 返回的消息为 JSON 格式时为 true，反之可以忽略。
-    + Image：图片消息
-        + url：图片来自 GET 请求
-        + path: 图片来自本地，图片路径相对于 plugins\MiraiAPIHTTP\setting.yml
-        + reDirect: 如果 URL 会重定向到另外一个 URL则为 ture，反之可以忽略。
-    + Face: 表情消息
-        + name: 表情名称
-    + Xml: XML 消息
-        + text: XML 文本
-+ operation: 表示操作/事件，符合任意一个就返回 true，若不写 operation 则默认为 true。
-    + MemberMute:
-    + MemberUnmute:
-    + GroupMuteAll:
-    + GroupUnMuteAll: 
-+ do: 所有 do 下的配置均位要执行的动作/发送的消息
-+ receiver: 表示消息的接收者，其下包含
-    + group: 可包含一个或多个群号，表示将消息发送给的群的群号
-    + user: 可包含一个或多个 QQ 号，表示将消息发送给的还有/群成员的 QQ 号
+| 关键字 | 必要 | 说明                                             |
+| ------ | ---- | ------------------------------------------------ |
+| global | 否   | 此关键字下的配置在接收到好友消息和群消息时均生效 |
+| friend | 否   | 此关键字下的配置在接收到好友消息时生效           |
+| group  | 否   | 此关键字下的配置群消息时生效                     |
+
+
+
+## 基本结构
+
+```yml
+when:
+  countID:
+  sender:
+  operation:
+  message:
+do:
+  count:
+  receiver:
+  operation:
+  message:
+```
+
+| 关键字    | 必要 | 说明                                              |
+| --------- | ---- | ------------------------------------------------- |
+| when      | 是   | 表示此配置触发的条件。                            |
+| do        | 是   | 表示此配置触发后执行的动作。                      |
+| countID   | 否   | 当`count: true`是必须填写，用于记录配置触发日志。 |
+| sender    | 否   | 表示消息的发送者。                                |
+| operation | 否   | 表示一些动作或事件，如新成员入群，禁言等。        |
+| message   | 否   | 表示消息，包括文本、图片、表情和 XML。            |
+
+
+## sender
+
+```yml
+sender:
+  group:
+    - 群号
+    ...
+  friend:
+    - QQ号
+    ...
+```
+
+| 关键字 | 必要 | 说明                                                         |
+| ------ | ---- | ------------------------------------------------------------ |
+| group  | 否   | 表示消息来源的群号，可包括若干个群号。                       |
+| friend | 否   | 表示消息来源的「群成员」或好友的「QQ号」，可以包括若干个「QQ号」。 |
+
+
+## receiver
+
+```yml
+receiver:
+  group:
+    - 群号
+    ...
+  friend:
+    - QQ号
+    ...
+```
+
+| 关键字 | 必要 | 说明                                                         |
+| ------ | ---- | ------------------------------------------------------------ |
+| group  | 否   | 表示接受消息的群的群号，可包括若干个群号。                   |
+| friend | 否   | 表示接受消息的「群成员」或好友的「QQ号」，可以包括若干个「QQ号」。 |
+
+## operation
+
+```yml
+operation:
+  - type: 
+    other:
+```
+
+| 关键字 | 必要 | 接受消息时的作用                        | 发送消息时的作用                        |
+| ------ | ---- | --------------------------------------- | --------------------------------------- |
+| type   | 是   | 表示事件/操作的类型。                   | 表示操作的类型。                        |
+| other  | 否   | 根据 `type`的不同会有不同的名字和作用。 | 根据 `type`的不同会有不同的名字和作用。 |
+
+### 事件/操作类型
+
+| 关键字            | 接受消息时的作用     | 发送消息时的作用 | 附属关键字 | 接受消息时附属关键字的作用 | 发送消息时附属关键字的作用 |
+| ----------------- | -------------------- | ---------------- | ---------- | -------------------------- | -------------------------- |
+| At                | 表示某成员被 At      | At 某成员        | id         | 无                         | 被 At 的成员的「QQ号」     |
+| AtAll             | 管理员 At 了全体成员 | At 全体成员      | 无         | 无                         | 无                         |
+| MemeberMute       | 某成员被禁言         | 无               | 无         | 无                         | 无                         |
+| MemberUnMute      | 某成员被解除禁言     | 无               | 无         | 无                         | 无                         |
+| GroupMuteAll      | 管理员开启群员禁言   | 无               | 无         | 无                         | 无                         |
+| GroupUnMuteAll    | 管理员关闭群员禁言   | 无               | 无         | 无                         | 无                         |
+| MemberJoin        | 新成员入群           | 无               | 无         | 无                         | 无                         |
+| MemberLeaveByKick | 成员被管理员移除     | 无               | 无         | 无                         | 无                         |
+| MemberLeaveByQuit | 成员主动退群         | 无               | 无         | 无                         | 无                         |
+
+
+## message
+
+```yml
+message:
+  - type:
+    other:
+```
+
+| 关键字 | 必要 | 接受消息时的作用                        | 发送消息时的作用 |
+| ------ | ---- | --------------------------------------- | ---------------- |
+| type   | 是   | 接收到的消息的类型                      | 发送的消息的类型 |
+| other  | 否   | 根据 `type`的不同会有不同的名字和作用。 |                  |
+
+### 消息类型
+
+| 关键字 | 接受消息时的作用      | 发送消息时的作用      | 附属关键字 | 接受消息时附属关键字的作用         | 发送消息时附属关键字的作用                                   |
+| ------ | --------------------- | --------------------- | ---------- | ---------------------------------- | ------------------------------------------------------------ |
+| Plain  | 表示接收到的文本消息  | 表示发送的文本消息    | text       | 表示要接受到的文本                 | 表示要发送的文本                                             |
+|        |                       |                       | regex      | 使用对应正则表达式匹配接收到的文本 | 无                                                           |
+| Image  | 表示接收到的图片      | 表示发送的图片        | url        | 无                                 | 要发送的图片的 URL                                           |
+|        |                       |                       | path       | 无                                 | 要发送的图片的路径（相对于`plugins/MiraiAPIHTTP/images`）    |
+|        |                       |                       | reDirect   | 无                                 | 如果要发送的图片的 URL 会重定向到其它  URL 则设置为`true`，反之则忽略。 |
+| Face   | 表示接收到的表情      | 表示发送的表情        | name       | 接收到的表情的名称                 | 要发送的表情的名称                                           |
+| Xml    | 表示接收到的 XML 文本 | 表示要发送的 XML 文本 | text       | 无                                 | 表示要发送的 XML 文本内容                                    |
+
 
 ## 预定义变量
 
