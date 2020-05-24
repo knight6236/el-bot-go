@@ -28,6 +28,7 @@
 
 
 # custom
+src/main/__debug_bin
 *.bin
 *.jar
 plugins/

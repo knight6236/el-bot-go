@@ -40,10 +40,18 @@ func (doer *OperationDoer) getSendedMessageList() {
 func (doer *OperationDoer) getSendedOperationList() {
 	for _, config := range doer.configHitList {
 		for _, doOperation := range config.DoOperationList {
+			var operation Operation
+			var err error
+			var value map[string]string
 			if doOperation.Type == OperationTypeAt {
-				doOperation.Value["id"] = doer.replaceStrByPreDefVarMap(doOperation.Value["id"])
+				value = make(map[string]string)
+				value["id"] = doer.replaceStrByPreDefVarMap(doOperation.Value["id"])
+				operation, err = NewOperation(OperationTypeAt, value)
+				if err != nil {
+					continue
+				}
 			}
-			doer.sendedOperationList = append(doer.sendedOperationList, doOperation)
+			doer.sendedOperationList = append(doer.sendedOperationList, operation)
 		}
 	}
 }
