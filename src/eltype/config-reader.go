@@ -2,8 +2,10 @@ package eltype
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 
+	"github.com/fsnotify/fsnotify"
 	"gopkg.in/yaml.v2"
 
 	// "io"
@@ -36,8 +38,71 @@ func NewConfigReader(folder string) ConfigReader {
 	var reader ConfigReader
 	reader.folder = folder
 	reader.parseYml()
+	go reader.monitorFolder()
 	// fmt.Printf("%v\n", reader.GroupConfigList)
 	return reader
+}
+
+func (reader *ConfigReader) monitorFolder() {
+	//创建一个监控对象
+	watch, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer watch.Close()
+	//添加要监控的对象，文件或文件夹
+	err = watch.Add(reader.folder)
+	if err != nil {
+		log.Fatal(err)
+	}
+	//我们另启一个goroutine来处理监控对象的事件
+	go func() {
+		for {
+			select {
+			case ev := <-watch.Events:
+				{
+					if ev.Op&fsnotify.Create == fsnotify.Create {
+						reader.reLoad()
+						fmt.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
+					}
+					if ev.Op&fsnotify.Write == fsnotify.Write {
+						reader.reLoad()
+						fmt.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
+					}
+					if ev.Op&fsnotify.Remove == fsnotify.Remove {
+						reader.reLoad()
+						fmt.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
+					}
+					if ev.Op&fsnotify.Rename == fsnotify.Rename {
+						reader.reLoad()
+						fmt.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
+					}
+					if ev.Op&fsnotify.Chmod == fsnotify.Chmod {
+						reader.reLoad()
+						fmt.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
+					}
+				}
+			case err := <-watch.Errors:
+				{
+					log.Println("error : ", err)
+					return
+				}
+			}
+		}
+	}()
+
+	//循环
+	select {}
+}
+
+// reLoad 重新加载配置
+func (reader *ConfigReader) reLoad() {
+	reader.GlobalConfigList = reader.GlobalConfigList[:0]
+	reader.FriendConifgList = reader.FriendConifgList[:0]
+	reader.GroupConfigList = reader.GroupConfigList[:0]
+	reader.CrontabConfigList = reader.CrontabConfigList[:0]
+	reader.CounterConfigList = reader.CounterConfigList[:0]
+	reader.parseYml()
 }
 
 func (reader *ConfigReader) parseYml() {
