@@ -2,6 +2,7 @@
 set DEFAULT_FILE=config/default.yml
 set SETTING_FILE=plugins/MiraiAPIHTTP/setting.yml
 set FACE_MAP_FILE=config/face-map.yml
+set IMAGE_FOLDER=plugins/MiraiAPIHTTP/images/
 
 set WIN_AMD64=bin/main-windows-amd64.exe
 set WIN_386=bin/main-windows-386.exe

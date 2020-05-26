@@ -1,7 +1,6 @@
 package eltype
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 
@@ -68,31 +67,37 @@ func NewMessageFromGoMiraiMessage(goMiraiMessage gomirai.Message) (Message, erro
 }
 
 // ToGoMiraiMessage 将 Message 转换为 gomirai.Message
-func (message *Message) ToGoMiraiMessage() (gomirai.Message, error) {
+func (message *Message) ToGoMiraiMessage() (gomirai.Message, bool) {
 	var goMiraiMessage gomirai.Message
 	var err error
 	switch message.Type {
 	case MessageTypePlain:
 		goMiraiMessage.Type = "Plain"
+		if message.Value["text"] == "" {
+			return goMiraiMessage, false
+		}
 		goMiraiMessage.Text = message.Value["text"]
 	case MessageTypeFace:
 		goMiraiMessage.Type = "Face"
 		goMiraiMessage.FaceID, err = strconv.ParseInt(message.Value["id"], 10, 64)
 		if err != nil {
-			return goMiraiMessage, err
+			return goMiraiMessage, false
 		}
 		goMiraiMessage.Name = message.Value["name"]
 	case MessageTypeImage:
 		goMiraiMessage.Type = "Image"
+		if message.Value["path"] == "" && message.Value["url"] == "" {
+			return goMiraiMessage, false
+		}
 		goMiraiMessage.Path = message.Value["path"]
 		goMiraiMessage.URL = message.Value["url"]
 	case MessageTypeXML:
 		goMiraiMessage.Type = "Xml"
 		goMiraiMessage.XML = message.Value["xml"]
 	default:
-		return goMiraiMessage, errors.New("暂不支持的消息类型")
+		return goMiraiMessage, false
 	}
-	return goMiraiMessage, nil
+	return goMiraiMessage, true
 }
 
 // ToString ...

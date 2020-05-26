@@ -15,9 +15,9 @@
 
 in progress......
 
-## 数据流图
++ [数据流图](dfd.jpg)
++ [BUG 列表](bug-list.md)
 
-![数据流图](dfd.jpg)
 
 
 

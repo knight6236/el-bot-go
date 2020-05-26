@@ -60,7 +60,10 @@ func (doer *PlainDoer) getSendedMessageList() {
 
 func (doer *PlainDoer) getTextMessage(message Message) (Message, error) {
 	value := make(map[string]string)
-	value["text"] = doer.replaceStrByPreDefVarMap(message.Value["text"])
+	text, isReplace := doer.replaceStrByPreDefVarMap(message.Value["text"])
+	if isReplace {
+		value["text"] = text
+	}
 	sendedMessage, err := NewMessage(MessageTypePlain, value)
 	if err != nil {
 		return sendedMessage, err
@@ -84,10 +87,16 @@ func (doer *PlainDoer) getURLMessage(message Message) (Message, error) {
 
 	value := make(map[string]string)
 
-	value["text"] = doer.replaceStrByPreDefVarMap(message.Value["text"])
+	text, isReplace := doer.replaceStrByPreDefVarMap(message.Value["text"])
+	if isReplace {
+		value["text"] = text
+	}
 
 	if message.Value["json"] == "true" {
-		value["text"] = doer.replaceStrByJSON(bodyContent, value["text"])
+		text, isReplace := doer.replaceStrByPreDefVarMap(message.Value["text"])
+		if isReplace {
+			value["text"] = text
+		}
 		if err != nil {
 			return message, err
 		}
@@ -102,12 +111,17 @@ func (doer *PlainDoer) getURLMessage(message Message) (Message, error) {
 	return sendedMessage, nil
 }
 
-func (doer PlainDoer) replaceStrByPreDefVarMap(text string) string {
+func (doer PlainDoer) replaceStrByPreDefVarMap(text string) (string, bool) {
+	var isReplace bool = false
 	for varName, value := range doer.preDefVarMap {
 		key := fmt.Sprintf("{%s}", varName)
+		temp := text
 		text = strings.ReplaceAll(text, key, value)
+		if !isReplace && temp == text {
+			isReplace = true
+		}
 	}
-	return text
+	return text, isReplace
 }
 
 func (doer *PlainDoer) replaceStrByJSON(jsonByteList []byte, text string) string {

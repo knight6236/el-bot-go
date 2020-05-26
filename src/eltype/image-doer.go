@@ -53,7 +53,12 @@ func (doer *ImageDoer) getSendedMessageList() {
 						}
 						value["path"] = filename
 					} else {
-						value["url"] = doer.replaceStrByPreDefVarMap(doMessage.Value["url"])
+						url, isReplace := doer.replaceStrByPreDefVarMap(doMessage.Value["url"])
+						if isReplace {
+							value["url"] = url
+						} else {
+							value["url"] = ""
+						}
 					}
 
 				} else if doMessage.Value["path"] != "" {
@@ -71,7 +76,7 @@ func (doer *ImageDoer) getSendedMessageList() {
 
 func (doer *ImageDoer) downloadImage(url string) (string, error) {
 	filename := strconv.FormatInt(rand.Int63(), 10) + ".jpg"
-	file, err := os.Create("plugins/MiraiAPIHTTP/images/" + filename)
+	file, err := os.Create(ImageFolder + "/" + filename)
 	if err != nil {
 		return "", err
 	}
@@ -87,12 +92,17 @@ func (doer *ImageDoer) downloadImage(url string) (string, error) {
 	return filename, nil
 }
 
-func (doer ImageDoer) replaceStrByPreDefVarMap(text string) string {
+func (doer ImageDoer) replaceStrByPreDefVarMap(text string) (string, bool) {
+	var isReplace bool = false
 	for varName, value := range doer.preDefVarMap {
 		key := fmt.Sprintf("{%s}", varName)
+		temp := text
 		text = strings.ReplaceAll(text, key, value)
+		if !isReplace && temp != text {
+			isReplace = true
+		}
 	}
-	return text
+	return text, isReplace
 }
 
 // GetSendedMessageList 获取将要发送的信息列表

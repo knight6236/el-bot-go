@@ -2,7 +2,6 @@ package eltype
 
 import (
 	"el-bot-go/src/gomirai"
-	"errors"
 	"fmt"
 	"strconv"
 )
@@ -75,22 +74,22 @@ func CastConfigOperationTypeToOperationType(configEventType string) OperationTyp
 	}
 }
 
-func (operation *Operation) ToGoMiraiMessage() (gomirai.Message, error) {
+func (operation *Operation) ToGoMiraiMessage() (gomirai.Message, bool) {
 	var goMiraiMessage gomirai.Message
 	switch operation.Type {
 	case OperationTypeAt:
 		goMiraiMessage.Type = "At"
 		id, err := strconv.ParseInt(operation.Value["id"], 10, 64)
 		if err != nil {
-			return goMiraiMessage, err
+			return goMiraiMessage, false
 		}
 		goMiraiMessage.Target = id
 	case OperationTypeAtAll:
 		goMiraiMessage.Type = "AtAll"
 	default:
-		return goMiraiMessage, errors.New("不受支持的 Operation 类型")
+		return goMiraiMessage, false
 	}
-	return goMiraiMessage, nil
+	return goMiraiMessage, true
 }
 
 // ToString ...

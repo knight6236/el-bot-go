@@ -77,6 +77,8 @@ func (controller *Controller) Commit(goMiraiEvent gomirai.InEvent) {
 
 	sendedGoMiraiMessageList := controller.getSendedGoMiraiMessageList(event, configHitList)
 
+	// fmt.Printf("\n%v\n", sendedGoMiraiMessageList)
+
 	controller.sendMessage(event, configHitList, sendedGoMiraiMessageList)
 
 }
@@ -164,6 +166,7 @@ func (controller *Controller) getConfigRelatedListByWhenSenderList(configList []
 }
 
 func (controller *Controller) getConfigHitList(event Event, configRelatedList []Config) []Config {
+	configSet := make(map[int]bool)
 	var configHitList []Config
 	for i := 0; i < len(handlerConstructor); i++ {
 		handler, err := (handlerConstructor[i](configRelatedList, event.MessageList, event.OperationList, &event.PreDefVarMap))
@@ -172,7 +175,10 @@ func (controller *Controller) getConfigHitList(event Event, configRelatedList []
 		}
 
 		for _, config := range handler.GetConfigHitList() {
-			configHitList = append(configHitList, config)
+			if !configSet[config.innerID] {
+				configHitList = append(configHitList, config)
+				configSet[config.innerID] = true
+			}
 		}
 	}
 	return configHitList
@@ -188,16 +194,16 @@ func (controller *Controller) getSendedGoMiraiMessageList(event Event, configHit
 		}
 
 		for _, message := range doer.GetSendedMessageList() {
-			goMiraiMessage, err := message.ToGoMiraiMessage()
-			if err != nil {
+			goMiraiMessage, isSuccess := message.ToGoMiraiMessage()
+			if !isSuccess {
 				continue
 			}
 			sendedGoMiraiMessageList = append(sendedGoMiraiMessageList, goMiraiMessage)
 		}
 
 		for _, operation := range doer.GetSendedOperationList() {
-			goMiraiMessage, err := operation.ToGoMiraiMessage()
-			if err != nil {
+			goMiraiMessage, isSuccess := operation.ToGoMiraiMessage()
+			if !isSuccess {
 				continue
 			}
 			sendedGoMiraiMessageList = append(sendedGoMiraiMessageList, goMiraiMessage)

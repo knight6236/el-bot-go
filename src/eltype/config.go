@@ -17,6 +17,7 @@ const (
 )
 
 // Config 配置对象
+// @property	innerID					int			内部 ID，对外没有任何意义。
 // @property	Type					ConfigType	配置类型
 // @property	WhenMessageList			[]Message	作为触发条件的「消息」
 // @property	WhenOperationList		[]Operation	作为触发条件的「事件/操作」
@@ -26,6 +27,7 @@ const (
 // @property	SenderList				[]Sender 	发送者列表
 // @property	Receiver				[]Receiver 	接收者列表
 type Config struct {
+	innerID           int
 	Type              ConfigType
 	IsCount           bool
 	CountID           string
@@ -37,6 +39,8 @@ type Config struct {
 	SenderList        []Sender
 	Receiver          []Receiver
 }
+
+var innerID int = 0
 
 // NewConfig 构造一个新的配置对象
 // @param	configType				ConfigType	配置类型
@@ -56,6 +60,8 @@ func NewConfig(configType ConfigType,
 	isCount bool,
 	countID string) (Config, error) {
 	var config Config
+	config.innerID = innerID
+	innerID++
 	config.Type = configType
 	config.WhenMessageList = whenMessageList
 	config.WhenOperationList = whenOperationList

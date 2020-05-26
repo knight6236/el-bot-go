@@ -51,12 +51,17 @@ func (doer *FaceDoer) getSendedMessageList() {
 	}
 }
 
-func (doer FaceDoer) replaceStrByPreDefVarMap(text string) string {
+func (doer FaceDoer) replaceStrByPreDefVarMap(text string) (string, bool) {
+	var isReplace bool = false
 	for varName, value := range doer.preDefVarMap {
 		key := fmt.Sprintf("{%s}", varName)
+		temp := text
 		text = strings.ReplaceAll(text, key, value)
+		if !isReplace && temp == text {
+			isReplace = true
+		}
 	}
-	return text
+	return text, isReplace
 }
 
 // GetSendedMessageList 获取将要发送的信息列表

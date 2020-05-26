@@ -45,9 +45,12 @@ func (doer *OperationDoer) getSendedOperationList() {
 			var value map[string]string
 			if doOperation.Type == OperationTypeAt {
 				value = make(map[string]string)
-				value["id"] = doer.replaceStrByPreDefVarMap(doOperation.Value["id"])
+				id, isReplace := doer.replaceStrByPreDefVarMap(doOperation.Value["id"])
+				if isReplace {
+					value["id"] = id
+				}
 				operation, err = NewOperation(OperationTypeAt, value)
-				if err != nil {
+				if err != nil || !isReplace {
 					continue
 				}
 			}
@@ -56,12 +59,17 @@ func (doer *OperationDoer) getSendedOperationList() {
 	}
 }
 
-func (doer OperationDoer) replaceStrByPreDefVarMap(text string) string {
+func (doer OperationDoer) replaceStrByPreDefVarMap(text string) (string, bool) {
+	var isReplace bool = false
 	for varName, value := range doer.preDefVarMap {
 		key := fmt.Sprintf("{%s}", varName)
+		temp := text
 		text = strings.ReplaceAll(text, key, value)
+		if !isReplace && temp == text {
+			isReplace = true
+		}
 	}
-	return text
+	return text, isReplace
 }
 
 // GetSendedMessageList 获取将要发送的信息列表

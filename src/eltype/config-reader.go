@@ -18,6 +18,7 @@ import (
 var SettingFullPath string = "../../plugins/MiraiAPIHTTP/setting.yml"
 var FaceMapFullPath string = "../../config/face-map.yml"
 var DefaultConfigFullPath string = "../../config/default.yml"
+var ImageFolder string = "../../plugins/MiraiAPIHTTP/images"
 
 // ConfigReader 配置读取对象
 type ConfigReader struct {
@@ -63,23 +64,23 @@ func (reader *ConfigReader) monitorFolder() {
 				{
 					if ev.Op&fsnotify.Create == fsnotify.Create {
 						reader.reLoad()
-						fmt.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
+						log.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
 					}
 					if ev.Op&fsnotify.Write == fsnotify.Write {
 						reader.reLoad()
-						fmt.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
+						log.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
 					}
 					if ev.Op&fsnotify.Remove == fsnotify.Remove {
 						reader.reLoad()
-						fmt.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
+						log.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
 					}
 					if ev.Op&fsnotify.Rename == fsnotify.Rename {
 						reader.reLoad()
-						fmt.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
+						log.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
 					}
 					if ev.Op&fsnotify.Chmod == fsnotify.Chmod {
 						reader.reLoad()
-						fmt.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
+						log.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
 					}
 				}
 			case err := <-watch.Errors:
@@ -131,13 +132,13 @@ func (reader *ConfigReader) parseYml() {
 func (reader *ConfigReader) parseThisFile(fileFullPath string) {
 	buf, err := ioutil.ReadFile(fileFullPath)
 	if err != nil {
-		fmt.Printf("跳过 %s, 因为未能打开文件。\n", fileFullPath)
+		log.Printf("跳过 %s, 因为未能打开文件。\n", fileFullPath)
 		return
 	}
 	result := make(map[string]interface{})
 	err = yaml.Unmarshal(buf, &result)
 	if err != nil {
-		fmt.Printf("跳过 %s, 因为解析失败，配置文件可能存在语法错误。\n", fileFullPath)
+		log.Printf("跳过 %s, 因为解析失败，配置文件可能存在语法错误。\n", fileFullPath)
 		return
 	}
 	reader.parseToConfigList(result)
@@ -146,13 +147,13 @@ func (reader *ConfigReader) parseThisFile(fileFullPath string) {
 func (reader *ConfigReader) parseToSetting() {
 	buf, err := ioutil.ReadFile(SettingFullPath)
 	if err != nil {
-		fmt.Printf("跳过 %s, 因为未能打开文件。\n", SettingFullPath)
+		log.Printf("跳过 %s, 因为未能打开文件。\n", SettingFullPath)
 		return
 	}
 	result := make(map[string]interface{})
 	err = yaml.Unmarshal(buf, &result)
 	if err != nil {
-		fmt.Printf("跳过 %s, 因为解析失败，配置文件可能存在语法错误。\n", SettingFullPath)
+		log.Printf("跳过 %s, 因为解析失败，配置文件可能存在语法错误。\n", SettingFullPath)
 		return
 	}
 	reader.Port = strconv.Itoa(result["port"].(int))
