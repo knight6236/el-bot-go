@@ -53,7 +53,7 @@ func (e *InEvent) OperatorDetail() error {
 		if err != nil {
 			return err
 		}
-	} else {
+	} else if e.Operator != nil {
 		e.OperatorFriend = reflect.ValueOf(e.Operator).Int()
 	}
 	return nil
@@ -74,7 +74,7 @@ func (e *InEvent) SenderDetail() error {
 					return err
 				}
 				return nil
-			} else if k.String() == "nickName" {
+			} else if k.String() == "nickname" {
 				bytesData, err := json.Marshal(e.Sender)
 				if err != nil {
 					return err
