@@ -112,8 +112,9 @@ func (event *Event) makeGroupMessageEventTemplate(goMiraiEvent gomirai.InEvent) 
 func (event *Event) makeFriendMessageEventTemplate(goMiraiEvent gomirai.InEvent) error {
 	var sender Sender
 	var err error
-	sender, err = NewSender(SenderTypeMember, goMiraiEvent.SenderGroup.ID,
-		goMiraiEvent.SenderGroup.MemberName, goMiraiEvent.SenderGroup.Permission)
+	event.Type = EventTypeFriendMessage
+	sender, err = NewSender(SenderTypeMember, goMiraiEvent.SenderFriend.ID,
+		goMiraiEvent.SenderFriend.NickName, goMiraiEvent.SenderFriend.Remark)
 	if err != nil {
 		return err
 	}

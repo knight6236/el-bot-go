@@ -15,7 +15,7 @@ import (
 // @property	configReader	ConfigReader	配置读取类
 // @property	bot				*gomirai.Bot	机器人
 type Controller struct {
-	configReader ConfigReader
+	configReader *ConfigReader
 	bot          *gomirai.Bot
 	countMap     map[string]int
 }
@@ -30,7 +30,7 @@ var doerConstructor = [...]func(configHitList []Config, recivedMessageList []Mes
 
 // NewController 构造一个 Controller
 // @param	configReader	ConfigReader	配置读取类
-func NewController(configReader ConfigReader, bot *gomirai.Bot) Controller {
+func NewController(configReader *ConfigReader, bot *gomirai.Bot) Controller {
 	var controller Controller
 	controller.configReader = configReader
 	controller.bot = bot

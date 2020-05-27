@@ -93,13 +93,7 @@ func (doer *PlainDoer) getURLMessage(message Message) (Message, error) {
 	}
 
 	if message.Value["json"] == "true" {
-		text, isReplace := doer.replaceStrByPreDefVarMap(message.Value["text"])
-		if isReplace {
-			value["text"] = text
-		}
-		if err != nil {
-			return message, err
-		}
+		value["text"] = doer.replaceStrByJSON(bodyContent, value["text"])
 	}
 
 	var sendedMessage Message

@@ -15,11 +15,6 @@ import (
 	// "reflect"
 )
 
-var SettingFullPath string = "../../plugins/MiraiAPIHTTP/setting.yml"
-var FaceMapFullPath string = "../../config/face-map.yml"
-var DefaultConfigFullPath string = "../../config/default.yml"
-var ImageFolder string = "../../plugins/MiraiAPIHTTP/images"
-
 // ConfigReader 配置读取对象
 type ConfigReader struct {
 	Port              string
@@ -304,8 +299,12 @@ func (reader *ConfigReader) parseToSenderList(nativeSender map[interface{}]inter
 
 	groupList := nativeSender["group"]
 	if groupList != nil {
-		for _, groupID := range groupList.([]interface{}) {
-			sender, err := NewSender(SenderTypeGroup, int64(groupID.(int)), "", "")
+		for _, nativeGroupID := range groupList.([]interface{}) {
+			groupID, err := toInt64(nativeGroupID)
+			if err != nil {
+				return nil
+			}
+			sender, err := NewSender(SenderTypeGroup, groupID, "", "")
 			if err != nil {
 				return nil
 			}
@@ -315,8 +314,12 @@ func (reader *ConfigReader) parseToSenderList(nativeSender map[interface{}]inter
 
 	friendList := nativeSender["friend"]
 	if friendList != nil {
-		for _, userID := range friendList.([]interface{}) {
-			sender, err := NewSender(SenderTypeFriend, int64(userID.(int)), "", "")
+		for _, nativeFriendID := range friendList.([]interface{}) {
+			friendID, err := toInt64(nativeFriendID)
+			if err != nil {
+				return nil
+			}
+			sender, err := NewSender(SenderTypeFriend, friendID, "", "")
 			if err != nil {
 				return nil
 			}
@@ -326,31 +329,39 @@ func (reader *ConfigReader) parseToSenderList(nativeSender map[interface{}]inter
 	return senderList
 }
 
-func (reader *ConfigReader) parseToReceiverList(nativeSender map[interface{}]interface{}) []Receiver {
-	var reciverList []Receiver
+func (reader *ConfigReader) parseToReceiverList(nativeReceiver map[interface{}]interface{}) []Receiver {
+	var recieverList []Receiver
 
-	groupList := nativeSender["group"]
+	groupList := nativeReceiver["group"]
 	if groupList != nil {
-		for _, groupID := range groupList.([]interface{}) {
-			receiver, err := NewReceiver(ReceiverTypeGroup, int64(groupID.(int)), "", "")
+		for _, nativeGroupID := range groupList.([]interface{}) {
+			groupID, err := toInt64(nativeGroupID)
 			if err != nil {
 				return nil
 			}
-			reciverList = append(reciverList, receiver)
+			receiver, err := NewReceiver(ReceiverTypeGroup, groupID, "", "")
+			if err != nil {
+				return nil
+			}
+			recieverList = append(recieverList, receiver)
 		}
 	}
 
-	userList := nativeSender["user"]
-	if userList != nil {
-		for _, userID := range userList.([]interface{}) {
-			receiver, err := NewReceiver(ReceiverTypeUser, int64(userID.(int)), "", "")
+	friendList := nativeReceiver["friend"]
+	if friendList != nil {
+		for _, nativeFriendID := range friendList.([]interface{}) {
+			friendID, err := toInt64(nativeFriendID)
 			if err != nil {
 				return nil
 			}
-			reciverList = append(reciverList, receiver)
+			receiver, err := NewReceiver(ReceiverTypeFriend, friendID, "", "")
+			if err != nil {
+				return nil
+			}
+			recieverList = append(recieverList, receiver)
 		}
 	}
-	return reciverList
+	return recieverList
 }
 
 func (reader *ConfigReader) parseToMessage(nativeMessage map[interface{}]interface{}) Message {
@@ -372,15 +383,9 @@ func (reader *ConfigReader) parseToMessage(nativeMessage map[interface{}]interfa
 
 	for key, nativeValue := range nativeMessage {
 		value := ""
-		switch nativeValue.(type) {
-		case string:
-			value = nativeValue.(string)
-		case int:
-			value = strconv.Itoa(nativeValue.(int))
-		case int64:
-			value = strconv.FormatInt(nativeValue.(int64), 10)
-		case bool:
-			value = strconv.FormatBool(nativeValue.(bool))
+		value, err := toString(nativeValue)
+		if err != nil {
+			continue
 		}
 		msgValue[key.(string)] = value
 	}
@@ -410,8 +415,12 @@ func (reader *ConfigReader) parseToOperation(natvieOperation map[interface{}]int
 	operationType = CastConfigOperationTypeToOperationType(natvieOperation["type"].(string))
 
 	operationValue := make(map[string]string)
-	for key, value := range natvieOperation {
-		operationValue[key.(string)] = value.(string)
+	for key, nativeValue := range natvieOperation {
+		value, err := toString(nativeValue)
+		if err != nil {
+			continue
+		}
+		operationValue[key.(string)] = value
 	}
 
 	operation, err := NewOperation(operationType, operationValue)
