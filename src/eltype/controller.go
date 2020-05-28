@@ -114,40 +114,47 @@ func (controller *Controller) getConfigRelatedList(event Event) []Config {
 	switch event.Type {
 	case EventTypeGroupMessage:
 		mergeConfigList(&configList,
-			controller.getConfigRelatedConfigList(controller.globalConfigList, event.Sender),
-			controller.getConfigRelatedConfigList(controller.groupConfigList, event.Sender))
+			controller.getConfigRelatedConfigList(event.Type, controller.globalConfigList, event.Sender),
+			controller.getConfigRelatedConfigList(event.Type, controller.groupConfigList, event.Sender))
 	case EventTypeFriendMessage:
 		mergeConfigList(&configList,
-			controller.getConfigRelatedConfigList(controller.globalConfigList, event.Sender),
-			controller.getConfigRelatedConfigList(controller.friendConfigList, event.Sender))
+			controller.getConfigRelatedConfigList(event.Type, controller.globalConfigList, event.Sender),
+			controller.getConfigRelatedConfigList(event.Type, controller.friendConfigList, event.Sender))
 	default:
 		mergeConfigList(&configList,
-			controller.getConfigRelatedConfigList(controller.globalConfigList, event.Sender),
-			controller.getConfigRelatedConfigList(controller.groupConfigList, event.Sender))
+			controller.getConfigRelatedConfigList(event.Type, controller.globalConfigList, event.Sender),
+			controller.getConfigRelatedConfigList(event.Type, controller.groupConfigList, event.Sender))
 	}
 	return configList
 }
 
-func (controller *Controller) getConfigRelatedConfigList(configList []Config, sender Sender) []Config {
+func (controller *Controller) getConfigRelatedConfigList(eventType EventType, configList []Config, sender Sender) []Config {
 	var ret []Config
 	for _, config := range configList {
-		if config.When.Message.Sender.UserIDList == nil &&
-			config.When.Message.Sender.GroupIDList == nil {
+		if (config.When.Message.Sender.UserIDList == nil || len(config.When.Message.Sender.UserIDList) == 0) &&
+			(config.When.Message.Sender.GroupIDList == nil || len(config.When.Message.Sender.GroupIDList) == 0) {
 			ret = append(ret, config)
 			continue
 		}
-		for _, groupID := range config.When.Message.Sender.GroupIDList {
-			if groupID == sender.GroupIDList[0] {
-				ret = append(ret, config)
-				goto LOOP_END
+
+		switch eventType {
+		case EventTypeFriendMessage:
+			for _, friendID := range config.When.Message.Sender.UserIDList {
+				if friendID == sender.UserIDList[0] {
+					ret = append(ret, config)
+					goto LOOP_END
+				}
+			}
+
+		default:
+			for _, groupID := range config.When.Message.Sender.GroupIDList {
+				if groupID == sender.GroupIDList[0] {
+					ret = append(ret, config)
+					goto LOOP_END
+				}
 			}
 		}
-		for _, friendID := range config.When.Message.Sender.UserIDList {
-			if friendID == sender.UserIDList[0] {
-				ret = append(ret, config)
-				goto LOOP_END
-			}
-		}
+
 	LOOP_END:
 	}
 	return ret
@@ -183,13 +190,15 @@ func (controller *Controller) sendMessageAndOperation(event Event, configHitList
 		}
 
 		for _, message := range doer.GetSendedMessageList() {
+			message.Complete()
 			message.Sender.Complete(event.PreDefVarMap)
 			message.Receiver.Complete(event.PreDefVarMap)
 			goMiraiMessageList, isSuccess := message.ToGoMiraiMessageList()
 			if !isSuccess {
 				continue
 			}
-			if message.Receiver.GroupIDList == nil && message.Receiver.UserIDList == nil {
+			if (message.Receiver.GroupIDList == nil || len(message.Receiver.GroupIDList) == 0) &&
+				(message.Receiver.UserIDList == nil || len(message.Receiver.UserIDList) == 0) {
 				switch event.Type {
 				case EventTypeFriendMessage:
 					message.Receiver.UserIDList = append(message.Receiver.UserIDList, event.Sender.UserIDList[0])
@@ -264,7 +273,7 @@ func (controller *Controller) monitorFolder() {
 	}
 	defer watch.Close()
 	//添加要监控的对象，文件或文件夹
-	err = watch.Add(controller.configReader.folder)
+	err = watch.Add(ConfigRoot + "/" + controller.configReader.folder)
 	if err != nil {
 		log.Fatal(err)
 	}

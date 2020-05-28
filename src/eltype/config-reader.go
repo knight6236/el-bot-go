@@ -1,7 +1,6 @@
 package eltype
 
 import (
-	"fmt"
 	"log"
 	"strconv"
 
@@ -32,12 +31,26 @@ type ConfigReader struct {
 func NewConfigReader(folder string) ConfigReader {
 	var reader ConfigReader
 	reader.folder = folder
-	reader.parseToSetting()
-	reader.parseYml()
-	reader.initConfigList()
-	// go reader.monitorFolder()
-	// fmt.Printf("%v\n", reader.GroupConfigList)
 	return reader
+}
+
+func (reader *ConfigReader) Load(isDebug bool) {
+	compiler, err := NewCompiler(reader.folder)
+	if err != nil {
+		return
+	}
+	compiler.Compile()
+	if isDebug {
+		filePath := compiler.WriteFile()
+		reader.parseThisFile(filePath)
+		reader.CompleteConfigList()
+	} else {
+		reader.GlobalConfigList = compiler.SourceConfig.GlobalConfigList
+		reader.FriendConfigList = compiler.SourceConfig.FriendConfigList
+		reader.GroupConfigList = compiler.SourceConfig.GroupConfigList
+		reader.CrontabConfigList = compiler.SourceConfig.CrontabConfigList
+	}
+	reader.parseToSetting()
 }
 
 // reLoad 重新加载配置
@@ -46,49 +59,7 @@ func (reader *ConfigReader) reLoad() {
 	reader.FriendConfigList = reader.FriendConfigList[:0]
 	reader.GroupConfigList = reader.GroupConfigList[:0]
 	reader.CrontabConfigList = reader.CrontabConfigList[:0]
-	// reader.CounterConfigList = reader.CounterConfigList[:0]
-	reader.parseYml()
-	reader.initConfigList()
-}
-
-func (reader *ConfigReader) parseYml() {
-	// reader.parseToSetting()
-
-	files, err := ioutil.ReadDir(reader.folder)
-	if err != nil {
-	}
-
-	// fmt.Println("使用自定义配置: " + reader.folder + "\n")
-	for _, file := range files {
-		if !file.IsDir() {
-			// fmt.Printf("正在读取配置：%s/%s\n", reader.folder, file.Name())
-			reader.parseThisFile(fmt.Sprintf("%s/%s", reader.folder, file.Name()))
-		}
-	}
-
-}
-
-func (reader *ConfigReader) initConfigList() {
-	for i := 0; i < len(reader.GlobalConfigList); i++ {
-		temp := reader.GlobalConfigList[i]
-		temp.Init()
-		reader.GlobalConfigList[i] = temp
-	}
-	for i := 0; i < len(reader.FriendConfigList); i++ {
-		temp := reader.FriendConfigList[i]
-		temp.Init()
-		reader.FriendConfigList[i] = temp
-	}
-	for i := 0; i < len(reader.GroupConfigList); i++ {
-		temp := reader.GroupConfigList[i]
-		temp.Init()
-		reader.GroupConfigList[i] = temp
-	}
-	for i := 0; i < len(reader.CrontabConfigList); i++ {
-		temp := reader.CrontabConfigList[i]
-		temp.Init()
-		reader.CrontabConfigList[i] = temp
-	}
+	reader.Load(false)
 }
 
 func (reader *ConfigReader) parseToSetting() {
@@ -114,15 +85,39 @@ func (reader *ConfigReader) parseThisFile(fileFullPath string) {
 		log.Printf("跳过 %s, 因为未能打开文件。\n", fileFullPath)
 		return
 	}
-	result := make(map[string]interface{})
-	err = yaml.Unmarshal(buf, &result)
-	if err != nil {
-		log.Printf("跳过 %s, 因为解析失败，配置文件可能存在语法错误。\n", fileFullPath)
-		return
+	yaml.Unmarshal(buf, reader)
+}
+
+func (reader *ConfigReader) CompleteConfigList() {
+	var innerID int = 0
+	for i := 0; i < len(reader.GlobalConfigList); i++ {
+		temp := reader.GlobalConfigList[i]
+		temp.Init()
+		temp.innerID = innerID
+		innerID++
+		reader.GlobalConfigList[i] = temp
 	}
-	var tempReader ConfigReader
-	yaml.Unmarshal(buf, &tempReader)
-	reader.mergeReader(tempReader)
+	for i := 0; i < len(reader.FriendConfigList); i++ {
+		temp := reader.FriendConfigList[i]
+		temp.Init()
+		temp.innerID = innerID
+		innerID++
+		reader.FriendConfigList[i] = temp
+	}
+	for i := 0; i < len(reader.GroupConfigList); i++ {
+		temp := reader.GroupConfigList[i]
+		temp.Init()
+		temp.innerID = innerID
+		innerID++
+		reader.GroupConfigList[i] = temp
+	}
+	for i := 0; i < len(reader.CrontabConfigList); i++ {
+		temp := reader.CrontabConfigList[i]
+		temp.Init()
+		temp.innerID = innerID
+		innerID++
+		reader.CrontabConfigList[i] = temp
+	}
 }
 
 func (reader *ConfigReader) mergeReader(tempReader ConfigReader) {

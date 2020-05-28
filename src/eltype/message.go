@@ -42,18 +42,8 @@ type MessageDetail struct {
 	Path      string `yaml:"path"`
 	ReDirect  bool   `yaml:"reDirect"`
 	FaceID    int64
-	FaceName  string `yaml.faceName`
+	FaceName  string `yaml."faceName"`
 }
-
-// NewMessage 构造一个 Message
-// @param	messageType	MessageType 		消息类型
-// @param	value		map[string]string 	与消息相关的属性
-// func NewMessage(messageType MessageType, value map[string]string) (Message, error) {
-// 	var message Message
-// 	message.Type = messageType
-// 	message.Value = value
-// 	return message, nil
-// }
 
 // NewMessageFromGoMiraiMessage 从 gomirai.Message 中 构造一个 Message
 // @param	goMiraiMessage	gomirai.Message
@@ -119,7 +109,7 @@ func (message *Message) AddDetail(detail MessageDetail) {
 
 // ToGoMiraiMessage 将 Message 转换为 gomirai.Message
 func (message *Message) ToGoMiraiMessageList() ([]gomirai.Message, bool) {
-	message.Init()
+	message.Complete()
 	var goMiraiMessageList []gomirai.Message
 	for _, detail := range message.DetailList {
 		goMiaraiMessage, isSuccess := detail.ToGoMiraiMessage()
@@ -131,7 +121,7 @@ func (message *Message) ToGoMiraiMessageList() ([]gomirai.Message, bool) {
 }
 
 func (detail *MessageDetail) ToGoMiraiMessage() (gomirai.Message, bool) {
-	detail.Init()
+	detail.Complete()
 	var goMiraiMessage gomirai.Message
 	switch detail.innerType {
 	case MessageTypePlain:
@@ -153,6 +143,9 @@ func (detail *MessageDetail) ToGoMiraiMessage() (gomirai.Message, bool) {
 		goMiraiMessage.URL = detail.URL
 	case MessageTypeXML:
 		goMiraiMessage.Type = "Xml"
+		if detail.Text == "" {
+			return goMiraiMessage, false
+		}
 		goMiraiMessage.XML = detail.Text
 	case MessageTypeAt:
 		goMiraiMessage.Type = "At"
@@ -165,15 +158,15 @@ func (detail *MessageDetail) ToGoMiraiMessage() (gomirai.Message, bool) {
 	return goMiraiMessage, true
 }
 
-func (message *Message) Init() {
+func (message *Message) Complete() {
 	for i := 0; i < len(message.DetailList); i++ {
 		temp := message.DetailList[i]
-		temp.Init()
+		temp.Complete()
 		message.DetailList[i] = temp
 	}
 }
 
-func (detail *MessageDetail) Init() {
+func (detail *MessageDetail) Complete() {
 	switch detail.Type {
 	case "Plain":
 		detail.innerType = MessageTypePlain

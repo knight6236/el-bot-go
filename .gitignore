@@ -28,6 +28,7 @@
 
 
 # custom
+config/obj/*.yml
 src/main/__debug_bin
 *.bin
 *.jar

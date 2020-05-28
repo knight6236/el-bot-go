@@ -69,22 +69,6 @@ func CastConfigOperationTypeToOperationType(configEventType string) OperationTyp
 	}
 }
 
-// func (operation *Operation) ToGoMiraiMessage() (gomirai.Message, bool) {
-// 	operation.Init()
-// 	var goMiraiMessage gomirai.Message
-// 	switch operation.innerType {
-// 	case OperationTypeAt:
-// 		goMiraiMessage.Type = "At"
-// 		goMiraiMessage.Target = operation.UserID
-// 	case OperationTypeAtAll:
-// 		goMiraiMessage.Type = "AtAll"
-// 	default:
-// 		return goMiraiMessage, false
-// 	}
-// 	return goMiraiMessage, true
-// }
-
-// ToString ...
 func (operation Operation) ToString() string {
 	// switch operation.Type {
 	// case OperationTypeMemberJoin:

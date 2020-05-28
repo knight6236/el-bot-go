@@ -66,10 +66,10 @@ func (sender *Sender) Complete(preDefVarMap map[string]string) {
 	}
 }
 
-func (sender *Sender) AddGroupID(groupID int64) {
-	sender.GroupIDList = append(sender.GroupIDList, CastInt64ToString(groupID))
+func (sender *Sender) AddGroupID(groupID string) {
+	sender.GroupIDList = append(sender.GroupIDList, groupID)
 }
 
-func (sender *Sender) AddUserID(userID int64) {
-	sender.UserIDList = append(sender.UserIDList, CastInt64ToString(userID))
+func (sender *Sender) AddUserID(userID string) {
+	sender.UserIDList = append(sender.UserIDList, userID)
 }

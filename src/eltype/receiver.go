@@ -62,10 +62,10 @@ func (receiver *Receiver) Complete(preDefVarMap map[string]string) {
 	}
 }
 
-func (receiver *Receiver) AddGroupID(groupID int64) {
-	receiver.GroupIDList = append(receiver.GroupIDList, CastInt64ToString(groupID))
+func (receiver *Receiver) AddGroupID(groupID string) {
+	receiver.GroupIDList = append(receiver.GroupIDList, groupID)
 }
 
-func (receiver *Receiver) AddUserID(userID int64) {
-	receiver.UserIDList = append(receiver.UserIDList, CastInt64ToString(userID))
+func (receiver *Receiver) AddUserID(userID string) {
+	receiver.UserIDList = append(receiver.UserIDList, userID)
 }

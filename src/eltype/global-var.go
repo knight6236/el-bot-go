@@ -1,5 +1,6 @@
 package eltype
 
+var ConfigRoot string = "../../config"
 var SettingFullPath string = "../../plugins/MiraiAPIHTTP/setting.yml"
 var FaceMapFullPath string = "../../config/face-map.yml"
 var DefaultConfigFullPath string = "../../config/default.yml"

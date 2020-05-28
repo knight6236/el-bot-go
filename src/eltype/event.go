@@ -89,8 +89,8 @@ func NewEventFromGoMiraiEvent(goMiraiEvent gomirai.InEvent) (Event, error) {
 
 func (event *Event) makeGroupMessageEventTemplate(goMiraiEvent gomirai.InEvent) error {
 	event.Type = EventTypeGroupMessage
-	event.Sender.AddGroupID(goMiraiEvent.SenderGroup.Group.ID)
-	event.Sender.AddUserID(goMiraiEvent.SenderGroup.ID)
+	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.SenderGroup.Group.ID))
+	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.SenderGroup.ID))
 	event.addPerDefVar("el-sender-group-id", goMiraiEvent.SenderGroup.Group.ID)
 	event.addPerDefVar("el-sender-group-name", goMiraiEvent.OperatorGroup.Group.Name)
 	event.addPerDefVar("el-sender-user-id", goMiraiEvent.SenderGroup.ID)
@@ -100,7 +100,7 @@ func (event *Event) makeGroupMessageEventTemplate(goMiraiEvent gomirai.InEvent) 
 
 func (event *Event) makeFriendMessageEventTemplate(goMiraiEvent gomirai.InEvent) error {
 	event.Type = EventTypeFriendMessage
-	event.Sender.AddUserID(goMiraiEvent.SenderFriend.ID)
+	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.SenderFriend.ID))
 	event.addPerDefVar("el-sender-user-id", goMiraiEvent.SenderFriend.ID)
 	event.addPerDefVar("el-sender-user-name", goMiraiEvent.SenderFriend.NickName)
 	return nil
@@ -108,9 +108,9 @@ func (event *Event) makeFriendMessageEventTemplate(goMiraiEvent gomirai.InEvent)
 
 func (event *Event) makeMemberMuteEventTemplate(goMiraiEvent gomirai.InEvent) error {
 	event.Type = EventTypeMemberMute
-	event.Sender.AddGroupID(goMiraiEvent.OperatorGroup.Group.ID)
-	event.Sender.AddUserID(goMiraiEvent.OperatorGroup.ID)
-	event.Sender.AddUserID(goMiraiEvent.Member.ID)
+	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID))
+	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.OperatorGroup.ID))
+	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
 	operation := Operation{
 		innerType:    OperationTypeMemberMute,
@@ -144,9 +144,9 @@ func (event *Event) makeMemberMuteEventTemplate(goMiraiEvent gomirai.InEvent) er
 
 func (event *Event) makeMemberUnmuteEventTemplate(goMiraiEvent gomirai.InEvent) error {
 	event.Type = EventTypeMemberUnmute
-	event.Sender.AddGroupID(goMiraiEvent.OperatorGroup.Group.ID)
-	event.Sender.AddUserID(goMiraiEvent.OperatorGroup.ID)
-	event.Sender.AddUserID(goMiraiEvent.Member.ID)
+	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID))
+	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.OperatorGroup.ID))
+	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
 	operation := Operation{
 		innerType:    OperationTypeMemberMute,
@@ -181,9 +181,9 @@ func (event *Event) makeGroupMuteAllEventTemplate(goMiraiEvent gomirai.InEvent) 
 	} else {
 		event.Type = EventTypeGroupMuteAll
 	}
-	event.Sender.AddGroupID(goMiraiEvent.OperatorGroup.Group.ID)
-	event.Sender.AddUserID(goMiraiEvent.OperatorGroup.ID)
-	event.Sender.AddUserID(goMiraiEvent.Member.ID)
+	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID))
+	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.OperatorGroup.ID))
+	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
 	operation := Operation{
 		innerType:    OperationTypeMemberMute,
@@ -210,8 +210,8 @@ func (event *Event) makeGroupMuteAllEventTemplate(goMiraiEvent gomirai.InEvent) 
 
 func (event *Event) makeMemberJoinEventTemplate(goMiraiEvent gomirai.InEvent) error {
 	event.Type = EventTypeMemberJoin
-	event.Sender.AddGroupID(goMiraiEvent.OperatorGroup.Group.ID)
-	event.Sender.AddUserID(goMiraiEvent.Member.ID)
+	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID))
+	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
 	operation := Operation{
 		innerType: OperationTypeMemberMute,
@@ -235,9 +235,9 @@ func (event *Event) makeMemberJoinEventTemplate(goMiraiEvent gomirai.InEvent) er
 
 func (event *Event) makeMemberLeaveByKickEventTemplate(goMiraiEvent gomirai.InEvent) error {
 	event.Type = EventTypeMemberLeaveByKick
-	event.Sender.AddGroupID(goMiraiEvent.OperatorGroup.Group.ID)
-	event.Sender.AddUserID(goMiraiEvent.OperatorGroup.ID)
-	event.Sender.AddUserID(goMiraiEvent.Member.ID)
+	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID))
+	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.OperatorGroup.ID))
+	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
 	operation := Operation{
 		innerType:    OperationTypeMemberMute,
@@ -268,8 +268,8 @@ func (event *Event) makeMemberLeaveByKickEventTemplate(goMiraiEvent gomirai.InEv
 
 func (event *Event) makeMemberLeaveByQuitEventTemplate(goMiraiEvent gomirai.InEvent) error {
 	event.Type = EventTypeMemberLeaveByQuit
-	event.Sender.AddGroupID(goMiraiEvent.OperatorGroup.Group.ID)
-	event.Sender.AddUserID(goMiraiEvent.Member.ID)
+	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID))
+	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
 	operation := Operation{
 		innerType: OperationTypeMemberMute,

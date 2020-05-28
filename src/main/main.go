@@ -11,11 +11,12 @@ import (
 )
 
 func main() {
-	eltype.DefaultConfigFullPath = os.Getenv("DEFAULT_FILE")
+	eltype.ConfigRoot = os.Getenv("CONFIG_ROOT")
 	eltype.SettingFullPath = os.Getenv("SETTING_FILE")
 	eltype.FaceMapFullPath = os.Getenv("FACE_MAP_FILE")
 	eltype.ImageFolder = os.Getenv("IMAGE_FOLDER")
 	reader := eltype.NewConfigReader(os.Args[2])
+	reader.Load(false)
 
 	address := "http://127.0.0.1:" + reader.Port
 	authKey := reader.AuthKey
