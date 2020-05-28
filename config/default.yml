@@ -2,48 +2,55 @@
 global:
   - when:
       message:
-        - type: Plain
-          text: hello
-        - type: Plain
-          text: 你好
+        detail:
+          - type: Plain
+            text: hello
+          - type: Plain
+            text: 你好
     do:
       message:
-        - type: Plain
-          text: Hello World!
-        - type: Plain
-          text: （你好 世界！）
+        detail:
+          - type: Plain
+            text: Hello World!
+          - type: Plain
+            text: （你好 世界！）
 
 group:
   # 当接收到的群消息为 say 时，调用「一言API」，原文发送接口返回的消息
   - when:
       message:
-        - type: Plain
-          text: say
+        detail:
+          - type: Plain
+            text: say
     do:
       message:
-        - type: Plain
-          url: https://v1.hitokoto.cn?encode=text
-          text: '{el-url-text}'
+        detail:
+          - type: Plain
+            url: https://v1.hitokoto.cn?encode=text
+            text: '{el-url-text}'
 
   # 当接收到的群消息为 jsay 时，调用「一言API」，解析返回后数据并拼接成文本消息发送
   - when:
       message:
-        - type: Plain
-          text: jsay
+        detail:
+          - type: Plain
+            text: jsay
     do:
       message:
-        - type: Plain
-          url: https://v1.hitokoto.cn?encode=json&charset=utf-8
-          text: '{hitokoto} ——— {from}'
-          json: true
+        detail:
+          - type: Plain
+            url: https://v1.hitokoto.cn?encode=json&charset=utf-8
+            text: '{hitokoto} ——— {from}'
+            json: true
   # 当某个成员被禁言时发送「「被禁言成员群昵称」喜提禁言套餐」
   - when:
       operation:
         - type: MemberMute
     do:
       message:
-        - type: Plain
-          text: 「{el-target-name}」喜提禁言套餐
+        detail:
+          - type: Plain
+            text: 「{el-target-name}」喜提禁言套餐
   
   # 当某个成员被禁言时发送「恭喜「被禁言成员群昵称」出狱」
   - when:
@@ -51,8 +58,9 @@ group:
         - type: MemberUnmute
     do:
       message:
-        - type: Plain
-          text: '恭喜「{el-target-name}」出狱'
+        detail:
+          - type: Plain
+            text: '恭喜「{el-target-name}」出狱'
 
   # 当开启全体禁言时发送 「砸瓦鲁多！」
   - when:
@@ -60,8 +68,9 @@ group:
         - type: GroupMuteAll
     do:
       message:
-        - type: Plain
-          text: 砸瓦鲁多！
+        detail:
+          - type: Plain
+            text: 砸瓦鲁多！
   
   #  当关闭全员禁言时发送「隐藏着黑暗力量的钥匙啊,在我面前显示你真正的力量！现在以你的主人，小樱之名命令你。封印解除！」
   - when:
@@ -69,8 +78,9 @@ group:
         - type: GroupUnMuteAll
     do:
       message:
-        - type: Plain
-          text: 隐藏着黑暗力量的钥匙啊,在我面前显示你真正的力量！现在以你的主人，小樱之名命令你。封印解除！
+        detail:
+          - type: Plain
+            text: 隐藏着黑暗力量的钥匙啊,在我面前显示你真正的力量！现在以你的主人，小樱之名命令你。封印解除！
   
   # 当有新成员入群时发送「欢迎「新成员群昵称」进群」
   - when:
@@ -78,8 +88,9 @@ group:
         - type: MemberJoin
     do:
       message:
-        - type: Plain
-          text: 欢迎「{el-target-name}」进群
+        detail:
+          - type: Plain
+            text: 欢迎「{el-target-name}」进群
 
   # 当某成员被移除群聊时发送「管理员赠送「被移除的成员的群昵称」飞机票一张」
   - when:
@@ -87,8 +98,9 @@ group:
         - type: MemberLeaveByKick
     do:
       message:
-        - type: Plain
-          text: 管理员赠送「{el-target-name}」飞机票一张
+        detail:
+          - type: Plain
+            text: 管理员赠送「{el-target-name}」飞机票一张
   
   # 当某成员自行退出群聊是发送「有大佬走了，群地位+1。」
   - when:
@@ -96,28 +108,33 @@ group:
         - type: MemberLeaveByQuit
     do:
       message:
-        - type: Plain
-          text: 有大佬走了，群地位+1。
+        detail:
+          - type: Plain
+            text: 有大佬走了，群地位+1。
   
   # 当文本消息符合正则表达式时复读第一个子表达式的内容并 At 消息发送者
   - when:
       message:
-        - type: Plain
-          regex: 复读\s(.+)
+        detail:
+          - type: Plain
+            regex: 复读\s(.+)
     do:
       operation:
         - type: At
           id: '{el-sender-id}'
       message:
-        - type: Plain
-          text: '{el-regex-0}'
+        detail:
+          - type: Plain
+            text: '{el-regex-0}'
 
-  # 当收到的表情消息为 「撇嘴」时发送表情「微笑」
+  # # 当收到的表情消息为 「撇嘴」时发送表情「微笑」
   - when:
       message:
-        - type: Face
-          name: piezui
+        detail:
+          - type: Face
+            faceName: piezui
     do:
       message:
-        - type: Face
-          name: weixiao
+        detail:
+          - type: Face
+            faceName: weixiao

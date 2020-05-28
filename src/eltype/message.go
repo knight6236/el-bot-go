@@ -42,7 +42,7 @@ type MessageDetail struct {
 	Path      string `yaml:"path"`
 	ReDirect  bool   `yaml:"reDirect"`
 	FaceID    int64
-	FaceName  string `yaml."faceName"`
+	FaceName  string `yaml:"faceName"`
 }
 
 // NewMessageFromGoMiraiMessage 从 gomirai.Message 中 构造一个 Message
