@@ -1,27 +1,27 @@
 package eltype
 
-// ImageHandler 判断是否命中和表情有关的配置
+// AtHandler 判断是否命中和表情有关的配置
 // @property	configList		[]Config			要判断的配置列表
 // @property	messageList		[]Message			要判断的消息列表
 // @property	operationList	[]Operation			要判断的配置列表
 // @property	configHitList	[]Config			命中的配置列表
 // @property	preDefVarMap	map[string]string	预定义变量 Map
-type ImageHandler struct {
+type AtHandler struct {
 	configList    []Config
 	messageList   []Message
-	configHitList []Config
 	operationList []Operation
+	configHitList []Config
 	preDefVarMap  *map[string]string
 }
 
-// NewImageHandler 构造一个 FaceHandler
+// NewAtHandler 构造一个 AtHandler
 // @param	configList		[]Config			要判断的配置列表
 // @param	messageList		[]Message			要判断的消息列表
 // @param	operationList	[]Operation			要判断的配置列表
 // @param	preDefVarMap	map[string]string	预定义变量 Map
-func NewImageHandler(configList []Config, messageList []Message, operationList []Operation,
+func NewAtHandler(configList []Config, messageList []Message, operationList []Operation,
 	preDefVarMap *map[string]string) (IHandler, error) {
-	var handler ImageHandler
+	var handler AtHandler
 	handler.configList = configList
 	handler.messageList = messageList
 	handler.preDefVarMap = preDefVarMap
@@ -29,14 +29,21 @@ func NewImageHandler(configList []Config, messageList []Message, operationList [
 	return handler, nil
 }
 
-func (handler *ImageHandler) searchHitConfig() {
+func (handler *AtHandler) searchHitConfig() {
 	for _, config := range handler.configList {
-		for _, whenMessageDetail := range config.When.Message.DetailList {
-			for _, message := range handler.messageList {
-				for _, messageDetail := range message.DetailList {
-					if messageDetail.innerType == MessageTypeImage &&
-						whenMessageDetail.innerType == MessageTypeImage {
+		goto SECOND_LOOP
+	TOP_LOOP:
+		continue
+	SECOND_LOOP:
+		for _, message := range handler.messageList {
+			for _, messageDetail := range message.DetailList {
+				for _, whenMessageDetail := range config.When.Message.DetailList {
+					if messageDetail.innerType == MessageTypeAt &&
+						whenMessageDetail.innerType == MessageTypeAt &&
+						(whenMessageDetail.GroupID == messageDetail.GroupID || whenMessageDetail.GroupID == "") &&
+						(whenMessageDetail.UserID == messageDetail.UserID || whenMessageDetail.UserID == "") {
 						handler.configHitList = append(handler.configHitList, config)
+						goto TOP_LOOP
 					}
 				}
 			}
@@ -45,6 +52,6 @@ func (handler *ImageHandler) searchHitConfig() {
 }
 
 // GetConfigHitList 获取命中的配置列表
-func (handler ImageHandler) GetConfigHitList() []Config {
+func (handler AtHandler) GetConfigHitList() []Config {
 	return handler.configHitList
 }

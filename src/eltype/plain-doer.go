@@ -39,70 +39,67 @@ func NewPlainDoer(configHitList []Config, recivedMessageList []Message, preDefVa
 
 func (doer *PlainDoer) getSendedMessageList() {
 	for _, config := range doer.configHitList {
-		for _, doMessage := range config.DoMessageList {
-			if doMessage.Type != MessageTypePlain {
-				continue
-			}
-			if doMessage.Value["url"] == "" {
-				sendedMessage, err := doer.getTextMessage(doMessage)
-				if err == nil {
-					doer.sendedMessageList = append(doer.sendedMessageList, sendedMessage)
-				}
-			} else if doMessage.Value["url"] != "" {
-				sendedMessage, err := doer.getURLMessage(doMessage)
-				if err == nil {
-					doer.sendedMessageList = append(doer.sendedMessageList, sendedMessage)
+		for _, doMessageDetail := range config.Do.Message.DetailList {
+			var willBeSentMessage Message
+			var willBeSentMessageDetail MessageDetail
+			willBeSentMessage.Sender = config.Do.Message.Sender.DeepCopy()
+			willBeSentMessage.Receiver = config.Do.Message.Receiver.DeepCopy()
+			willBeSentMessageDetail.innerType = MessageTypePlain
+			if doMessageDetail.innerType == MessageTypePlain {
+				if doMessageDetail.URL == "" {
+					willBeSentMessageDetail, err := doer.getTextMessageDetail(doMessageDetail)
+					willBeSentMessage.AddDetail(willBeSentMessageDetail)
+					if err == nil {
+						doer.sendedMessageList = append(doer.sendedMessageList, willBeSentMessage)
+					}
+				} else if doMessageDetail.URL != "" {
+					willBeSentMessageDetail, err := doer.getURLMessageDetail(doMessageDetail)
+					willBeSentMessage.AddDetail(willBeSentMessageDetail)
+					if err == nil {
+						doer.sendedMessageList = append(doer.sendedMessageList, willBeSentMessage)
+					}
 				}
 			}
 		}
 	}
 }
 
-func (doer *PlainDoer) getTextMessage(message Message) (Message, error) {
-	value := make(map[string]string)
-	text, isReplace := doer.replaceStrByPreDefVarMap(message.Value["text"])
+func (doer *PlainDoer) getTextMessageDetail(detail MessageDetail) (MessageDetail, error) {
+	var newDetail MessageDetail
+	text, isReplace := doer.replaceStrByPreDefVarMap(detail.Text)
 	if isReplace {
-		value["text"] = text
+		newDetail.Text = text
+	} else {
+		newDetail.Text = detail.Text
 	}
-	sendedMessage, err := NewMessage(MessageTypePlain, value)
-	if err != nil {
-		return sendedMessage, err
-	}
-	return sendedMessage, nil
+	return newDetail, nil
 }
 
-func (doer *PlainDoer) getURLMessage(message Message) (Message, error) {
-	res, err := http.Get(message.Value["url"])
+func (doer *PlainDoer) getURLMessageDetail(detail MessageDetail) (MessageDetail, error) {
+	var newDetail MessageDetail
+	res, err := http.Get(detail.URL)
 	if err != nil {
-		return message, err
+		return detail, err
 	}
 
 	defer res.Body.Close()
 
 	bodyContent, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return message, err
+		return detail, err
 	}
 	doer.preDefVarMap["el-url-text"] = string(bodyContent)
 
-	value := make(map[string]string)
-
-	text, isReplace := doer.replaceStrByPreDefVarMap(message.Value["text"])
+	text, isReplace := doer.replaceStrByPreDefVarMap(detail.Text)
 	if isReplace {
-		value["text"] = text
+		newDetail.Text = text
 	}
 
-	if message.Value["json"] == "true" {
-		value["text"] = doer.replaceStrByJSON(bodyContent, value["text"])
+	if detail.JSON {
+		newDetail.Text = doer.replaceStrByJSON(bodyContent, newDetail.Text)
 	}
 
-	var sendedMessage Message
-	sendedMessage, err = NewMessage(MessageTypePlain, value)
-	if err != nil {
-		return message, err
-	}
-
-	return sendedMessage, nil
+	return newDetail, nil
 }
 
 func (doer PlainDoer) replaceStrByPreDefVarMap(text string) (string, bool) {

@@ -38,9 +38,9 @@ func NewPlainHandler(configList []Config, messageList []Message, operationList [
 
 func (handler *PlainHandler) searchHitConfig() {
 	for _, config := range handler.configList {
-		for _, whenMessage := range config.WhenMessageList {
-			if handler.checkText(whenMessage) ||
-				handler.checkRegex(whenMessage) {
+		for _, whenMessageDetail := range config.When.Message.DetailList {
+			if handler.checkText(whenMessageDetail) ||
+				handler.checkRegex(whenMessageDetail) {
 				handler.configHitList = append(handler.configHitList, config)
 				break
 			}
@@ -48,27 +48,30 @@ func (handler *PlainHandler) searchHitConfig() {
 	}
 }
 
-func (handler *PlainHandler) checkText(whenMessage Message) bool {
-	if whenMessage.Type != MessageTypePlain {
+func (handler *PlainHandler) checkText(detail MessageDetail) bool {
+	if detail.innerType != MessageTypePlain {
 		return false
 	}
-	text := whenMessage.Value["text"]
-	if text == "" {
+
+	if detail.Text == "" {
 		return false
 	}
 	for _, message := range handler.messageList {
-		if message.Value["text"] == text {
-			return true
+		for _, messageDetail := range message.DetailList {
+			if messageDetail.Text == detail.Text {
+				return true
+			}
 		}
+
 	}
 	return false
 }
 
-func (handler *PlainHandler) checkRegex(whenMessage Message) bool {
-	if whenMessage.Type != MessageTypePlain {
+func (handler *PlainHandler) checkRegex(detail MessageDetail) bool {
+	if detail.innerType != MessageTypePlain {
 		return false
 	}
-	pattern := whenMessage.Value["regex"]
+	pattern := detail.Regex
 
 	if pattern == "" {
 		return false
@@ -77,8 +80,10 @@ func (handler *PlainHandler) checkRegex(whenMessage Message) bool {
 	var buf bytes.Buffer
 
 	for _, message := range handler.messageList {
-		if message.Type == MessageTypePlain && message.Value["text"] != "" {
-			buf.WriteString(message.Value["text"])
+		for _, messageDetail := range message.DetailList {
+			if messageDetail.innerType == MessageTypePlain && messageDetail.Text != "" {
+				buf.WriteString(messageDetail.Text)
+			}
 		}
 	}
 

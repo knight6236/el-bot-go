@@ -36,12 +36,14 @@ func (handler *FaceHandler) searchHitConfig() {
 		continue
 	SECOND_LOOP:
 		for _, message := range handler.messageList {
-			for _, whenMessage := range config.WhenMessageList {
-				if message.Type == MessageTypeFace &&
-					whenMessage.Type == MessageTypeFace &&
-					whenMessage.Value["name"] == message.Value["name"] {
-					handler.configHitList = append(handler.configHitList, config)
-					goto TOP_LOOP
+			for _, messageDetail := range message.DetailList {
+				for _, whenMessageDetail := range config.When.Message.DetailList {
+					if messageDetail.innerType == MessageTypeFace &&
+						whenMessageDetail.innerType == MessageTypeFace &&
+						whenMessageDetail.FaceName == messageDetail.FaceName {
+						handler.configHitList = append(handler.configHitList, config)
+						goto TOP_LOOP
+					}
 				}
 			}
 		}

@@ -11,6 +11,5 @@ func (job Job) Run() {
 	var event Event
 	var configHitList []Config
 	configHitList = append(configHitList, job.config)
-	sendedGoMiraiMessageList := job.controller.getSendedGoMiraiMessageList(event, configHitList)
-	job.controller.sendMessage(event, configHitList, sendedGoMiraiMessageList)
+	job.controller.sendMessageAndOperation(event, configHitList)
 }

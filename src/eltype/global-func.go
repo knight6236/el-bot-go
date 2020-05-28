@@ -1,57 +1,34 @@
 package eltype
 
 import (
-	"errors"
-	"fmt"
+	"el-bot-go/src/gomirai"
 	"strconv"
 )
 
-func toString(nativeValue interface{}) (string, error) {
-	value := ""
-	switch nativeValue.(type) {
-	case string:
-		value = nativeValue.(string)
-	case int:
-		value = strconv.Itoa(nativeValue.(int))
-	case int64:
-		value = strconv.FormatInt(nativeValue.(int64), 10)
-	case float64:
-		value = fmt.Sprintf("%.6f", nativeValue.(float64))
-	case float32:
-		value = fmt.Sprintf("%.6f", nativeValue.(float32))
-	case bool:
-		value = strconv.FormatBool(nativeValue.(bool))
-	default:
-		return value, errors.New("")
-	}
-	return value, nil
+func CastInt64ToString(nativeValue int64) string {
+	return strconv.FormatInt(nativeValue, 10)
 }
 
-func toInt64(nativeValue interface{}) (int64, error) {
-	var value int64
-	var err error
-	switch nativeValue.(type) {
-	case string:
-		value, err = strconv.ParseInt(nativeValue.(string), 10, 64)
-		if err != nil {
-			return value, err
-		}
-	case int:
-		value = int64(nativeValue.(int))
-	case int64:
-		value = nativeValue.(int64)
-	case float64:
-		value = int64(nativeValue.(float64))
-	case float32:
-		value = int64(nativeValue.(float32))
-	case bool:
-		if nativeValue.(bool) {
-			value = 1
-		} else {
-			value = 0
-		}
-	default:
-		return value, errors.New("")
+func CastStringToInt64(str string) int64 {
+	value, err := strconv.ParseInt(str, 10, 64)
+	if err != nil {
+
 	}
-	return value, nil
+	return value
+}
+
+func mergeConfigList(dest *[]Config, lists ...[]Config) {
+	for _, list := range lists {
+		for _, item := range list {
+			*dest = append(*dest, item)
+		}
+	}
+}
+
+func mergeGoMiraiMessageList(dest *[]gomirai.Message, lists ...[]gomirai.Message) {
+	for _, list := range lists {
+		for _, item := range list {
+			*dest = append(*dest, item)
+		}
+	}
 }

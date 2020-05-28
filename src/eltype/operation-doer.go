@@ -39,20 +39,53 @@ func (doer *OperationDoer) getSendedMessageList() {
 
 func (doer *OperationDoer) getSendedOperationList() {
 	for _, config := range doer.configHitList {
-		for _, doOperation := range config.DoOperationList {
+		for _, doOperation := range config.Do.OperationList {
 			var operation Operation
-			var err error
-			var value map[string]string
-			if doOperation.Type == OperationTypeAt {
-				value = make(map[string]string)
-				id, isReplace := doer.replaceStrByPreDefVarMap(doOperation.Value["id"])
-				if isReplace {
-					value["id"] = id
+			switch doOperation.innerType {
+			case OperationTypeMemberMute:
+				operation.innerType = OperationTypeMemberMute
+				groupID, isReplace := doer.replaceStrByPreDefVarMap(doOperation.GroupID)
+				if !isReplace {
+					operation.GroupID = doOperation.GroupID
 				}
-				operation, err = NewOperation(OperationTypeAt, value)
-				if err != nil || !isReplace {
-					continue
+				operation.GroupID = groupID
+
+				userID, isReplace := doer.replaceStrByPreDefVarMap(doOperation.UserID)
+				if !isReplace {
+					operation.UserID = doOperation.UserID
 				}
+				operation.UserID = userID
+
+				operation.Second = doOperation.Second
+			case OperationTypeMemberUnMute:
+				operation.innerType = OperationTypeMemberUnMute
+				groupID, isReplace := doer.replaceStrByPreDefVarMap(doOperation.GroupID)
+				if !isReplace {
+					operation.GroupID = doOperation.GroupID
+				}
+				operation.GroupID = groupID
+
+				userID, isReplace := doer.replaceStrByPreDefVarMap(doOperation.UserID)
+				if !isReplace {
+					operation.UserID = doOperation.UserID
+				}
+				operation.UserID = userID
+			case OperationTypeGroupMuteAll:
+				operation.innerType = OperationTypeGroupMuteAll
+				groupID, isReplace := doer.replaceStrByPreDefVarMap(doOperation.GroupID)
+				if !isReplace {
+					operation.GroupID = doOperation.GroupID
+				}
+				operation.GroupID = groupID
+			case OperationTypeGroupUnMuteAll:
+				operation.innerType = OperationTypeGroupUnMuteAll
+				groupID, isReplace := doer.replaceStrByPreDefVarMap(doOperation.GroupID)
+				if !isReplace {
+					operation.GroupID = doOperation.GroupID
+				}
+				operation.GroupID = groupID
+			default:
+				continue
 			}
 			doer.sendedOperationList = append(doer.sendedOperationList, operation)
 		}

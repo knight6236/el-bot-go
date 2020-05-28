@@ -27,17 +27,13 @@ const (
 // @property	SenderList				[]Sender 	发送者列表
 // @property	Receiver				[]Receiver 	接收者列表
 type Config struct {
-	innerID           int
-	Type              ConfigType
-	IsCount           bool
-	CountID           string
-	Cron              string
-	WhenMessageList   []Message
-	WhenOperationList []Operation
-	DoMessageList     []Message
-	DoOperationList   []Operation
-	SenderList        []Sender
-	Receiver          []Receiver
+	innerID int
+	Type    ConfigType
+	IsCount bool
+	CountID string `yaml:"countID"`
+	Cron    string `yaml:"cron"`
+	When    When   `yaml:"when"`
+	Do      Do     `yaml:"do"`
 }
 
 var innerID int = 0
@@ -49,28 +45,33 @@ var innerID int = 0
 // @param	DoMessageList			[]Message	作为动作的「消息」
 // @param	DoOperationList			[]Operation 作为动作的「操作」
 // @param	Cron					string 		Cron 字符串
-func NewConfig(configType ConfigType,
-	whenMessageList []Message,
-	whenOperationList []Operation,
-	doMessageList []Message,
-	doOperationList []Operation,
-	SenderList []Sender,
-	Receiver []Receiver,
-	Cron string,
-	isCount bool,
-	countID string) (Config, error) {
-	var config Config
-	config.innerID = innerID
-	innerID++
-	config.Type = configType
-	config.WhenMessageList = whenMessageList
-	config.WhenOperationList = whenOperationList
-	config.DoMessageList = doMessageList
-	config.DoOperationList = doOperationList
-	config.SenderList = SenderList
-	config.Receiver = Receiver
-	config.Cron = Cron
-	config.IsCount = isCount
-	config.CountID = countID
-	return config, nil
+// func NewConfig(configType ConfigType,
+// 	whenMessageList []Message,
+// 	whenOperationList []Operation,
+// 	doMessageList []Message,
+// 	doOperationList []Operation,
+// 	SenderList []Sender,
+// 	Receiver []Receiver,
+// 	Cron string,
+// 	isCount bool,
+// 	countID string) (Config, error) {
+// 	var config Config
+// 	config.innerID = innerID
+// 	innerID++
+// 	config.Type = configType
+// 	config.WhenMessageList = whenMessageList
+// 	config.WhenOperationList = whenOperationList
+// 	config.DoMessageList = doMessageList
+// 	config.DoOperationList = doOperationList
+// 	config.SenderList = SenderList
+// 	config.Receiver = Receiver
+// 	config.Cron = Cron
+// 	config.IsCount = isCount
+// 	config.CountID = countID
+// 	return config, nil
+// }
+
+func (config *Config) Init() {
+	config.When.Message.Init()
+	config.Do.Message.Init()
 }

@@ -2,10 +2,12 @@ package eltype
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"el-bot-go/src/gomirai"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/robfig/cron"
 )
 
@@ -15,26 +17,35 @@ import (
 // @property	configReader	ConfigReader	配置读取类
 // @property	bot				*gomirai.Bot	机器人
 type Controller struct {
-	configReader *ConfigReader
-	bot          *gomirai.Bot
-	countMap     map[string]int
+	configReader      ConfigReader
+	globalConfigList  []Config
+	friendConfigList  []Config
+	groupConfigList   []Config
+	crontabConfigList []Config
+	bot               *gomirai.Bot
+	countMap          map[string]int
 }
 
 var handlerConstructor = [...]func(configList []Config, messageList []Message, operationList []Operation,
 	preDefVarMap *map[string]string) (IHandler, error){
-	NewPlainHandler, NewImageHandler, NewOperationHandler, NewFaceHandler, NewXMLHandler}
+	NewPlainHandler, NewImageHandler, NewOperationHandler, NewFaceHandler, NewXMLHandler, NewAtHandler}
 
 var doerConstructor = [...]func(configHitList []Config, recivedMessageList []Message,
 	preDefVarMap map[string]string) (IDoer, error){
-	NewPlainDoer, NewImageDoer, NewOperationDoer, NewFaceDoer, NewXMLDoer}
+	NewPlainDoer, NewImageDoer, NewOperationDoer, NewFaceDoer, NewXMLDoer, NewAtDoer}
 
 // NewController 构造一个 Controller
 // @param	configReader	ConfigReader	配置读取类
-func NewController(configReader *ConfigReader, bot *gomirai.Bot) Controller {
+func NewController(configReader ConfigReader, bot *gomirai.Bot) Controller {
 	var controller Controller
 	controller.configReader = configReader
 	controller.bot = bot
 	controller.countMap = make(map[string]int)
+	controller.globalConfigList = controller.configReader.GlobalConfigList
+	controller.friendConfigList = controller.configReader.FriendConfigList
+	controller.groupConfigList = controller.configReader.GroupConfigList
+	controller.crontabConfigList = controller.configReader.CrontabConfigList
+	go controller.monitorFolder()
 	go controller.doCrontabConfig()
 	return controller
 }
@@ -75,11 +86,7 @@ func (controller *Controller) Commit(goMiraiEvent gomirai.InEvent) {
 	event.addPerDefVar("el-count-overall",
 		strings.Replace(fmt.Sprintf("%v", controller.countMap), "map", "统计概要", 1))
 
-	sendedGoMiraiMessageList := controller.getSendedGoMiraiMessageList(event, configHitList)
-
-	// fmt.Printf("\n%v\n", sendedGoMiraiMessageList)
-
-	controller.sendMessage(event, configHitList, sendedGoMiraiMessageList)
+	controller.sendMessageAndOperation(event, configHitList)
 
 }
 
@@ -102,65 +109,46 @@ func (controller *Controller) doCrontabConfig() {
 	select {}
 }
 
-func (controller *Controller) mergeList(args ...[]Config) []Config {
-	targetList := args[0]
-	for i := 1; i < len(args); i++ {
-		for _, item := range args[i] {
-			targetList = append(targetList, item)
-		}
-	}
-	return targetList
-}
-
 func (controller *Controller) getConfigRelatedList(event Event) []Config {
 	var configList []Config
 	switch event.Type {
 	case EventTypeGroupMessage:
-		configList = controller.mergeList(configList,
-			controller.getConfigRelatedListByWhenSenderList(controller.configReader.GlobalConfigList, event.SenderList),
-			controller.getConfigRelatedListByWhenSenderList(controller.configReader.GroupConfigList, event.SenderList))
+		mergeConfigList(&configList,
+			controller.getConfigRelatedConfigList(controller.globalConfigList, event.Sender),
+			controller.getConfigRelatedConfigList(controller.groupConfigList, event.Sender))
 	case EventTypeFriendMessage:
-		configList = controller.mergeList(configList,
-			controller.getConfigRelatedListByWhenSenderList(controller.configReader.GlobalConfigList, event.SenderList),
-			controller.getConfigRelatedListByWhenSenderList(controller.configReader.FriendConifgList, event.SenderList))
-	case EventTypeMemberMute:
-		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
-			controller.configReader.GroupConfigList)
-	case EventTypeMemberUnmute:
-		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
-			controller.configReader.GroupConfigList)
-	case EventTypeGroupMuteAll:
-		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
-			controller.configReader.GroupConfigList)
-	case EventTypeGroupUnMuteAll:
-		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
-			controller.configReader.GroupConfigList)
-	case EventTypeMemberJoin:
-		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
-			controller.configReader.GroupConfigList)
-	case EventTypeMemberLeaveByKick:
-		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
-			controller.configReader.GroupConfigList)
-	case EventTypeMemberLeaveByQuit:
-		configList = controller.mergeList(configList, controller.configReader.GlobalConfigList,
-			controller.configReader.GroupConfigList)
+		mergeConfigList(&configList,
+			controller.getConfigRelatedConfigList(controller.globalConfigList, event.Sender),
+			controller.getConfigRelatedConfigList(controller.friendConfigList, event.Sender))
+	default:
+		mergeConfigList(&configList,
+			controller.getConfigRelatedConfigList(controller.globalConfigList, event.Sender),
+			controller.getConfigRelatedConfigList(controller.groupConfigList, event.Sender))
 	}
 	return configList
 }
 
-func (controller *Controller) getConfigRelatedListByWhenSenderList(configList []Config, senderList []Sender) []Config {
+func (controller *Controller) getConfigRelatedConfigList(configList []Config, sender Sender) []Config {
 	var ret []Config
 	for _, config := range configList {
-		if config.SenderList == nil {
+		if config.When.Message.Sender.UserIDList == nil &&
+			config.When.Message.Sender.GroupIDList == nil {
 			ret = append(ret, config)
+			continue
 		}
-		for _, sender := range config.SenderList {
-			if (sender.Type == SenderTypeGroup && sender.ID == senderList[0].ID) ||
-				(sender.Type == SenderTypeUser && sender.ID == senderList[1].ID) {
+		for _, groupID := range config.When.Message.Sender.GroupIDList {
+			if groupID == sender.GroupIDList[0] {
 				ret = append(ret, config)
-				break
+				goto LOOP_END
 			}
 		}
+		for _, friendID := range config.When.Message.Sender.UserIDList {
+			if friendID == sender.UserIDList[0] {
+				ret = append(ret, config)
+				goto LOOP_END
+			}
+		}
+	LOOP_END:
 	}
 	return ret
 }
@@ -185,8 +173,9 @@ func (controller *Controller) getConfigHitList(event Event, configRelatedList []
 
 }
 
-func (controller *Controller) getSendedGoMiraiMessageList(event Event, configHitList []Config) []gomirai.Message {
-	var sendedGoMiraiMessageList []gomirai.Message
+func (controller *Controller) sendMessageAndOperation(event Event, configHitList []Config) {
+	willBeSentGoMiraiGroupMessageMap := make(map[int64][]gomirai.Message)
+	willBeSentGoMiraiUserMessageMap := make(map[int64][]gomirai.Message)
 	for i := 0; i < len(doerConstructor); i++ {
 		doer, err := (doerConstructor[i](configHitList, event.MessageList, event.PreDefVarMap))
 		if err != nil {
@@ -194,69 +183,131 @@ func (controller *Controller) getSendedGoMiraiMessageList(event Event, configHit
 		}
 
 		for _, message := range doer.GetSendedMessageList() {
-			goMiraiMessage, isSuccess := message.ToGoMiraiMessage()
+			message.Sender.Complete(event.PreDefVarMap)
+			message.Receiver.Complete(event.PreDefVarMap)
+			goMiraiMessageList, isSuccess := message.ToGoMiraiMessageList()
 			if !isSuccess {
 				continue
 			}
-			sendedGoMiraiMessageList = append(sendedGoMiraiMessageList, goMiraiMessage)
+			if message.Receiver.GroupIDList == nil && message.Receiver.UserIDList == nil {
+				switch event.Type {
+				case EventTypeFriendMessage:
+					message.Receiver.UserIDList = append(message.Receiver.UserIDList, event.Sender.UserIDList[0])
+				default:
+					message.Receiver.GroupIDList = append(message.Receiver.GroupIDList, event.Sender.GroupIDList[0])
+				}
+			}
+			for _, nativeGroupID := range message.Receiver.GroupIDList {
+				groupID := CastStringToInt64(nativeGroupID)
+				for _, goMiraiMessage := range goMiraiMessageList {
+					willBeSentGoMiraiGroupMessageMap[groupID] = append(willBeSentGoMiraiGroupMessageMap[groupID], goMiraiMessage)
+				}
+			}
+			for _, nativeUserID := range message.Receiver.UserIDList {
+				userID := CastStringToInt64(nativeUserID)
+				for _, goMiraiMessage := range goMiraiMessageList {
+					willBeSentGoMiraiUserMessageMap[userID] = append(willBeSentGoMiraiUserMessageMap[userID], goMiraiMessage)
+				}
+			}
 		}
 
 		for _, operation := range doer.GetSendedOperationList() {
-			goMiraiMessage, isSuccess := operation.ToGoMiraiMessage()
-			if !isSuccess {
-				continue
-			}
-			sendedGoMiraiMessageList = append(sendedGoMiraiMessageList, goMiraiMessage)
+			operation.Complete(event.PreDefVarMap)
+			controller.sendOperation(operation)
 		}
 	}
-	return sendedGoMiraiMessageList
+	for receiverID, willBeSentMessageList := range willBeSentGoMiraiGroupMessageMap {
+		controller.sendMessage(ReceiverTypeGroup, receiverID, willBeSentMessageList)
+	}
+	for receiverID, willBeSentMessageList := range willBeSentGoMiraiUserMessageMap {
+		controller.sendMessage(ReceiverTypeUser, receiverID, willBeSentMessageList)
+	}
 }
 
-func (controller *Controller) sendMessage(event Event, configHitList []Config, sendedGoMiraiMessageList []gomirai.Message) {
-	// fmt.Printf("%v\n", sendedGoMiraiMessageList)
+func (controller *Controller) sendMessage(receiverType ReceiverType, receiverID int64, willBeSentGoMiraiMessageList []gomirai.Message) {
+	switch receiverType {
+	case ReceiverTypeGroup:
+		_, err := controller.bot.SendGroupMessage(receiverID, 0, willBeSentGoMiraiMessageList)
+		if err != nil {
+			log.Println(err)
+		}
+	case ReceiverTypeUser:
+		_, err := controller.bot.SendFriendMessage(receiverID, 0, willBeSentGoMiraiMessageList)
+		if err != nil {
+			log.Println(err)
+		}
+	}
+}
 
-	hasReceiver := false
-	groupIDSet := make(map[int64]string)
-	friendIDSet := make(map[int64]string)
-	for _, config := range configHitList {
-		for _, receiver := range config.Receiver {
-			hasReceiver = true
-			switch receiver.Type {
-			case ReceiverTypeGroup:
-				if groupIDSet[receiver.ID] == "" {
-					controller.bot.SendGroupMessage(receiver.ID, 0, sendedGoMiraiMessageList)
-					groupIDSet[receiver.ID] = "sent"
+func (controller *Controller) sendOperation(operation Operation) {
+	groupID := CastStringToInt64(operation.GroupID)
+	userID := CastStringToInt64(operation.UserID)
+
+	switch operation.innerType {
+	case OperationTypeMemberMute:
+		controller.bot.Mute(groupID, userID, CastStringToInt64(operation.Second))
+	case OperationTypeMemberUnMute:
+		controller.bot.Mute(groupID, userID, CastStringToInt64(operation.Second))
+	case OperationTypeGroupMuteAll:
+		controller.bot.MuteAll(groupID)
+	case OperationTypeGroupUnMuteAll:
+
+		controller.bot.UnmuteAll(groupID)
+	}
+}
+
+func (controller *Controller) monitorFolder() {
+	//创建一个监控对象
+	watch, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer watch.Close()
+	//添加要监控的对象，文件或文件夹
+	err = watch.Add(controller.configReader.folder)
+	if err != nil {
+		log.Fatal(err)
+	}
+	//我们另启一个goroutine来处理监控对象的事件
+	go func() {
+		for {
+			select {
+			case ev := <-watch.Events:
+				{
+					if ev.Op&fsnotify.Create == fsnotify.Create {
+						controller.configReader.reLoad()
+						log.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
+					}
+					if ev.Op&fsnotify.Write == fsnotify.Write {
+						controller.configReader.reLoad()
+						log.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
+					}
+					if ev.Op&fsnotify.Remove == fsnotify.Remove {
+						controller.configReader.reLoad()
+						log.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
+					}
+					if ev.Op&fsnotify.Rename == fsnotify.Rename {
+						controller.configReader.reLoad()
+						log.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
+					}
+					if ev.Op&fsnotify.Chmod == fsnotify.Chmod {
+						controller.configReader.reLoad()
+						log.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
+					}
+					controller.globalConfigList = controller.configReader.GlobalConfigList
+					controller.friendConfigList = controller.configReader.FriendConfigList
+					controller.groupConfigList = controller.configReader.GroupConfigList
+					controller.crontabConfigList = controller.configReader.CrontabConfigList
 				}
-			case ReceiverTypeUser:
-				if friendIDSet[receiver.ID] == "" {
-					controller.bot.SendGroupMessage(receiver.ID, 0, sendedGoMiraiMessageList)
-					friendIDSet[receiver.ID] = "sent"
+			case err := <-watch.Errors:
+				{
+					log.Println("error : ", err)
+					return
 				}
 			}
 		}
-	}
-	if hasReceiver {
-		return
-	}
+	}()
 
-	switch event.Type {
-	case EventTypeGroupMessage:
-		controller.bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
-	case EventTypeMemberMute:
-		controller.bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
-	case EventTypeFriendMessage:
-		controller.bot.SendFriendMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
-	case EventTypeMemberUnmute:
-		controller.bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
-	case EventTypeGroupMuteAll:
-		controller.bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
-	case EventTypeGroupUnMuteAll:
-		controller.bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
-	case EventTypeMemberJoin:
-		controller.bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
-	case EventTypeMemberLeaveByKick:
-		controller.bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
-	case EventTypeMemberLeaveByQuit:
-		controller.bot.SendGroupMessage(event.SenderList[0].ID, 0, sendedGoMiraiMessageList)
-	}
+	//循环
+	select {}
 }

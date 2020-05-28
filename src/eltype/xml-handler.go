@@ -31,11 +31,13 @@ func NewXMLHandler(configList []Config, messageList []Message, operationList []O
 
 func (handler *XMLHandler) searchHitConfig() {
 	for _, config := range handler.configList {
-		for _, whenMessage := range config.WhenMessageList {
+		for _, whenMessageDetail := range config.When.Message.DetailList {
 			for _, message := range handler.messageList {
-				if whenMessage.Type == MessageTypeXML &&
-					message.Type == MessageTypeXML {
-					handler.configHitList = append(handler.configHitList, config)
+				for _, messageDetail := range message.DetailList {
+					if messageDetail.innerType == MessageTypeXML &&
+						whenMessageDetail.innerType == MessageTypeXML {
+						handler.configHitList = append(handler.configHitList, config)
+					}
 				}
 			}
 		}

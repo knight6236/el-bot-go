@@ -2,6 +2,7 @@
 
 [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/ElpsyCN/el-bot-go?color=blue&include_prereleases)](https://github.com/ElpsyCN/el-bot-go/releases)
 [![docs passing](https://img.shields.io/badge/docs-passing-brightgreen)](https://github.com/ElpsyCN/el-bot-go/blob/master/docs/dir.md)
+[![QQ Group](https://img.shields.io/badge/qq%20group-707408530-12B7F5)](https://shang.qq.com/wpa/qunwpa?idkey=5b0eef3e3256ce23981f3b0aa2457175c66ca9194efd266fd0e9a7dbe43ed653)
 [![GitHub issues](https://img.shields.io/github/issues/ElpsyCN/el-bot-go)](https://github.com/ElpsyCN/el-bot-go/issues)
 [![GitHub closed issues](https://img.shields.io/github/issues-closed/ElpsyCN/el-bot-go?color=success)](https://github.com/ElpsyCN/el-bot-go/issues)
 [![GitHub pull requests](https://img.shields.io/github/issues-pr/ElpsyCN/el-bot-go)](https://github.com/ElpsyCN/el-bot-go/pulls)

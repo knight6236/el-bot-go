@@ -35,18 +35,19 @@ func NewXMLDoer(configHitList []Config, recivedMessageList []Message, preDefVarM
 
 func (doer *XMLDoer) getSendedMessageList() {
 	for _, config := range doer.configHitList {
-		for _, doMessage := range config.DoMessageList {
-			if doMessage.Type == MessageTypeXML {
-				value := make(map[string]string)
-				xml, isReplace := doer.replaceStrByPreDefVarMap(doMessage.Value["text"])
+		for _, doMessageDetail := range config.Do.Message.DetailList {
+			var willBeSentMessage Message
+			var willBeSentMessageDetail MessageDetail
+			willBeSentMessage.Sender = config.Do.Message.Sender.DeepCopy()
+			willBeSentMessage.Receiver = config.Do.Message.Receiver.DeepCopy()
+			willBeSentMessageDetail.innerType = MessageTypeXML
+			if doMessageDetail.innerType == MessageTypeXML {
+				xml, isReplace := doer.replaceStrByPreDefVarMap(doMessageDetail.Text)
 				if isReplace {
-					value["xml"] = xml
+					willBeSentMessageDetail.Text = xml
 				}
-				message, err := NewMessage(MessageTypeXML, value)
-				if err != nil {
-					continue
-				}
-				doer.sendedMessageList = append(doer.sendedMessageList, message)
+				willBeSentMessage.AddDetail(willBeSentMessageDetail)
+				doer.sendedMessageList = append(doer.sendedMessageList, willBeSentMessage)
 			}
 		}
 	}

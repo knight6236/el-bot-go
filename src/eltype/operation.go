@@ -1,9 +1,8 @@
 package eltype
 
 import (
-	"el-bot-go/src/gomirai"
 	"fmt"
-	"strconv"
+	"strings"
 )
 
 // OperationType 操作/事件类型
@@ -24,29 +23,29 @@ const (
 	OperationTypeMemberLeaveByKick
 	// OperationTypeMemberLeaveByQuit 成员自行退运事件类型
 	OperationTypeMemberLeaveByQuit
-	// OperationTypeAt At某人
-	OperationTypeAt
-	// OperationTypeAtAll At全体成员
-	OperationTypeAtAll
 )
 
-// Operation 操作/事件
-// @property	Type	OperationType		操作/事件类型
-// @property	Value	map[string]string	与事件/操作相关的信息
 type Operation struct {
-	Type  OperationType
-	Value map[string]string
+	innerType    OperationType
+	Type         string `yaml:"type"`
+	GroupID      string `yaml:"groupID"`
+	GroupName    string
+	OperatorID   int64
+	OperatorName string
+	UserID       string `yaml:"userID"`
+	UserName     string
+	Second       string `yaml:"second"`
 }
 
 // NewOperation 构造一个 Operation
 // @param	operationType	OperationType		操作/事件类型
 // @param	value	map[string]string	与事件/操作相关的信息
-func NewOperation(operationType OperationType, value map[string]string) (Operation, error) {
-	var operation Operation
-	operation.Type = operationType
-	operation.Value = value
-	return operation, nil
-}
+// func NewOperation(operationType OperationType, value map[string]string) (Operation, error) {
+// 	var operation Operation
+// 	operation.Type = operationType
+// 	operation.Value = value
+// 	return operation, nil
+// }
 
 // CastConfigOperationTypeToOperationType 将 ConfigOperationType 转换为 OperationType
 func CastConfigOperationTypeToOperationType(configEventType string) OperationType {
@@ -65,47 +64,99 @@ func CastConfigOperationTypeToOperationType(configEventType string) OperationTyp
 		return OperationTypeMemberLeaveByKick
 	case "MemberLeaveByQuit":
 		return OperationTypeMemberLeaveByQuit
-	case "At":
-		return OperationTypeAt
-	case "AtAll":
-		return OperationTypeAtAll
 	default:
 		panic("")
 	}
 }
 
-func (operation *Operation) ToGoMiraiMessage() (gomirai.Message, bool) {
-	var goMiraiMessage gomirai.Message
-	switch operation.Type {
-	case OperationTypeAt:
-		goMiraiMessage.Type = "At"
-		id, err := strconv.ParseInt(operation.Value["id"], 10, 64)
-		if err != nil {
-			return goMiraiMessage, false
-		}
-		goMiraiMessage.Target = id
-	case OperationTypeAtAll:
-		goMiraiMessage.Type = "AtAll"
-	default:
-		return goMiraiMessage, false
-	}
-	return goMiraiMessage, true
-}
+// func (operation *Operation) ToGoMiraiMessage() (gomirai.Message, bool) {
+// 	operation.Init()
+// 	var goMiraiMessage gomirai.Message
+// 	switch operation.innerType {
+// 	case OperationTypeAt:
+// 		goMiraiMessage.Type = "At"
+// 		goMiraiMessage.Target = operation.UserID
+// 	case OperationTypeAtAll:
+// 		goMiraiMessage.Type = "AtAll"
+// 	default:
+// 		return goMiraiMessage, false
+// 	}
+// 	return goMiraiMessage, true
+// }
 
 // ToString ...
 func (operation Operation) ToString() string {
-	switch operation.Type {
-	case OperationTypeMemberJoin:
-		return fmt.Sprintf("Operation: {Type: %s, Member: {id: %s, name: %s}}",
-			"MemberJoin", operation.Value["id"], operation.Value["name"])
+	// switch operation.Type {
+	// case OperationTypeMemberJoin:
+	// 	return fmt.Sprintf("Operation: {Type: %s, Member: {id: %s, name: %s}}",
+	// 		"MemberJoin", operation.Value["id"], operation.Value["name"])
+	// case OperationTypeMemberMute:
+	// 	return fmt.Sprintf("Operation: {Type: %s, Member: {id: %s, name: %s}, Second: %s}",
+	// 		"MemberMute", operation.Value["id"], operation.Value["name"], operation.Value["second"])
+	// case OperationTypeMemberUnMute:
+	// 	return fmt.Sprintf("Operation: {Type: %s, Member: {id: %s, name: %s}}",
+	// 		"MemberUnMute", operation.Value["id"], operation.Value["name"])
+	// default:
+	// 	// TODO
+	// 	return ""
+	// }
+	return ""
+}
+
+func (operation *Operation) Complete(preDefVarMap map[string]string) {
+	for key, value := range preDefVarMap {
+		varName := fmt.Sprintf("{%s}", key)
+		operation.GroupID = strings.ReplaceAll(operation.GroupID, varName, value)
+		operation.UserID = strings.ReplaceAll(operation.UserID, varName, value)
+		operation.Second = strings.ReplaceAll(operation.Second, varName, value)
+	}
+}
+
+func (operation *Operation) Init() {
+	switch operation.innerType {
 	case OperationTypeMemberMute:
-		return fmt.Sprintf("Operation: {Type: %s, Member: {id: %s, name: %s}, Second: %s}",
-			"MemberMute", operation.Value["id"], operation.Value["name"], operation.Value["second"])
+		operation.Type = "MemberMute"
 	case OperationTypeMemberUnMute:
-		return fmt.Sprintf("Operation: {Type: %s, Member: {id: %s, name: %s}}",
-			"MemberUnMute", operation.Value["id"], operation.Value["name"])
-	default:
-		// TODO
-		return ""
+		operation.Type = "MemberUnMute"
+	case OperationTypeGroupMuteAll:
+		operation.Type = "GroupMuteAll"
+	case OperationTypeGroupUnMuteAll:
+		operation.Type = "GroupUnMuteAll"
+	case OperationTypeMemberJoin:
+		operation.Type = "MemberJoin"
+	case OperationTypeMemberLeaveByKick:
+		operation.Type = "MemberLeaveEventKick"
+	case OperationTypeMemberLeaveByQuit:
+		operation.Type = "MemberLeaveEventQuit"
+	}
+	switch operation.Type {
+	case "MemberMute":
+		operation.innerType = OperationTypeMemberMute
+	case "MemberUnMute":
+		operation.innerType = OperationTypeMemberUnMute
+	case "GroupMuteAll":
+		operation.innerType = OperationTypeGroupMuteAll
+	case "GroupUnMuteAll":
+		operation.innerType = OperationTypeGroupUnMuteAll
+	case "MemberJoin":
+		operation.innerType = OperationTypeMemberJoin
+	case "MemberLeaveEventKick":
+		operation.innerType = OperationTypeMemberLeaveByKick
+	case "MemberLeaveEventQuit":
+		operation.innerType = OperationTypeMemberLeaveByQuit
+	}
+}
+
+func (operation *Operation) DeepCopy() Operation {
+	return Operation{
+		innerType:    operation.innerType,
+		Type:         operation.Type,
+		GroupID:      operation.GroupID,
+		GroupName:    operation.GroupName,
+		OperatorID:   operation.OperatorID,
+		OperatorName: operation.OperatorName,
+		UserID:       operation.UserID,
+		UserName:     operation.UserName,
+		Second:       operation.Second,
 	}
 }

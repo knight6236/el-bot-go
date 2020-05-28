@@ -40,35 +40,35 @@ func NewImageDoer(configHitList []Config, recivedMessageList []Message, preDefVa
 
 func (doer *ImageDoer) getSendedMessageList() {
 	for _, config := range doer.configHitList {
-		for _, doMessage := range config.DoMessageList {
-			if doMessage.Type == MessageTypeImage {
-				value := make(map[string]string)
-				if doMessage.Value["url"] != "" {
-					if doMessage.Value["reDirect"] == "true" {
-						// fmt.Println("reDirect")
-						filename, err := doer.downloadImage(doMessage.Value["url"])
+		for _, doMessageDetail := range config.Do.Message.DetailList {
+			var willBeSentMessage Message
+			var willBeSentMessageDetail MessageDetail
+			willBeSentMessage.Sender = config.Do.Message.Sender.DeepCopy()
+			willBeSentMessage.Receiver = config.Do.Message.Receiver.DeepCopy()
+			willBeSentMessageDetail.innerType = MessageTypeImage
+			if doMessageDetail.innerType == MessageTypeImage {
+				if doMessageDetail.URL != "" {
+					if doMessageDetail.ReDirect == true {
+						filename, err := doer.downloadImage(doMessageDetail.URL)
 						if err != nil {
 							fmt.Println(err)
 							continue
 						}
-						value["path"] = filename
+						willBeSentMessageDetail.Path = filename
 					} else {
-						url, isReplace := doer.replaceStrByPreDefVarMap(doMessage.Value["url"])
+						url, isReplace := doer.replaceStrByPreDefVarMap(doMessageDetail.URL)
 						if isReplace {
-							value["url"] = url
+							willBeSentMessageDetail.URL = url
 						} else {
-							value["url"] = ""
+							willBeSentMessageDetail.URL = ""
 						}
 					}
 
-				} else if doMessage.Value["path"] != "" {
-					value = doMessage.Value
+				} else if doMessageDetail.Path != "" {
+					willBeSentMessageDetail.Path = doMessageDetail.Path
 				}
-				message, err := NewMessage(MessageTypeImage, value)
-				if err != nil {
-					continue
-				}
-				doer.sendedMessageList = append(doer.sendedMessageList, message)
+				willBeSentMessage.AddDetail(willBeSentMessageDetail)
+				doer.sendedMessageList = append(doer.sendedMessageList, willBeSentMessage)
 			}
 		}
 	}
