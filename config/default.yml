@@ -50,19 +50,19 @@ group:
       message:
         detail:
           - type: Plain
-            text: 「{el-target-name}」喜提禁言套餐
+            text: 「{el-target-user-name}」喜提禁言套餐
   
   # 当某个成员被禁言时发送「恭喜「被禁言成员群昵称」出狱」
   - when:
       operation:
-        - type: MemberUnmute
+        - type: MemberUnMute
     do:
       message:
         detail:
           - type: Plain
-            text: '恭喜「{el-target-name}」出狱'
+            text: '恭喜「{el-target-user-name}」出狱'
 
-  # 当开启全体禁言时发送 「砸瓦鲁多！」
+  #当开启全体禁言时发送 「砸瓦鲁多！」
   - when:
       operation:
         - type: GroupMuteAll
@@ -90,7 +90,7 @@ group:
       message:
         detail:
           - type: Plain
-            text: 欢迎「{el-target-name}」进群
+            text: 欢迎「{el-target-user-name}」进群
 
   # 当某成员被移除群聊时发送「管理员赠送「被移除的成员的群昵称」飞机票一张」
   - when:
@@ -100,7 +100,7 @@ group:
       message:
         detail:
           - type: Plain
-            text: 管理员赠送「{el-target-name}」飞机票一张
+            text: 管理员赠送「{el-target-user-name}」飞机票一张
   
   # 当某成员自行退出群聊是发送「有大佬走了，群地位+1。」
   - when:
@@ -121,7 +121,8 @@ group:
     do:
       operation:
         - type: At
-          id: '{el-sender-id}'
+          groupID: '{el-sender-group-id}'
+          userID: '{el-sender-user-id}'
       message:
         detail:
           - type: Plain

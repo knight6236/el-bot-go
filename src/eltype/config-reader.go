@@ -124,4 +124,5 @@ func (reader *ConfigReader) mergeReader(tempReader ConfigReader) {
 	mergeConfigList(&reader.GlobalConfigList, tempReader.GlobalConfigList)
 	mergeConfigList(&reader.FriendConfigList, tempReader.FriendConfigList)
 	mergeConfigList(&reader.GroupConfigList, tempReader.GroupConfigList)
+	mergeConfigList(&reader.CrontabConfigList, tempReader.CrontabConfigList)
 }

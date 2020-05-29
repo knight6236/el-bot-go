@@ -78,7 +78,7 @@ detail:
 | Image  | 表示接收到的图片      | 表示发送的图片        | url        | 无                                 | 要发送的图片的 URL                                           |
 |        |                       |                       | path       | 无                                 | 要发送的图片的路径（相对于`plugins/MiraiAPIHTTP/images`）    |
 |        |                       |                       | reDirect   | 无                                 | 如果要发送的图片的 URL 会重定向到其它  URL 则设置为`true`，反之则忽略。 |
-| Face   | 表示接收到的表情      | 表示发送的表情        | faceName   | 接收到的表情的名称                 | 要发送的表情的名称                                           |
+| Face   | 表示接收到的表情      | 表示发送的表情        | faceName   | 接收到的表情的名称                 | 要发送的表情的名称（详见`config/face-map.yml`）              |
 | Xml    | 表示接收到的 XML 文本 | 表示要发送的 XML 文本 | text       | 无                                 | 表示要发送的 XML 文本内容                                    |
 
 
@@ -226,10 +226,10 @@ group:
       message:
         detail:
           - type: Plain
-            text: 「{el-target-name}」喜提禁言套餐
+            text: 「{el-target-user-name}」喜提禁言套餐
 ```
 
-更多例子见 [config/default.ym](../config/default.yml)
+更多例子见 [config/default.yml](../config/default.yml)
 
 
 # 预定义变量
@@ -246,7 +246,6 @@ group:
 crontab:
   - cron: '* * * * * *'
     do:
-      receiver:
       operation:
       message:
 ```
@@ -256,7 +255,7 @@ crontab:
 | crontab | 此关键字下的配置会被解析为定时任务 |      |
 | cron    | cron 表达式，精确到秒。            |      |
 
-区别于「通用配置」，定时任务中的 `do.receiver` 是必须的，不允许省略，即至少要指定一个消息的接收者。
+区别于「通用配置」，定时任务中的 `do.message.receiver` 是必须的，不允许省略，即至少要指定一个消息的接收者。
 
 ## 配置举例
 
@@ -265,10 +264,10 @@ crontab:
 crontab:
   - cron: '0 * * * * *'
     do:
-      receiver:
-        group:
-          - 接收消息的群号
       message:
+      	receiver:
+          group:
+            - 接收消息的群号
         detail:
           - type: Plain
             text: 一分钟过去了
@@ -290,7 +289,7 @@ transfer:
       group:
       user:
     target:
-      grpup:
+      group:
       user:
 ```
 
@@ -310,7 +309,7 @@ transfer:
 # 当接收到的指定的群或指定的好友的消息时，自动将消息转发给指定的群和好友
 transfer:
   - listen:
-      grouP:
+      group:
         - 群号
         - 群号
         ...
@@ -319,7 +318,7 @@ transfer:
         - QQ号
         ...
     target:
-      grouP:
+      group:
         - 群号
         - 群号
         ...

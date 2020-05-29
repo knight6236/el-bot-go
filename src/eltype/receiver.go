@@ -50,7 +50,7 @@ func (receiver *Receiver) DeepCopy() Receiver {
 	return newReceiver
 }
 
-func (receiver *Receiver) Complete(preDefVarMap map[string]string) {
+func (receiver *Receiver) CompleteContent(preDefVarMap map[string]string) {
 	for key, value := range preDefVarMap {
 		varName := fmt.Sprintf("{%s}", key)
 		for i := 0; i < len(receiver.GroupIDList); i++ {

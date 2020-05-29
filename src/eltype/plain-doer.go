@@ -18,8 +18,8 @@ import (
 type PlainDoer struct {
 	configHitList       []Config
 	recivedMessageList  []Message
-	sendedMessageList   []Message
-	sendedOperationList []Operation
+	willBeSentMessage   []Message
+	willBeSentOperation []Operation
 	preDefVarMap        map[string]string
 }
 
@@ -33,11 +33,11 @@ func NewPlainDoer(configHitList []Config, recivedMessageList []Message, preDefVa
 	doer.configHitList = configHitList
 	doer.recivedMessageList = recivedMessageList
 	doer.preDefVarMap = preDefVarMap
-	doer.getSendedMessageList()
+	doer.getWillBeSentMessageList()
 	return doer, nil
 }
 
-func (doer *PlainDoer) getSendedMessageList() {
+func (doer *PlainDoer) getWillBeSentMessageList() {
 	for _, config := range doer.configHitList {
 		for _, doMessageDetail := range config.Do.Message.DetailList {
 			var willBeSentMessage Message
@@ -50,13 +50,13 @@ func (doer *PlainDoer) getSendedMessageList() {
 					willBeSentMessageDetail, err := doer.getTextMessageDetail(doMessageDetail)
 					willBeSentMessage.AddDetail(willBeSentMessageDetail)
 					if err == nil {
-						doer.sendedMessageList = append(doer.sendedMessageList, willBeSentMessage)
+						doer.willBeSentMessage = append(doer.willBeSentMessage, willBeSentMessage)
 					}
 				} else if doMessageDetail.URL != "" {
 					willBeSentMessageDetail, err := doer.getURLMessageDetail(doMessageDetail)
 					willBeSentMessage.AddDetail(willBeSentMessageDetail)
 					if err == nil {
-						doer.sendedMessageList = append(doer.sendedMessageList, willBeSentMessage)
+						doer.willBeSentMessage = append(doer.willBeSentMessage, willBeSentMessage)
 					}
 				}
 			}
@@ -145,11 +145,11 @@ func (doer *PlainDoer) replaceStrByJSON(jsonByteList []byte, text string) string
 }
 
 // GetSendedMessageList 获取将要发送的信息列表
-func (doer PlainDoer) GetSendedMessageList() []Message {
-	return doer.sendedMessageList
+func (doer PlainDoer) GetWillBeSentMessageList() []Message {
+	return doer.willBeSentMessage
 }
 
 // GetSendedOperationList 获取将要执行的动作列表
-func (doer PlainDoer) GetSendedOperationList() []Operation {
-	return doer.sendedOperationList
+func (doer PlainDoer) GetWillBeSentOperationList() []Operation {
+	return doer.willBeSentOperation
 }

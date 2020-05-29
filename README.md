@@ -58,37 +58,37 @@
 
 1. 安装Golang和JRE
 2. clone: `git clone git@github.com:ElpsyCN/el-bot-go.git`
-3. 下载依赖: `./install.sh`
-4. 由于安装 `golang` 的 `package` 比较麻烦，可以进入 [release](https://github.com/ElpsyCN/el-bot-go/releases) 下载对应的二进制文件到 `bin` 下，来使用编译好程序，跳过 `package `的安装的环节。
-5. 创建文件`plugins/MiraiAPIHTTP/setting.yml`并填入下列内容
+3. 下载依赖: `sh install.sh`
+4. 创建文件`plugins/MiraiAPIHTTP/setting.yml`并填入下列内容
     ```yml
     authKey: qwertyuiop
     port: 8080
     enableWebsocket: false
     ```
-6. 启动 mirai-console: ` ./start-console.sh`并按照提示进行操作
-7. 启动 el-bot-go: 在另一个 shell 运行脚本：
+5. 启动 mirai-console: `sh start-console.sh`并按照提示进行操作
+6. 启动 el-bot-go: 在另一个 shell 运行脚本：
     1. 选择合适的 shell 脚本 `start-el-bot-xxx-yyy.sh`
-    2. `sh start-el-bot-xxx-yyy.sh 机器人QQ号 自定义配置路径（相对于 config 目录）`，如果不使用自定义配置则为`""`
+    2. 执行命令`sh start-el-bot-xxx-yyy.sh 机器人QQ号 自定义配置目录（相对于 config 目录）`，如果不使用自定义配置则为`"default"`
+7. 如果执行上一步时出现安装 `package`失败的情况，可以进入 [release](https://github.com/ElpsyCN/el-bot-go/releases) 下载对应的二进制文件到 `bin` 下，来使用编译好程序，跳过 `package `的安装的环节。
 
-## On Windows
+## On Windows（Powershell）
 
 1. 安装Golang和JRE
 2. clone: `git clone git@github.com:ElpsyCN/el-bot-go.git`
 3. 下载依赖：
     + 下载[mirai-console-wrapper-1.2.0-all](https://github.com/mamoe/mirai-console-wrapper/releases/download/1.2.0/mirai-console-wrapper-1.2.0-all.jar)到项目根目录
     + 下载[mirai-api-http-v1.7.0](https://github.com/mamoe/mirai-api-http/releases/download/v1.7.0/mirai-api-http-v1.7.0.jar)到`plugins/`
-4. 由于安装 `golang` 的 `package` 比较麻烦，可以进入 [release](https://github.com/ElpsyCN/el-bot-go/releases) 下载对应的二进制文件到 `bin` 下，来使用编译好程序，跳过 `package `的安装的环节。
-5. 创建文件`plugins/MiraiAPIHTTP/setting.yml`并填入下列内容
+4. 创建文件`plugins/MiraiAPIHTTP/setting.yml`并填入下列内容
     ```yml
     authKey: qwertyuiop
     port: 8080
     enableWebsocket: false
     ```
-6. 启动 mirai-console: `./start-console.bat`
-7. 启动 el-bot-go: 在另一个 cmd 执行命令 `start-el-bot-xxxx.bat 机器人的QQ号 配置所在路径`
-    1. 选择合适的 shell 脚本 `start-el-bot-xxx-yyy.sh`
-    2. `start-el-bot-xxx.bat 机器人QQ号 自定义配置路径（相对于 config 目录）`，如果不使用自定义配置则为`""`
+5. 启动 mirai-console: `./start-console.bat`
+6. 启动 el-bot-go: 在另一个 cmd 执行命令 `start-el-bot-xxxx.bat 机器人的QQ号 配置所在路径`
+    1. 选择合适的 bat 脚本 `start-el-bot-xxx.bat`
+    2. 执行命令`start-el-bot-xxx.bat 机器人QQ号 自定义配置目录（相对于 config 目录）`，如果不使用自定义配置则为`"default"`
+7. 如果执行上一步时出现安装 `package`失败的情况，可以进入 [release](https://github.com/ElpsyCN/el-bot-go/releases) 下载对应的二进制文件到 `bin` 下，来使用编译好程序，跳过 `package `的安装的环节。
 
 # 反馈
 

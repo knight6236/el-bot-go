@@ -25,6 +25,18 @@ type Config struct {
 }
 
 func (config *Config) Init() {
-	config.When.Message.Complete()
-	config.Do.Message.Complete()
+	config.When.Message.CompleteType()
+	config.Do.Message.CompleteType()
+
+	for i := 0; i < len(config.When.OperationList); i++ {
+		temp := config.When.OperationList[i]
+		temp.CompleteType()
+		config.When.OperationList[i] = temp
+	}
+	for i := 0; i < len(config.Do.OperationList); i++ {
+		temp := config.Do.OperationList[i]
+		temp.CompleteType()
+		config.Do.OperationList[i] = temp
+	}
+
 }

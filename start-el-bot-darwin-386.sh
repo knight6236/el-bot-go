@@ -1,4 +1,3 @@
-# export DEFAULT_FILE=config/default.yml
 export SETTING_FILE=plugins/MiraiAPIHTTP/setting.yml
 export FACE_MAP_FILE=config/face-map.yml
 export IMAGE_FOLDER=plugins/MiraiAPIHTTP/images
@@ -13,7 +12,7 @@ export LINUX_386=bin/main-linux-386.bin
 export LINUX_ARM=bin/main-linux-arm.bin
 
 if [ -d $DARWIN_386 ];then
-./$DARWIN_386 $1 $2
+./$DARWIN_386 $0 $1
 else
-go run src/main/main.go $1 $2
+go run src/main/main.go $0 $1
 fi

@@ -1,4 +1,3 @@
-# export DEFAULT_FILE=config/default.yml
 export SETTING_FILE=plugins/MiraiAPIHTTP/setting.yml
 export FACE_MAP_FILE=config/face-map.yml
 export IMAGE_FOLDER=plugins/MiraiAPIHTTP/images

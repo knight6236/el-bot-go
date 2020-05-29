@@ -82,6 +82,12 @@ func NewEventFromGoMiraiEvent(goMiraiEvent gomirai.InEvent) (Event, error) {
 
 	event.parseGoMiraiMessageListToMessageList(goMiraiEvent)
 
+	for i := 0; i < len(event.OperationList); i++ {
+		temp := event.OperationList[i]
+		temp.CompleteType()
+		event.OperationList[i] = temp
+	}
+
 	event.addSomePreDefVar()
 
 	return event, nil
@@ -149,7 +155,7 @@ func (event *Event) makeMemberUnmuteEventTemplate(goMiraiEvent gomirai.InEvent) 
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
 	operation := Operation{
-		innerType:    OperationTypeMemberMute,
+		innerType:    OperationTypeMemberUnMute,
 		GroupID:      CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID),
 		GroupName:    goMiraiEvent.OperatorGroup.Group.Name,
 		OperatorID:   goMiraiEvent.OperatorGroup.ID,
@@ -176,17 +182,20 @@ func (event *Event) makeMemberUnmuteEventTemplate(goMiraiEvent gomirai.InEvent) 
 }
 
 func (event *Event) makeGroupMuteAllEventTemplate(goMiraiEvent gomirai.InEvent) error {
+	var operationType OperationType
 	if goMiraiEvent.Origin.(bool) {
 		event.Type = EventTypeGroupUnMuteAll
+		operationType = OperationTypeGroupUnMuteAll
 	} else {
 		event.Type = EventTypeGroupMuteAll
+		operationType = OperationTypeGroupMuteAll
 	}
 	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID))
-	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.OperatorGroup.ID))
+	// event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.OperatorGroup.ID))
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
 	operation := Operation{
-		innerType:    OperationTypeMemberMute,
+		innerType:    operationType,
 		GroupID:      CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID),
 		GroupName:    goMiraiEvent.OperatorGroup.Group.Name,
 		OperatorID:   goMiraiEvent.OperatorGroup.ID,
@@ -210,11 +219,11 @@ func (event *Event) makeGroupMuteAllEventTemplate(goMiraiEvent gomirai.InEvent) 
 
 func (event *Event) makeMemberJoinEventTemplate(goMiraiEvent gomirai.InEvent) error {
 	event.Type = EventTypeMemberJoin
-	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID))
+	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.Member.Group.ID))
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
 	operation := Operation{
-		innerType: OperationTypeMemberMute,
+		innerType: OperationTypeMemberJoin,
 		GroupID:   CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID),
 		GroupName: goMiraiEvent.OperatorGroup.Group.Name,
 		UserID:    CastInt64ToString(goMiraiEvent.Member.ID),
@@ -235,12 +244,11 @@ func (event *Event) makeMemberJoinEventTemplate(goMiraiEvent gomirai.InEvent) er
 
 func (event *Event) makeMemberLeaveByKickEventTemplate(goMiraiEvent gomirai.InEvent) error {
 	event.Type = EventTypeMemberLeaveByKick
-	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID))
-	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.OperatorGroup.ID))
+	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.Member.Group.ID))
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
 	operation := Operation{
-		innerType:    OperationTypeMemberMute,
+		innerType:    OperationTypeMemberLeaveByKick,
 		GroupID:      CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID),
 		GroupName:    goMiraiEvent.OperatorGroup.Group.Name,
 		OperatorID:   goMiraiEvent.OperatorGroup.ID,
@@ -268,11 +276,11 @@ func (event *Event) makeMemberLeaveByKickEventTemplate(goMiraiEvent gomirai.InEv
 
 func (event *Event) makeMemberLeaveByQuitEventTemplate(goMiraiEvent gomirai.InEvent) error {
 	event.Type = EventTypeMemberLeaveByQuit
-	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID))
+	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.Member.Group.ID))
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
 	operation := Operation{
-		innerType: OperationTypeMemberMute,
+		innerType: OperationTypeMemberLeaveByQuit,
 		GroupID:   CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID),
 		GroupName: goMiraiEvent.OperatorGroup.Group.Name,
 		UserID:    CastInt64ToString(goMiraiEvent.Member.ID),
@@ -297,6 +305,7 @@ func (event *Event) parseGoMiraiMessageListToMessageList(goMiraiEvent gomirai.In
 		if err != nil {
 			continue
 		}
+		message.CompleteType()
 		event.MessageList = append(event.MessageList, message)
 	}
 }

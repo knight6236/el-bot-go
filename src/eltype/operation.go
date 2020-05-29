@@ -1,6 +1,7 @@
 package eltype
 
 import (
+	"el-bot-go/src/gomirai"
 	"fmt"
 	"strings"
 )
@@ -23,6 +24,8 @@ const (
 	OperationTypeMemberLeaveByKick
 	// OperationTypeMemberLeaveByQuit 成员自行退运事件类型
 	OperationTypeMemberLeaveByQuit
+	OperationTypeAt
+	OperationTypeAtAll
 )
 
 type Operation struct {
@@ -37,36 +40,18 @@ type Operation struct {
 	Second       string `yaml:"second"`
 }
 
-// NewOperation 构造一个 Operation
-// @param	operationType	OperationType		操作/事件类型
-// @param	value	map[string]string	与事件/操作相关的信息
-// func NewOperation(operationType OperationType, value map[string]string) (Operation, error) {
-// 	var operation Operation
-// 	operation.Type = operationType
-// 	operation.Value = value
-// 	return operation, nil
-// }
-
-// CastConfigOperationTypeToOperationType 将 ConfigOperationType 转换为 OperationType
-func CastConfigOperationTypeToOperationType(configEventType string) OperationType {
-	switch configEventType {
-	case "MemberMute":
-		return OperationTypeMemberMute
-	case "MemberUnmute":
-		return OperationTypeMemberUnMute
-	case "GroupMuteAll":
-		return OperationTypeGroupMuteAll
-	case "GroupUnMuteAll":
-		return OperationTypeGroupUnMuteAll
-	case "MemberJoin":
-		return OperationTypeMemberJoin
-	case "MemberLeaveByKick":
-		return OperationTypeMemberLeaveByKick
-	case "MemberLeaveByQuit":
-		return OperationTypeMemberLeaveByQuit
+func (operation *Operation) ToGoMiraiMessage() (gomirai.Message, bool) {
+	var goMiraimessage gomirai.Message
+	switch operation.innerType {
+	case OperationTypeAt:
+		goMiraimessage.Type = "At"
+		goMiraimessage.Target = CastStringToInt64(operation.UserID)
+	case OperationTypeAtAll:
+		goMiraimessage.Type = "AtAll"
 	default:
-		panic("")
+		return goMiraimessage, false
 	}
+	return goMiraimessage, true
 }
 
 func (operation Operation) ToString() string {
@@ -87,7 +72,7 @@ func (operation Operation) ToString() string {
 	return ""
 }
 
-func (operation *Operation) Complete(preDefVarMap map[string]string) {
+func (operation *Operation) CompleteContent(preDefVarMap map[string]string) {
 	for key, value := range preDefVarMap {
 		varName := fmt.Sprintf("{%s}", key)
 		operation.GroupID = strings.ReplaceAll(operation.GroupID, varName, value)
@@ -96,8 +81,35 @@ func (operation *Operation) Complete(preDefVarMap map[string]string) {
 	}
 }
 
-func (operation *Operation) Init() {
+func (operation *Operation) CompleteType() {
+	if operation.Type != "" {
+		switch operation.Type {
+		case "At":
+			operation.innerType = OperationTypeAt
+		case "AtAll":
+			operation.innerType = OperationTypeAtAll
+		case "MemberMute":
+			operation.innerType = OperationTypeMemberMute
+		case "MemberUnMute":
+			operation.innerType = OperationTypeMemberUnMute
+		case "GroupMuteAll":
+			operation.innerType = OperationTypeGroupMuteAll
+		case "GroupUnMuteAll":
+			operation.innerType = OperationTypeGroupUnMuteAll
+		case "MemberJoin":
+			operation.innerType = OperationTypeMemberJoin
+		case "MemberLeaveByKick":
+			operation.innerType = OperationTypeMemberLeaveByKick
+		case "MemberLeaveByQuit":
+			operation.innerType = OperationTypeMemberLeaveByQuit
+		}
+	}
+
 	switch operation.innerType {
+	case OperationTypeAt:
+		operation.Type = "At"
+	case OperationTypeAtAll:
+		operation.Type = "AtAll"
 	case OperationTypeMemberMute:
 		operation.Type = "MemberMute"
 	case OperationTypeMemberUnMute:
@@ -109,25 +121,9 @@ func (operation *Operation) Init() {
 	case OperationTypeMemberJoin:
 		operation.Type = "MemberJoin"
 	case OperationTypeMemberLeaveByKick:
-		operation.Type = "MemberLeaveEventKick"
+		operation.Type = "MemberLeaveByKick"
 	case OperationTypeMemberLeaveByQuit:
-		operation.Type = "MemberLeaveEventQuit"
-	}
-	switch operation.Type {
-	case "MemberMute":
-		operation.innerType = OperationTypeMemberMute
-	case "MemberUnMute":
-		operation.innerType = OperationTypeMemberUnMute
-	case "GroupMuteAll":
-		operation.innerType = OperationTypeGroupMuteAll
-	case "GroupUnMuteAll":
-		operation.innerType = OperationTypeGroupUnMuteAll
-	case "MemberJoin":
-		operation.innerType = OperationTypeMemberJoin
-	case "MemberLeaveEventKick":
-		operation.innerType = OperationTypeMemberLeaveByKick
-	case "MemberLeaveEventQuit":
-		operation.innerType = OperationTypeMemberLeaveByQuit
+		operation.Type = "MemberLeaveByQuit"
 	}
 }
 

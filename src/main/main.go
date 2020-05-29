@@ -4,6 +4,7 @@ import (
 	"el-bot-go/src/eltype"
 	"el-bot-go/src/gomirai"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -15,6 +16,16 @@ func main() {
 	eltype.SettingFullPath = os.Getenv("SETTING_FILE")
 	eltype.FaceMapFullPath = os.Getenv("FACE_MAP_FILE")
 	eltype.ImageFolder = os.Getenv("IMAGE_FOLDER")
+
+	switch len(os.Args) {
+	case 0:
+		log.Println("缺少启动参数「QQ号」和「自定义配置目录（相对于 config 目录）」")
+	case 1:
+		log.Println("缺少启动参数「QQ号」")
+	case 2:
+		log.Println("缺少启动参数和「自定义配置目录（相对于 config 目录）」")
+	}
+
 	reader := eltype.NewConfigReader(os.Args[2])
 	reader.Load(false)
 
@@ -31,7 +42,7 @@ func main() {
 	// 也可通过Client.Bots[]获取
 	qq, err := strconv.ParseInt(os.Args[1], 10, 64)
 	if err != nil {
-		fmt.Println("获取 QQ 号失败")
+		log.Printf("获取 QQ 号失败，可能是启动参数有误 %s。\n", os.Args[1])
 	}
 	bot, err := client.Verify(qq)
 	if err != nil {

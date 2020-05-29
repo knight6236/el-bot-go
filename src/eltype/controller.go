@@ -28,11 +28,11 @@ type Controller struct {
 
 var handlerConstructor = [...]func(configList []Config, messageList []Message, operationList []Operation,
 	preDefVarMap *map[string]string) (IHandler, error){
-	NewPlainHandler, NewImageHandler, NewOperationHandler, NewFaceHandler, NewXMLHandler, NewAtHandler}
+	NewPlainHandler, NewImageHandler, NewOperationHandler, NewFaceHandler, NewXMLHandler}
 
 var doerConstructor = [...]func(configHitList []Config, recivedMessageList []Message,
 	preDefVarMap map[string]string) (IDoer, error){
-	NewPlainDoer, NewImageDoer, NewOperationDoer, NewFaceDoer, NewXMLDoer, NewAtDoer}
+	NewPlainDoer, NewImageDoer, NewOperationDoer, NewFaceDoer, NewXMLDoer}
 
 // NewController 构造一个 Controller
 // @param	configReader	ConfigReader	配置读取类
@@ -101,8 +101,9 @@ func (controller *Controller) doCount(configHitList []Config) {
 func (controller *Controller) doCrontabConfig() {
 	c := cron.New()
 	for _, config := range controller.configReader.CrontabConfigList {
-		if c.AddJob(config.Cron, Job{controller: controller, config: config}) != nil {
-			fmt.Println("定时任务创建失败")
+		err := c.AddJob(config.Cron, Job{controller: controller, config: config})
+		if err != nil {
+			fmt.Println(err)
 		}
 	}
 	c.Start()
@@ -189,10 +190,9 @@ func (controller *Controller) sendMessageAndOperation(event Event, configHitList
 			continue
 		}
 
-		for _, message := range doer.GetSendedMessageList() {
-			message.Complete()
-			message.Sender.Complete(event.PreDefVarMap)
-			message.Receiver.Complete(event.PreDefVarMap)
+		for _, message := range doer.GetWillBeSentMessageList() {
+			message.CompleteType()
+			message.CompleteContent(event.PreDefVarMap)
 			goMiraiMessageList, isSuccess := message.ToGoMiraiMessageList()
 			if !isSuccess {
 				continue
@@ -215,13 +215,16 @@ func (controller *Controller) sendMessageAndOperation(event Event, configHitList
 			for _, nativeUserID := range message.Receiver.UserIDList {
 				userID := CastStringToInt64(nativeUserID)
 				for _, goMiraiMessage := range goMiraiMessageList {
+					if goMiraiMessage.Type == "At" {
+						continue
+					}
 					willBeSentGoMiraiUserMessageMap[userID] = append(willBeSentGoMiraiUserMessageMap[userID], goMiraiMessage)
 				}
 			}
 		}
 
-		for _, operation := range doer.GetSendedOperationList() {
-			operation.Complete(event.PreDefVarMap)
+		for _, operation := range doer.GetWillBeSentOperationList() {
+			operation.CompleteContent(event.PreDefVarMap)
 			controller.sendOperation(operation)
 		}
 	}
@@ -260,12 +263,14 @@ func (controller *Controller) sendOperation(operation Operation) {
 	case OperationTypeGroupMuteAll:
 		controller.bot.MuteAll(groupID)
 	case OperationTypeGroupUnMuteAll:
-
 		controller.bot.UnmuteAll(groupID)
 	}
 }
 
 func (controller *Controller) monitorFolder() {
+	if controller.configReader.folder == "default" {
+		return
+	}
 	//创建一个监控对象
 	watch, err := fsnotify.NewWatcher()
 	if err != nil {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"regexp"
 
 	"gopkg.in/yaml.v2"
 )
@@ -43,7 +44,12 @@ func NewCompiler(folder string) (Compiler, error) {
 }
 
 func (compiler *Compiler) Compile() {
-	compiler.compileFolder()
+	if compiler.folder == "default" {
+		compiler.compileThisFile(ConfigRoot + "/default.yml")
+	} else {
+		compiler.compileFolder()
+	}
+
 	compiler.CompleteConfigList()
 }
 
@@ -65,14 +71,17 @@ func (compiler *Compiler) compileFolder() {
 		return
 	}
 	for _, fileInfo := range files {
-		compiler.compileThisFile(fmt.Sprintf("%s/%s/%s", ConfigRoot, compiler.folder, fileInfo.Name()))
+		isMatch, err := regexp.MatchString(".+\\.yml", fileInfo.Name())
+		if isMatch && err == nil {
+			compiler.compileThisFile(fmt.Sprintf("%s/%s/%s", ConfigRoot, compiler.folder, fileInfo.Name()))
+		}
 	}
 }
 
 func (compiler *Compiler) compileThisFile(filePath string) {
 	buf, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		log.Printf("跳过 %s, 因为未能打开文件。\n", filePath)
+		log.Printf("跳过 %s, 因为未能读取文件。\n", filePath)
 		return
 	}
 	var tempSourceConfig SourceConfig
@@ -120,8 +129,8 @@ func (compiler *Compiler) CompleteConfigList() {
 func (compiler *Compiler) mergeSourceConfig(tempSourceConfig SourceConfig) {
 	mergeConfigList(&compiler.SourceConfig.GlobalConfigList, tempSourceConfig.GlobalConfigList)
 	mergeConfigList(&compiler.SourceConfig.FriendConfigList, tempSourceConfig.FriendConfigList)
-	mergeConfigList(&compiler.SourceConfig.FriendConfigList, tempSourceConfig.FriendConfigList)
 	mergeConfigList(&compiler.SourceConfig.GroupConfigList, tempSourceConfig.GroupConfigList)
+	mergeConfigList(&compiler.SourceConfig.CrontabConfigList, tempSourceConfig.CrontabConfigList)
 }
 
 func (transfer *Transfer) toConfig() Config {

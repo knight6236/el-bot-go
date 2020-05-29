@@ -18,8 +18,8 @@ import (
 type ImageDoer struct {
 	configHitList       []Config
 	recivedMessageList  []Message
-	sendedMessageList   []Message
-	sendedOperationList []Operation
+	willBeSentMessage   []Message
+	willBeSentOperation []Operation
 	preDefVarMap        map[string]string
 }
 
@@ -34,11 +34,11 @@ func NewImageDoer(configHitList []Config, recivedMessageList []Message, preDefVa
 	doer.configHitList = configHitList
 	doer.recivedMessageList = recivedMessageList
 	doer.preDefVarMap = preDefVarMap
-	doer.getSendedMessageList()
+	doer.getWillBeSentMessageList()
 	return doer, nil
 }
 
-func (doer *ImageDoer) getSendedMessageList() {
+func (doer *ImageDoer) getWillBeSentMessageList() {
 	for _, config := range doer.configHitList {
 		for _, doMessageDetail := range config.Do.Message.DetailList {
 			var willBeSentMessage Message
@@ -68,7 +68,7 @@ func (doer *ImageDoer) getSendedMessageList() {
 					willBeSentMessageDetail.Path = doMessageDetail.Path
 				}
 				willBeSentMessage.AddDetail(willBeSentMessageDetail)
-				doer.sendedMessageList = append(doer.sendedMessageList, willBeSentMessage)
+				doer.willBeSentMessage = append(doer.willBeSentMessage, willBeSentMessage)
 			}
 		}
 	}
@@ -106,11 +106,11 @@ func (doer ImageDoer) replaceStrByPreDefVarMap(text string) (string, bool) {
 }
 
 // GetSendedMessageList 获取将要发送的信息列表
-func (doer ImageDoer) GetSendedMessageList() []Message {
-	return doer.sendedMessageList
+func (doer ImageDoer) GetWillBeSentMessageList() []Message {
+	return doer.willBeSentMessage
 }
 
 // GetSendedOperationList 获取将要执行的动作列表
-func (doer ImageDoer) GetSendedOperationList() []Operation {
-	return doer.sendedOperationList
+func (doer ImageDoer) GetWillBeSentOperationList() []Operation {
+	return doer.willBeSentOperation
 }

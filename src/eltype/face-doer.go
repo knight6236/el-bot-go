@@ -16,8 +16,8 @@ import (
 type FaceDoer struct {
 	configHitList       []Config
 	recivedMessageList  []Message
-	sendedMessageList   []Message
-	sendedOperationList []Operation
+	willBeSentMessage   []Message
+	willBeSentOperation []Operation
 	preDefVarMap        map[string]string
 }
 
@@ -30,11 +30,11 @@ func NewFaceDoer(configHitList []Config, recivedMessageList []Message, preDefVar
 	doer.configHitList = configHitList
 	doer.recivedMessageList = recivedMessageList
 	doer.preDefVarMap = preDefVarMap
-	doer.getSendedMessageList()
+	doer.getWillBeSentMessageList()
 	return doer, nil
 }
 
-func (doer *FaceDoer) getSendedMessageList() {
+func (doer *FaceDoer) getWillBeSentMessageList() {
 	for _, config := range doer.configHitList {
 		for _, doMessageDetail := range config.Do.Message.DetailList {
 			var willBeSentMessage Message
@@ -43,7 +43,7 @@ func (doer *FaceDoer) getSendedMessageList() {
 			willBeSentMessage.Receiver = config.Do.Message.Receiver.DeepCopy()
 			willBeSentMessageDetail.innerType = MessageTypeImage
 			if doMessageDetail.innerType == MessageTypeFace {
-				doer.sendedMessageList = append(doer.sendedMessageList, config.Do.Message.DeepCopy())
+				doer.willBeSentMessage = append(doer.willBeSentMessage, config.Do.Message.DeepCopy())
 			}
 		}
 	}
@@ -63,11 +63,11 @@ func (doer FaceDoer) replaceStrByPreDefVarMap(text string) (string, bool) {
 }
 
 // GetSendedMessageList 获取将要发送的信息列表
-func (doer FaceDoer) GetSendedMessageList() []Message {
-	return doer.sendedMessageList
+func (doer FaceDoer) GetWillBeSentMessageList() []Message {
+	return doer.willBeSentMessage
 }
 
 // GetSendedOperationList 获取将要执行的动作列表
-func (doer FaceDoer) GetSendedOperationList() []Operation {
-	return doer.sendedOperationList
+func (doer FaceDoer) GetWillBeSentOperationList() []Operation {
+	return doer.willBeSentOperation
 }

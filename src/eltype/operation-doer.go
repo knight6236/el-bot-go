@@ -14,8 +14,8 @@ import (
 type OperationDoer struct {
 	configHitList       []Config
 	recivedMessageList  []Message
-	sendedMessageList   []Message
-	sendedOperationList []Operation
+	willBeSentMessage   []Message
+	willBeSentOperation []Operation
 	preDefVarMap        map[string]string
 }
 
@@ -29,12 +29,34 @@ func NewOperationDoer(configHitList []Config, recivedMessageList []Message, preD
 	doer.configHitList = configHitList
 	doer.recivedMessageList = recivedMessageList
 	doer.preDefVarMap = preDefVarMap
-	doer.getSendedMessageList()
+	doer.getWillBeSentMessageList()
 	doer.getSendedOperationList()
 	return doer, nil
 }
 
-func (doer *OperationDoer) getSendedMessageList() {
+func (doer *OperationDoer) getWillBeSentMessageList() {
+	for _, config := range doer.configHitList {
+		for _, doOperation := range config.Do.OperationList {
+			var willBeSentMessage Message
+			var willBeSentMessageDetail MessageDetail
+			switch doOperation.innerType {
+			case OperationTypeAt:
+				willBeSentMessage.Receiver.AddGroupID(doOperation.GroupID)
+				willBeSentMessage.Receiver.AddUserID(doOperation.UserID)
+				willBeSentMessageDetail.innerType = MessageTypeAt
+				willBeSentMessageDetail.GroupID = doOperation.GroupID
+				willBeSentMessageDetail.UserID = doOperation.UserID
+			case OperationTypeAtAll:
+				willBeSentMessage.Receiver.AddGroupID(doOperation.GroupID)
+				willBeSentMessageDetail.innerType = MessageTypeAtAll
+				willBeSentMessageDetail.GroupID = doOperation.GroupID
+			default:
+				continue
+			}
+			willBeSentMessage.AddDetail(willBeSentMessageDetail)
+			doer.willBeSentMessage = append(doer.willBeSentMessage, willBeSentMessage)
+		}
+	}
 }
 
 func (doer *OperationDoer) getSendedOperationList() {
@@ -87,7 +109,7 @@ func (doer *OperationDoer) getSendedOperationList() {
 			default:
 				continue
 			}
-			doer.sendedOperationList = append(doer.sendedOperationList, operation)
+			doer.willBeSentOperation = append(doer.willBeSentOperation, operation)
 		}
 	}
 }
@@ -106,11 +128,11 @@ func (doer OperationDoer) replaceStrByPreDefVarMap(text string) (string, bool) {
 }
 
 // GetSendedMessageList 获取将要发送的信息列表
-func (doer OperationDoer) GetSendedMessageList() []Message {
-	return doer.sendedMessageList
+func (doer OperationDoer) GetWillBeSentMessageList() []Message {
+	return doer.willBeSentMessage
 }
 
 // GetSendedOperationList 获取将要执行的动作列表
-func (doer OperationDoer) GetSendedOperationList() []Operation {
-	return doer.sendedOperationList
+func (doer OperationDoer) GetWillBeSentOperationList() []Operation {
+	return doer.willBeSentOperation
 }

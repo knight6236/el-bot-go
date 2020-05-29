@@ -1,6 +1,5 @@
 @echo off
 set CONFIG_ROOT=config
-REM set DEFAULT_FILE=config/default.yml
 set SETTING_FILE=plugins/MiraiAPIHTTP/setting.yml
 set FACE_MAP_FILE=config/face-map.yml
 set IMAGE_FOLDER=plugins/MiraiAPIHTTP/images

@@ -2,6 +2,7 @@ package eltype
 
 import (
 	"fmt"
+	"strings"
 
 	"el-bot-go/src/gomirai"
 )
@@ -109,7 +110,7 @@ func (message *Message) AddDetail(detail MessageDetail) {
 
 // ToGoMiraiMessage 将 Message 转换为 gomirai.Message
 func (message *Message) ToGoMiraiMessageList() ([]gomirai.Message, bool) {
-	message.Complete()
+	message.CompleteType()
 	var goMiraiMessageList []gomirai.Message
 	for _, detail := range message.DetailList {
 		goMiaraiMessage, isSuccess := detail.ToGoMiraiMessage()
@@ -121,7 +122,7 @@ func (message *Message) ToGoMiraiMessageList() ([]gomirai.Message, bool) {
 }
 
 func (detail *MessageDetail) ToGoMiraiMessage() (gomirai.Message, bool) {
-	detail.Complete()
+	detail.CompleteType()
 	var goMiraiMessage gomirai.Message
 	switch detail.innerType {
 	case MessageTypePlain:
@@ -158,15 +159,25 @@ func (detail *MessageDetail) ToGoMiraiMessage() (gomirai.Message, bool) {
 	return goMiraiMessage, true
 }
 
-func (message *Message) Complete() {
+func (message *Message) CompleteType() {
 	for i := 0; i < len(message.DetailList); i++ {
 		temp := message.DetailList[i]
-		temp.Complete()
+		temp.CompleteType()
 		message.DetailList[i] = temp
 	}
 }
 
-func (detail *MessageDetail) Complete() {
+func (message *Message) CompleteContent(preDefVarMap map[string]string) {
+	message.Sender.CompleteContent(preDefVarMap)
+	message.Receiver.CompleteContent(preDefVarMap)
+	for i := 0; i < len(message.DetailList); i++ {
+		temp := message.DetailList[i]
+		temp.CompleteContent(preDefVarMap)
+		message.DetailList[i] = temp
+	}
+}
+
+func (detail *MessageDetail) CompleteType() {
 	switch detail.Type {
 	case "Plain":
 		detail.innerType = MessageTypePlain
@@ -194,6 +205,18 @@ func (detail *MessageDetail) Complete() {
 		detail.Type = "At"
 	case MessageTypeAtAll:
 		detail.Type = "AtAll"
+	}
+}
+
+func (detail *MessageDetail) CompleteContent(preDefVarMap map[string]string) {
+	for key, value := range preDefVarMap {
+		varName := fmt.Sprintf("{%s}", key)
+		detail.UserID = strings.ReplaceAll(detail.UserID, varName, value)
+		detail.GroupID = strings.ReplaceAll(detail.GroupID, varName, value)
+		detail.Text = strings.ReplaceAll(detail.Text, varName, value)
+		detail.URL = strings.ReplaceAll(detail.URL, varName, value)
+		detail.Path = strings.ReplaceAll(detail.Path, varName, value)
+		detail.FaceName = strings.ReplaceAll(detail.FaceName, varName, value)
 	}
 }
 
