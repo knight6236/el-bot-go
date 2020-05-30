@@ -4,12 +4,10 @@ import (
 	"log"
 	"strconv"
 
-	"gopkg.in/yaml.v2"
-
-	// "io"
-
 	// "os"
 	"io/ioutil"
+
+	"gopkg.in/yaml.v2"
 	// "reflect"
 )
 
@@ -23,6 +21,7 @@ type ConfigReader struct {
 	FriendConfigList  []Config `yaml:"friend"`
 	GroupConfigList   []Config `yaml:"group"`
 	CrontabConfigList []Config `yaml:"crontab"`
+	RssConfigList     []Config `yaml:"rss"`
 	// CounterConfigList []Config
 }
 
@@ -49,6 +48,7 @@ func (reader *ConfigReader) Load(isDebug bool) {
 		reader.FriendConfigList = compiler.SourceConfig.FriendConfigList
 		reader.GroupConfigList = compiler.SourceConfig.GroupConfigList
 		reader.CrontabConfigList = compiler.SourceConfig.CrontabConfigList
+		reader.RssConfigList = compiler.SourceConfig.RssConfigList
 	}
 	reader.parseToSetting()
 }
@@ -59,6 +59,7 @@ func (reader *ConfigReader) reLoad() {
 	reader.FriendConfigList = reader.FriendConfigList[:0]
 	reader.GroupConfigList = reader.GroupConfigList[:0]
 	reader.CrontabConfigList = reader.CrontabConfigList[:0]
+	reader.RssConfigList = reader.RssConfigList[:0]
 	reader.Load(false)
 }
 

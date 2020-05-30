@@ -2,6 +2,7 @@ export SETTING_FILE=plugins/MiraiAPIHTTP/setting.yml
 export FACE_MAP_FILE=config/face-map.yml
 export IMAGE_FOLDER=plugins/MiraiAPIHTTP/images
 export CONFIG_ROOT=config
+export DATA_ROOT=data
 
 export WIN_AMD64=bin/main-windows-amd64.exe
 export WIN_386=bin/main-windows-386.exe

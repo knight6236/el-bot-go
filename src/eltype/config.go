@@ -18,6 +18,7 @@ type Config struct {
 	innerID int
 	Type    ConfigType
 	IsCount bool
+	RssURL  string `yaml:"url"`
 	CountID string `yaml:"countID"`
 	Cron    string `yaml:"cron"`
 	When    When   `yaml:"when"`

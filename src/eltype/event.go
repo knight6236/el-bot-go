@@ -326,6 +326,7 @@ func (event *Event) addSomePreDefVar() {
 			}
 		}
 	}
+	event.addPerDefVar("\\n", "\n")
 	event.addPerDefVar("el-message-text", text)
 	event.addPerDefVar("el-message-xml", xml)
 }

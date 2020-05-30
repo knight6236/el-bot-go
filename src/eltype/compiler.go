@@ -29,6 +29,7 @@ type SourceConfig struct {
 	FriendConfigList  []Config   `yaml:"friend"`
 	GroupConfigList   []Config   `yaml:"group"`
 	CrontabConfigList []Config   `yaml:"crontab"`
+	RssConfigList     []Config   `yaml:"rss"`
 	TransferList      []Transfer `yaml:"transfer"`
 }
 
@@ -45,7 +46,7 @@ func NewCompiler(folder string) (Compiler, error) {
 
 func (compiler *Compiler) Compile() {
 	if compiler.folder == "default" {
-		compiler.compileThisFile(ConfigRoot + "/default.yml")
+		compiler.compileThisFile(ConfigRoot + "/" + DefaultConfigFileName)
 	} else {
 		compiler.compileFolder()
 	}
@@ -131,6 +132,7 @@ func (compiler *Compiler) mergeSourceConfig(tempSourceConfig SourceConfig) {
 	mergeConfigList(&compiler.SourceConfig.FriendConfigList, tempSourceConfig.FriendConfigList)
 	mergeConfigList(&compiler.SourceConfig.GroupConfigList, tempSourceConfig.GroupConfigList)
 	mergeConfigList(&compiler.SourceConfig.CrontabConfigList, tempSourceConfig.CrontabConfigList)
+	mergeConfigList(&compiler.SourceConfig.RssConfigList, tempSourceConfig.RssConfigList)
 }
 
 func (transfer *Transfer) toConfig() Config {

@@ -1,11 +1,10 @@
 package eltype
 
 import (
+	"el-bot-go/src/gomirai"
 	"fmt"
 	"log"
 	"strings"
-
-	"el-bot-go/src/gomirai"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/robfig/cron"
@@ -22,6 +21,7 @@ type Controller struct {
 	friendConfigList  []Config
 	groupConfigList   []Config
 	crontabConfigList []Config
+	RssConfigList     []Config
 	bot               *gomirai.Bot
 	countMap          map[string]int
 }
@@ -45,8 +45,10 @@ func NewController(configReader ConfigReader, bot *gomirai.Bot) Controller {
 	controller.friendConfigList = controller.configReader.FriendConfigList
 	controller.groupConfigList = controller.configReader.GroupConfigList
 	controller.crontabConfigList = controller.configReader.CrontabConfigList
+	controller.RssConfigList = controller.configReader.RssConfigList
 	go controller.monitorFolder()
-	go controller.doCrontabConfig()
+	go controller.enableCrontab()
+	go controller.enableRssListener()
 	return controller
 }
 
@@ -98,7 +100,7 @@ func (controller *Controller) doCount(configHitList []Config) {
 	}
 }
 
-func (controller *Controller) doCrontabConfig() {
+func (controller *Controller) enableCrontab() {
 	c := cron.New()
 	for _, config := range controller.configReader.CrontabConfigList {
 		err := c.AddJob(config.Cron, Job{controller: controller, config: config})
@@ -324,4 +326,25 @@ func (controller *Controller) monitorFolder() {
 
 	//循环
 	select {}
+}
+
+func (controller *Controller) enableRssListener() {
+	c := cron.New()
+	err := c.AddFunc("0 0/15 * * * *", func() {
+		listener, _ := NewRssListener(controller.RssConfigList)
+		for _, rssConfig := range listener.rssConfigList {
+			temp := listener.checkUpdate(rssConfig.RssURL)
+			if temp != nil {
+				event := Event{
+					PreDefVarMap: temp,
+				}
+				controller.sendMessageAndOperation(event, []Config{rssConfig})
+			}
+		}
+	})
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	c.Start()
 }

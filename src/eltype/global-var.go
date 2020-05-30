@@ -1,7 +1,9 @@
 package eltype
 
+var DataRoot = "../../data"
+var RssDataFileName = "rss.yml"
 var ConfigRoot string = "../../config"
 var SettingFullPath string = "../../plugins/MiraiAPIHTTP/setting.yml"
 var FaceMapFullPath string = "../../config/face-map.yml"
-var DefaultConfigFullPath string = "../../config/default.yml"
+var DefaultConfigFileName string = "default.yml"
 var ImageFolder string = "../../plugins/MiraiAPIHTTP/images"

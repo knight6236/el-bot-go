@@ -2,7 +2,8 @@
 set CONFIG_ROOT=config
 set SETTING_FILE=plugins/MiraiAPIHTTP/setting.yml
 set FACE_MAP_FILE=config/face-map.yml
-set IMAGE_FOLDER=.plugins/MiraiAPIHTTP/images
+set IMAGE_FOLDER=plugins/MiraiAPIHTTP/images
+set DATA_ROOT=data
 
 set WIN_AMD64=bin/main-windows-amd64.exe
 set WIN_386=bin/main-windows-386.exe

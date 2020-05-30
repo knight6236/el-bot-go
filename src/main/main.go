@@ -16,6 +16,9 @@ func main() {
 	eltype.SettingFullPath = os.Getenv("SETTING_FILE")
 	eltype.FaceMapFullPath = os.Getenv("FACE_MAP_FILE")
 	eltype.ImageFolder = os.Getenv("IMAGE_FOLDER")
+	eltype.DataRoot = os.Getenv("DATA_ROOT")
+	eltype.DefaultConfigFileName = os.Getenv("DEFAULT_CONFIG_FILE_NAME")
+	eltype.RssDataFileName = os.Getenv("RSS_DATA_FILE_NAME")
 
 	switch len(os.Args) {
 	case 0:
