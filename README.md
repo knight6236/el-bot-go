@@ -50,6 +50,7 @@
 + 定时任务
   + 定时发送消息
 + 消息自动转发
++ RSS 订阅
 + 配置触发次数统计
 
 # 快速开始
@@ -67,8 +68,7 @@
     ```
 5. 启动 mirai-console: `sh start-console.sh`并按照提示进行操作
 6. 启动 el-bot-go: 在另一个 shell 运行脚本：
-    1. 选择合适的 shell 脚本 `start-el-bot-xxx-yyy.sh`
-    2. 执行命令`sh start-el-bot-xxx-yyy.sh 机器人QQ号 自定义配置目录（相对于 config 目录）`，如果不使用自定义配置则为`"default"`
+    1. 执行命令`sh start-el-bot.sh 机器人QQ号 自定义配置目录（相对于 config 目录）`，如果不使用自定义配置则为`"default"`
 7. 如果执行上一步时出现安装 `package`失败的情况，可以进入 [release](https://github.com/ElpsyCN/el-bot-go/releases) 下载对应的二进制文件到 `bin` 下，来使用编译好程序，跳过 `package `的安装的环节。
 
 ## On Windows（Powershell）
@@ -87,7 +87,7 @@
 5. 启动 mirai-console: `./start-console.bat`
 6. 启动 el-bot-go: 在另一个 cmd 执行命令 `start-el-bot-xxxx.bat 机器人的QQ号 配置所在路径`
     1. 选择合适的 bat 脚本 `start-el-bot-xxx.bat`
-    2. 执行命令`start-el-bot-xxx.bat 机器人QQ号 自定义配置目录（相对于 config 目录）`，如果不使用自定义配置则为`"default"`
+    2. 执行命令`./start-el-bot-xxx.bat 机器人QQ号 自定义配置目录（相对于 config 目录）`，如果不使用自定义配置则为`"default"`
 7. 如果执行上一步时出现安装 `package`失败的情况，可以进入 [release](https://github.com/ElpsyCN/el-bot-go/releases) 下载对应的二进制文件到 `bin` 下，来使用编译好程序，跳过 `package `的安装的环节。
 
 # 反馈

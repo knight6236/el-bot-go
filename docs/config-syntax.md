@@ -328,3 +328,45 @@ transfer:
         ...
 ```
 
+# RSS 订阅
+
+## 基本结构
+
+```yml
+rss:
+  - url: 
+    do:
+      operation:
+      message:
+        receiver:
+```
+
+| 关键字 | 必要 | 说明                           |
+| ------ | ---- | ------------------------------ |
+| rss    | 是   | `rss`下的配置均为`rss`订阅配置 |
+| url    | 是   | `rss`URL                       |
+
+区别于「通用配置」，定时任务中的 `do.message.receiver` 是必须的，不允许省略，即至少要指定一个消息的接收者。
+
+## 配置举例
+
+```yml
+rss:
+  - url: https://xxxx/atom.xml
+    do:
+      message:
+        receiver:
+          group:
+            - 群号
+        detail:
+          - type: Plain
+            text: '标题：{el-rss-title}{\n}'
+          - type: Plain
+            text: '作者：{el-rss-author}{\n}'
+          - type: Plain
+            text: '链接：{el-rss-link}{\n}'
+          - type: Plain
+            text: '时间：{el-rss-year}-{el-rss-month}-{el-rss-day} {el-rss-hour}:{el-rss-minute}:{el-rss-second}'
+```
+
+关于上面配置中所用到的 {el-rss-link} 等预定义变量的说明请参考[预定义变量](pre-def-var.md)
