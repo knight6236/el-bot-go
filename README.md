@@ -77,7 +77,7 @@
 2. clone: `git clone git@github.com:ElpsyCN/el-bot-go.git`
 3. 下载依赖：
     + 下载[mirai-console-wrapper-1.2.0-all](https://github.com/mamoe/mirai-console-wrapper/releases/download/1.2.0/mirai-console-wrapper-1.2.0-all.jar)到项目根目录
-    + 下载[mirai-api-http-v1.7.0](https://github.com/mamoe/mirai-api-http/releases/download/v1.7.0/mirai-api-http-v1.7.0.jar)到`plugins/`
+    + 下载[mirai-api-http-v1.7.1](https://github.com/mamoe/mirai-api-http/releases/download/v1.7.1/mirai-api-http-v1.7.1.jar)到`plugins/`
 4. 创建文件`plugins/MiraiAPIHTTP/setting.yml`并填入下列内容
     ```yml
     authKey: qwertyuiop
