@@ -292,23 +292,23 @@ func (controller *Controller) monitorFolder() {
 				{
 					if ev.Op&fsnotify.Create == fsnotify.Create {
 						controller.configReader.reLoad()
-						log.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
+						log.Println("检测到配置目录下的文件被创建，已经自动更新配置。")
 					}
 					if ev.Op&fsnotify.Write == fsnotify.Write {
 						controller.configReader.reLoad()
-						log.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
+						log.Println("检测到配置目录下的文件被修改，已经自动更新配置。")
 					}
 					if ev.Op&fsnotify.Remove == fsnotify.Remove {
 						controller.configReader.reLoad()
-						log.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
+						log.Println("检测到配置目录下的文件被移除，已经自动更新配置。")
 					}
 					if ev.Op&fsnotify.Rename == fsnotify.Rename {
 						controller.configReader.reLoad()
-						log.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
+						log.Println("检测到配置目录下的文件被重命名，已经自动更新配置。")
 					}
 					if ev.Op&fsnotify.Chmod == fsnotify.Chmod {
 						controller.configReader.reLoad()
-						log.Println("检测到配置目录下的文件发生变化，已经自动更新配置。")
+						log.Println("检测到配置目录下的文件权限变化，已经自动更新配置。")
 					}
 					controller.globalConfigList = controller.configReader.GlobalConfigList
 					controller.friendConfigList = controller.configReader.FriendConfigList
