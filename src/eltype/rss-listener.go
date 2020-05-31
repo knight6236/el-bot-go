@@ -9,13 +9,16 @@ import (
 	"time"
 
 	"github.com/mmcdole/gofeed"
+	"github.com/robfig/cron"
 	"gopkg.in/yaml.v2"
 )
 
 type RssListener struct {
-	rssConfigList []Config
-	rssDataMap    map[string]string
-	monthsMap     map[string]string
+	rssConfigList    []Config
+	rssDataMap       map[string]string
+	monthsMap        map[string]string
+	willBeSentConfig chan Config
+	willBeUsedEvent  chan Event
 }
 
 func NewRssListener(rssConfigList []Config) (RssListener, error) {
@@ -26,6 +29,8 @@ func NewRssListener(rssConfigList []Config) (RssListener, error) {
 	listener.rssDataMap = make(map[string]string)
 	listener.monthsMap = monthsMap
 	listener.rssConfigList = rssConfigList
+	listener.willBeSentConfig = make(chan Config, 10)
+	listener.willBeUsedEvent = make(chan Event, 10)
 	buf, err := ioutil.ReadFile(fmt.Sprintf("%s/%s", DataRoot, RssDataFileName))
 	if err != nil {
 		os.Create(fmt.Sprintf("%s/%s", DataRoot, RssDataFileName))
@@ -35,18 +40,44 @@ func NewRssListener(rssConfigList []Config) (RssListener, error) {
 	return listener, nil
 }
 
-func (listen *RssListener) checkUpdate(url string) map[string]string {
+func (listener *RssListener) Start() {
+	go listener.start()
+}
+
+func (listener *RssListener) start() {
+	c := cron.New()
+	err := c.AddFunc("0 0/1 * * * *", func() {
+		for _, rssConfig := range listener.rssConfigList {
+			temp := listener.checkUpdate(rssConfig.RssURL)
+			if temp != nil {
+				event := Event{
+					PreDefVarMap: temp,
+				}
+				listener.willBeSentConfig <- rssConfig
+				listener.willBeUsedEvent <- event
+			}
+		}
+	})
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	c.Start()
+	select {}
+}
+
+func (listener *RssListener) checkUpdate(url string) map[string]string {
 	ret := make(map[string]string)
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 	fp := gofeed.NewParser()
 	feed, _ := fp.ParseURLWithContext(url, ctx)
-	if len(feed.Items) == 0 || listen.rssDataMap[url] == feed.Items[0].Title ||
-		listen.rssDataMap[url] == "" {
+	if len(feed.Items) == 0 || listener.rssDataMap[url] == feed.Items[0].Title ||
+		listener.rssDataMap[url] == "" {
 		return nil
 	}
 	year := fmt.Sprintf("%02d", feed.Items[0].UpdatedParsed.Year())
-	month := listen.monthsMap[feed.Items[0].UpdatedParsed.Month().String()]
+	month := listener.monthsMap[feed.Items[0].UpdatedParsed.Month().String()]
 	day := fmt.Sprintf("%02d", feed.Items[0].UpdatedParsed.Day())
 	hour := fmt.Sprintf("%02d", feed.Items[0].UpdatedParsed.Hour())
 	minute := fmt.Sprintf("%02d", feed.Items[0].UpdatedParsed.Minute())
@@ -61,9 +92,9 @@ func (listen *RssListener) checkUpdate(url string) map[string]string {
 	ret["el-rss-second"] = second
 	ret["el-rss-link"] = feed.Items[0].Link
 	ret["\\n"] = "\n"
-	listen.rssDataMap[url] = feed.Items[0].Title
+	listener.rssDataMap[url] = feed.Items[0].Title
 
-	ymlStr, err := yaml.Marshal(listen.rssDataMap)
+	ymlStr, err := yaml.Marshal(listener.rssDataMap)
 	if err != nil {
 		log.Println(err)
 	}

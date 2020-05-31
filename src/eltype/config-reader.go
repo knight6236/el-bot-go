@@ -13,16 +13,15 @@ import (
 
 // ConfigReader 配置读取对象
 type ConfigReader struct {
-	Port              string
-	EnableWebsocket   bool
-	folder            string
-	AuthKey           string
-	GlobalConfigList  []Config `yaml:"global"`
-	FriendConfigList  []Config `yaml:"friend"`
-	GroupConfigList   []Config `yaml:"group"`
-	CrontabConfigList []Config `yaml:"crontab"`
-	RssConfigList     []Config `yaml:"rss"`
-	// CounterConfigList []Config
+	Port             string
+	EnableWebsocket  bool
+	folder           string
+	AuthKey          string
+	GlobalConfigList []Config `yaml:"global"`
+	FriendConfigList []Config `yaml:"friend"`
+	GroupConfigList  []Config `yaml:"group"`
+	CronConfigList   []Config `yaml:"crontab"`
+	RssConfigList    []Config `yaml:"rss"`
 }
 
 // NewConfigReader 使用配置文件路径构造一个 ConfigReader
@@ -47,7 +46,7 @@ func (reader *ConfigReader) Load(isDebug bool) {
 		reader.GlobalConfigList = compiler.SourceConfig.GlobalConfigList
 		reader.FriendConfigList = compiler.SourceConfig.FriendConfigList
 		reader.GroupConfigList = compiler.SourceConfig.GroupConfigList
-		reader.CrontabConfigList = compiler.SourceConfig.CrontabConfigList
+		reader.CronConfigList = compiler.SourceConfig.CronConfigList
 		reader.RssConfigList = compiler.SourceConfig.RssConfigList
 	}
 	reader.parseToSetting()
@@ -58,7 +57,7 @@ func (reader *ConfigReader) reLoad() {
 	reader.GlobalConfigList = reader.GlobalConfigList[:0]
 	reader.FriendConfigList = reader.FriendConfigList[:0]
 	reader.GroupConfigList = reader.GroupConfigList[:0]
-	reader.CrontabConfigList = reader.CrontabConfigList[:0]
+	reader.CronConfigList = reader.CronConfigList[:0]
 	reader.RssConfigList = reader.RssConfigList[:0]
 	reader.Load(false)
 }
@@ -112,12 +111,12 @@ func (reader *ConfigReader) CompleteConfigList() {
 		innerID++
 		reader.GroupConfigList[i] = temp
 	}
-	for i := 0; i < len(reader.CrontabConfigList); i++ {
-		temp := reader.CrontabConfigList[i]
+	for i := 0; i < len(reader.CronConfigList); i++ {
+		temp := reader.CronConfigList[i]
 		temp.Init()
 		temp.innerID = innerID
 		innerID++
-		reader.CrontabConfigList[i] = temp
+		reader.CronConfigList[i] = temp
 	}
 }
 
@@ -125,5 +124,5 @@ func (reader *ConfigReader) mergeReader(tempReader ConfigReader) {
 	mergeConfigList(&reader.GlobalConfigList, tempReader.GlobalConfigList)
 	mergeConfigList(&reader.FriendConfigList, tempReader.FriendConfigList)
 	mergeConfigList(&reader.GroupConfigList, tempReader.GroupConfigList)
-	mergeConfigList(&reader.CrontabConfigList, tempReader.CrontabConfigList)
+	mergeConfigList(&reader.CronConfigList, tempReader.CronConfigList)
 }

@@ -25,12 +25,12 @@ type Transfer struct {
 }
 
 type SourceConfig struct {
-	GlobalConfigList  []Config   `yaml:"global"`
-	FriendConfigList  []Config   `yaml:"friend"`
-	GroupConfigList   []Config   `yaml:"group"`
-	CrontabConfigList []Config   `yaml:"crontab"`
-	RssConfigList     []Config   `yaml:"rss"`
-	TransferList      []Transfer `yaml:"transfer"`
+	GlobalConfigList []Config   `yaml:"global"`
+	FriendConfigList []Config   `yaml:"friend"`
+	GroupConfigList  []Config   `yaml:"group"`
+	CronConfigList   []Config   `yaml:"crontab"`
+	RssConfigList    []Config   `yaml:"rss"`
+	TransferList     []Transfer `yaml:"transfer"`
 }
 
 type Compiler struct {
@@ -118,12 +118,12 @@ func (compiler *Compiler) CompleteConfigList() {
 		innerID++
 		compiler.SourceConfig.GroupConfigList[i] = temp
 	}
-	for i := 0; i < len(compiler.SourceConfig.CrontabConfigList); i++ {
-		temp := compiler.SourceConfig.CrontabConfigList[i]
+	for i := 0; i < len(compiler.SourceConfig.CronConfigList); i++ {
+		temp := compiler.SourceConfig.CronConfigList[i]
 		temp.Init()
 		temp.innerID = innerID
 		innerID++
-		compiler.SourceConfig.CrontabConfigList[i] = temp
+		compiler.SourceConfig.CronConfigList[i] = temp
 	}
 }
 
@@ -131,7 +131,7 @@ func (compiler *Compiler) mergeSourceConfig(tempSourceConfig SourceConfig) {
 	mergeConfigList(&compiler.SourceConfig.GlobalConfigList, tempSourceConfig.GlobalConfigList)
 	mergeConfigList(&compiler.SourceConfig.FriendConfigList, tempSourceConfig.FriendConfigList)
 	mergeConfigList(&compiler.SourceConfig.GroupConfigList, tempSourceConfig.GroupConfigList)
-	mergeConfigList(&compiler.SourceConfig.CrontabConfigList, tempSourceConfig.CrontabConfigList)
+	mergeConfigList(&compiler.SourceConfig.CronConfigList, tempSourceConfig.CronConfigList)
 	mergeConfigList(&compiler.SourceConfig.RssConfigList, tempSourceConfig.RssConfigList)
 }
 

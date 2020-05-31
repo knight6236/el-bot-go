@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/robfig/cron"
 )
 
 // 「」
@@ -16,14 +15,11 @@ import (
 // @property	configReader	ConfigReader	配置读取类
 // @property	bot				*gomirai.Bot	机器人
 type Controller struct {
-	configReader      ConfigReader
-	globalConfigList  []Config
-	friendConfigList  []Config
-	groupConfigList   []Config
-	crontabConfigList []Config
-	RssConfigList     []Config
-	bot               *gomirai.Bot
-	countMap          map[string]int
+	configReader ConfigReader
+	cronChecker  CronChecker
+	rssListener  RssListener
+	bot          *gomirai.Bot
+	countMap     map[string]int
 }
 
 var handlerConstructor = [...]func(configList []Config, messageList []Message, operationList []Operation,
@@ -40,15 +36,14 @@ func NewController(configReader ConfigReader, bot *gomirai.Bot) Controller {
 	var controller Controller
 	controller.configReader = configReader
 	controller.bot = bot
+	controller.cronChecker, _ = NewCronChecker(configReader.CronConfigList)
+	controller.rssListener, _ = NewRssListener(configReader.RssConfigList)
 	controller.countMap = make(map[string]int)
-	controller.globalConfigList = controller.configReader.GlobalConfigList
-	controller.friendConfigList = controller.configReader.FriendConfigList
-	controller.groupConfigList = controller.configReader.GroupConfigList
-	controller.crontabConfigList = controller.configReader.CrontabConfigList
-	controller.RssConfigList = controller.configReader.RssConfigList
+	controller.cronChecker.Start()
+	controller.rssListener.Start()
 	go controller.monitorFolder()
-	go controller.enableCrontab()
-	go controller.enableRssListener()
+	go controller.listenCron()
+	go controller.listenRss()
 	return controller
 }
 
@@ -100,16 +95,11 @@ func (controller *Controller) doCount(configHitList []Config) {
 	}
 }
 
-func (controller *Controller) enableCrontab() {
-	c := cron.New()
-	for _, config := range controller.configReader.CrontabConfigList {
-		err := c.AddJob(config.Cron, Job{controller: controller, config: config})
-		if err != nil {
-			fmt.Println(err)
-		}
+func (controller *Controller) listenCron() {
+	for true {
+		config := <-controller.cronChecker.WillBeSentConfig
+		controller.sendMessageAndOperation(Event{}, []Config{config})
 	}
-	c.Start()
-	select {}
 }
 
 func (controller *Controller) getConfigRelatedList(event Event) []Config {
@@ -117,16 +107,16 @@ func (controller *Controller) getConfigRelatedList(event Event) []Config {
 	switch event.Type {
 	case EventTypeGroupMessage:
 		mergeConfigList(&configList,
-			controller.getConfigRelatedConfigList(event.Type, controller.globalConfigList, event.Sender),
-			controller.getConfigRelatedConfigList(event.Type, controller.groupConfigList, event.Sender))
+			controller.getConfigRelatedConfigList(event.Type, controller.configReader.GlobalConfigList, event.Sender),
+			controller.getConfigRelatedConfigList(event.Type, controller.configReader.GroupConfigList, event.Sender))
 	case EventTypeFriendMessage:
 		mergeConfigList(&configList,
-			controller.getConfigRelatedConfigList(event.Type, controller.globalConfigList, event.Sender),
-			controller.getConfigRelatedConfigList(event.Type, controller.friendConfigList, event.Sender))
+			controller.getConfigRelatedConfigList(event.Type, controller.configReader.GlobalConfigList, event.Sender),
+			controller.getConfigRelatedConfigList(event.Type, controller.configReader.FriendConfigList, event.Sender))
 	default:
 		mergeConfigList(&configList,
-			controller.getConfigRelatedConfigList(event.Type, controller.globalConfigList, event.Sender),
-			controller.getConfigRelatedConfigList(event.Type, controller.groupConfigList, event.Sender))
+			controller.getConfigRelatedConfigList(event.Type, controller.configReader.GlobalConfigList, event.Sender),
+			controller.getConfigRelatedConfigList(event.Type, controller.configReader.GroupConfigList, event.Sender))
 	}
 	return configList
 }
@@ -180,7 +170,6 @@ func (controller *Controller) getConfigHitList(event Event, configRelatedList []
 		}
 	}
 	return configHitList
-
 }
 
 func (controller *Controller) sendMessageAndOperation(event Event, configHitList []Config) {
@@ -217,7 +206,7 @@ func (controller *Controller) sendMessageAndOperation(event Event, configHitList
 			for _, nativeUserID := range message.Receiver.UserIDList {
 				userID := CastStringToInt64(nativeUserID)
 				for _, goMiraiMessage := range goMiraiMessageList {
-					if goMiraiMessage.Type == "At" {
+					if goMiraiMessage.Type == "At" || goMiraiMessage.Type == "AtAll" {
 						continue
 					}
 					willBeSentGoMiraiUserMessageMap[userID] = append(willBeSentGoMiraiUserMessageMap[userID], goMiraiMessage)
@@ -310,10 +299,6 @@ func (controller *Controller) monitorFolder() {
 						controller.configReader.reLoad()
 						log.Println("检测到配置目录下的文件权限变化，已经自动更新配置。")
 					}
-					controller.globalConfigList = controller.configReader.GlobalConfigList
-					controller.friendConfigList = controller.configReader.FriendConfigList
-					controller.groupConfigList = controller.configReader.GroupConfigList
-					controller.crontabConfigList = controller.configReader.CrontabConfigList
 				}
 			case err := <-watch.Errors:
 				{
@@ -328,23 +313,10 @@ func (controller *Controller) monitorFolder() {
 	select {}
 }
 
-func (controller *Controller) enableRssListener() {
-	c := cron.New()
-	err := c.AddFunc("0 0/15 * * * *", func() {
-		listener, _ := NewRssListener(controller.RssConfigList)
-		for _, rssConfig := range listener.rssConfigList {
-			temp := listener.checkUpdate(rssConfig.RssURL)
-			if temp != nil {
-				event := Event{
-					PreDefVarMap: temp,
-				}
-				controller.sendMessageAndOperation(event, []Config{rssConfig})
-			}
-		}
-	})
-	if err != nil {
-		log.Println(err)
-		return
+func (controller *Controller) listenRss() {
+	for true {
+		config := <-controller.rssListener.willBeSentConfig
+		event := <-controller.rssListener.willBeUsedEvent
+		controller.sendMessageAndOperation(event, []Config{config})
 	}
-	c.Start()
 }
