@@ -15,7 +15,7 @@ const (
 )
 
 type Config struct {
-	innerID int
+	innerID int64
 	Type    ConfigType
 	IsCount bool
 	RssURL  string `yaml:"url"`
@@ -25,7 +25,7 @@ type Config struct {
 	Do      Do     `yaml:"do"`
 }
 
-func (config *Config) Init() {
+func (config *Config) CompleteType() {
 	config.When.Message.CompleteType()
 	config.Do.Message.CompleteType()
 
@@ -39,5 +39,20 @@ func (config *Config) Init() {
 		temp.CompleteType()
 		config.Do.OperationList[i] = temp
 	}
+}
 
+func (config *Config) CompleteContent(event Event) {
+	config.When.Message.CompleteContent(event)
+	config.Do.Message.CompleteContent(event)
+
+	for i := 0; i < len(config.When.OperationList); i++ {
+		temp := config.When.OperationList[i]
+		temp.CompleteContent(event.PreDefVarMap)
+		config.When.OperationList[i] = temp
+	}
+	for i := 0; i < len(config.Do.OperationList); i++ {
+		temp := config.Do.OperationList[i]
+		temp.CompleteContent(event.PreDefVarMap)
+		config.Do.OperationList[i] = temp
+	}
 }

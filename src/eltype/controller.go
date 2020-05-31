@@ -15,11 +15,11 @@ import (
 // @property	configReader	ConfigReader	配置读取类
 // @property	bot				*gomirai.Bot	机器人
 type Controller struct {
-	configReader ConfigReader
-	cronChecker  CronChecker
-	rssListener  RssListener
+	configReader *ConfigReader
+	cronChecker  *CronChecker
+	rssListener  *RssListener
+	freqMonitor  *FreqMonitor
 	bot          *gomirai.Bot
-	countMap     map[string]int
 }
 
 var handlerConstructor = [...]func(configList []Config, messageList []Message, operationList []Operation,
@@ -32,15 +32,16 @@ var doerConstructor = [...]func(configHitList []Config, recivedMessageList []Mes
 
 // NewController 构造一个 Controller
 // @param	configReader	ConfigReader	配置读取类
-func NewController(configReader ConfigReader, bot *gomirai.Bot) Controller {
+func NewController(configReader *ConfigReader, bot *gomirai.Bot) Controller {
 	var controller Controller
 	controller.configReader = configReader
 	controller.bot = bot
 	controller.cronChecker, _ = NewCronChecker(configReader.CronConfigList)
 	controller.rssListener, _ = NewRssListener(configReader.RssConfigList)
-	controller.countMap = make(map[string]int)
+	controller.freqMonitor, _ = NewFreqMonitor(configReader.FreqUpperLimit)
 	controller.cronChecker.Start()
 	controller.rssListener.Start()
+	controller.freqMonitor.Start()
 	go controller.monitorFolder()
 	go controller.listenCron()
 	go controller.listenRss()
@@ -48,7 +49,6 @@ func NewController(configReader ConfigReader, bot *gomirai.Bot) Controller {
 }
 
 // Commit 将事件提交给 Controller
-// @param	bot				*gomirai.Bot		机器人
 // @param	goMiraiEvent	gomirai.InEvent		事件
 func (controller *Controller) Commit(goMiraiEvent gomirai.InEvent) {
 	var err error
@@ -77,29 +77,11 @@ func (controller *Controller) Commit(goMiraiEvent gomirai.InEvent) {
 
 	configHitList := controller.getConfigHitList(event, configRelatedList)
 
-	// fmt.Printf("%v\n", configHitList)
-
-	controller.doCount(configHitList)
 	event.addPerDefVar("el-count-overall",
-		strings.Replace(fmt.Sprintf("%v", controller.countMap), "map", "统计概要", 1))
+		strings.Replace(fmt.Sprintf("%v", controller.freqMonitor.CountMap), "map", "统计概要", 1))
 
 	controller.sendMessageAndOperation(event, configHitList)
 
-}
-
-func (controller *Controller) doCount(configHitList []Config) {
-	for _, config := range configHitList {
-		if config.IsCount {
-			controller.countMap[config.CountID]++
-		}
-	}
-}
-
-func (controller *Controller) listenCron() {
-	for true {
-		config := <-controller.cronChecker.WillBeSentConfig
-		controller.sendMessageAndOperation(Event{}, []Config{config})
-	}
 }
 
 func (controller *Controller) getConfigRelatedList(event Event) []Config {
@@ -154,7 +136,7 @@ func (controller *Controller) getConfigRelatedConfigList(eventType EventType, co
 }
 
 func (controller *Controller) getConfigHitList(event Event, configRelatedList []Config) []Config {
-	configSet := make(map[int]bool)
+	configSet := make(map[int64]bool)
 	var configHitList []Config
 	for i := 0; i < len(handlerConstructor); i++ {
 		handler, err := (handlerConstructor[i](configRelatedList, event.MessageList, event.OperationList, &event.PreDefVarMap))
@@ -164,12 +146,58 @@ func (controller *Controller) getConfigHitList(event Event, configRelatedList []
 
 		for _, config := range handler.GetConfigHitList() {
 			if !configSet[config.innerID] {
-				configHitList = append(configHitList, config)
-				configSet[config.innerID] = true
+				config.CompleteType()
+				config.CompleteContent(event)
+				controller.freqMonitor.Commit(config)
+				if !controller.convertToUnBlockConfig(&config) {
+					configHitList = append(configHitList, config)
+					configSet[config.innerID] = true
+				}
 			}
 		}
 	}
 	return configHitList
+}
+
+func (controller *Controller) convertToUnBlockConfig(configHit *Config) bool {
+	isAllBlocked := true
+	for i := 0; i < len(configHit.Do.Message.Receiver.GroupIDList); i++ {
+		isBlocked := controller.freqMonitor.IsBlocked(configHit.innerID,
+			ReceiverTypeGroup, CastStringToInt64(configHit.Do.Message.Receiver.GroupIDList[i]))
+		isAllBlocked = isAllBlocked && isBlocked
+		if isBlocked {
+			configHit.Do.Message.Receiver.GroupIDList[i] = "0"
+		}
+	}
+	for i := 0; i < len(configHit.Do.Message.Receiver.UserIDList); i++ {
+		isBlocked := controller.freqMonitor.IsBlocked(configHit.innerID,
+			ReceiverTypeUser, CastStringToInt64(configHit.Do.Message.Receiver.UserIDList[i]))
+		isAllBlocked = isAllBlocked && isBlocked
+		if isBlocked {
+			configHit.Do.Message.Receiver.UserIDList[i] = "0"
+		}
+	}
+	for i := 0; i < len(configHit.Do.OperationList); i++ {
+		switch configHit.Do.OperationList[i].innerType {
+		case OperationTypeAt:
+			isBlocked := controller.freqMonitor.IsBlocked(configHit.innerID,
+				ReceiverTypeGroup,
+				CastStringToInt64(configHit.Do.OperationList[i].GroupID))
+			isAllBlocked = isAllBlocked && isBlocked
+			if isBlocked {
+				configHit.Do.OperationList[i].GroupID = "0"
+			}
+		case OperationTypeAtAll:
+			isBlocked := controller.freqMonitor.IsBlocked(configHit.innerID,
+				ReceiverTypeGroup,
+				CastStringToInt64(configHit.Do.OperationList[i].GroupID))
+			isAllBlocked = isAllBlocked && isBlocked
+			if isBlocked {
+				configHit.Do.OperationList[i].GroupID = "0"
+			}
+		}
+	}
+	return isAllBlocked
 }
 
 func (controller *Controller) sendMessageAndOperation(event Event, configHitList []Config) {
@@ -183,19 +211,10 @@ func (controller *Controller) sendMessageAndOperation(event Event, configHitList
 
 		for _, message := range doer.GetWillBeSentMessageList() {
 			message.CompleteType()
-			message.CompleteContent(event.PreDefVarMap)
+			message.CompleteContent(event)
 			goMiraiMessageList, isSuccess := message.ToGoMiraiMessageList()
 			if !isSuccess {
 				continue
-			}
-			if (message.Receiver.GroupIDList == nil || len(message.Receiver.GroupIDList) == 0) &&
-				(message.Receiver.UserIDList == nil || len(message.Receiver.UserIDList) == 0) {
-				switch event.Type {
-				case EventTypeFriendMessage:
-					message.Receiver.UserIDList = append(message.Receiver.UserIDList, event.Sender.UserIDList[0])
-				default:
-					message.Receiver.GroupIDList = append(message.Receiver.GroupIDList, event.Sender.GroupIDList[0])
-				}
 			}
 			for _, nativeGroupID := range message.Receiver.GroupIDList {
 				groupID := CastStringToInt64(nativeGroupID)
@@ -232,12 +251,12 @@ func (controller *Controller) sendMessage(receiverType ReceiverType, receiverID 
 	case ReceiverTypeGroup:
 		_, err := controller.bot.SendGroupMessage(receiverID, 0, willBeSentGoMiraiMessageList)
 		if err != nil {
-			log.Println(err)
+			log.Printf("Controller.sendMessage: %s", err.Error())
 		}
 	case ReceiverTypeUser:
 		_, err := controller.bot.SendFriendMessage(receiverID, 0, willBeSentGoMiraiMessageList)
 		if err != nil {
-			log.Println(err)
+			log.Printf("Controller.sendMessage: %s", err.Error())
 		}
 	}
 }
@@ -302,7 +321,7 @@ func (controller *Controller) monitorFolder() {
 				}
 			case err := <-watch.Errors:
 				{
-					log.Println("error : ", err)
+					log.Printf("Controller.monitorFolder: %s", err.Error())
 					return
 				}
 			}
@@ -313,10 +332,17 @@ func (controller *Controller) monitorFolder() {
 	select {}
 }
 
+func (controller *Controller) listenCron() {
+	for true {
+		config := <-controller.cronChecker.WillBeSentConfig
+		controller.sendMessageAndOperation(Event{}, []Config{config})
+	}
+}
+
 func (controller *Controller) listenRss() {
 	for true {
-		config := <-controller.rssListener.willBeSentConfig
-		event := <-controller.rssListener.willBeUsedEvent
+		config := <-controller.rssListener.WillBeSentConfig
+		event := <-controller.rssListener.WillBeUsedEvent
 		controller.sendMessageAndOperation(event, []Config{config})
 	}
 }

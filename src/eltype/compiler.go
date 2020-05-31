@@ -25,6 +25,7 @@ type Transfer struct {
 }
 
 type SourceConfig struct {
+	FreqUpperLimit   int64      `yaml:"freqLimit"`
 	GlobalConfigList []Config   `yaml:"global"`
 	FriendConfigList []Config   `yaml:"friend"`
 	GroupConfigList  []Config   `yaml:"group"`
@@ -96,31 +97,31 @@ func (compiler *Compiler) compileThisFile(filePath string) {
 }
 
 func (compiler *Compiler) CompleteConfigList() {
-	var innerID int = 0
+	var innerID int64 = 1
 	for i := 0; i < len(compiler.SourceConfig.GlobalConfigList); i++ {
 		temp := compiler.SourceConfig.GlobalConfigList[i]
-		temp.Init()
+		temp.CompleteType()
 		temp.innerID = innerID
 		innerID++
 		compiler.SourceConfig.GlobalConfigList[i] = temp
 	}
 	for i := 0; i < len(compiler.SourceConfig.FriendConfigList); i++ {
 		temp := compiler.SourceConfig.FriendConfigList[i]
-		temp.Init()
+		temp.CompleteType()
 		temp.innerID = innerID
 		innerID++
 		compiler.SourceConfig.FriendConfigList[i] = temp
 	}
 	for i := 0; i < len(compiler.SourceConfig.GroupConfigList); i++ {
 		temp := compiler.SourceConfig.GroupConfigList[i]
-		temp.Init()
+		temp.CompleteType()
 		temp.innerID = innerID
 		innerID++
 		compiler.SourceConfig.GroupConfigList[i] = temp
 	}
 	for i := 0; i < len(compiler.SourceConfig.CronConfigList); i++ {
 		temp := compiler.SourceConfig.CronConfigList[i]
-		temp.Init()
+		temp.CompleteType()
 		temp.innerID = innerID
 		innerID++
 		compiler.SourceConfig.CronConfigList[i] = temp
@@ -128,6 +129,7 @@ func (compiler *Compiler) CompleteConfigList() {
 }
 
 func (compiler *Compiler) mergeSourceConfig(tempSourceConfig SourceConfig) {
+	compiler.SourceConfig.FreqUpperLimit = tempSourceConfig.FreqUpperLimit
 	mergeConfigList(&compiler.SourceConfig.GlobalConfigList, tempSourceConfig.GlobalConfigList)
 	mergeConfigList(&compiler.SourceConfig.FriendConfigList, tempSourceConfig.FriendConfigList)
 	mergeConfigList(&compiler.SourceConfig.GroupConfigList, tempSourceConfig.GroupConfigList)

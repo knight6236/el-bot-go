@@ -50,14 +50,23 @@ func (receiver *Receiver) DeepCopy() Receiver {
 	return newReceiver
 }
 
-func (receiver *Receiver) CompleteContent(preDefVarMap map[string]string) {
-	for key, value := range preDefVarMap {
+func (receiver *Receiver) CompleteContent(event Event) {
+	for key, value := range event.PreDefVarMap {
 		varName := fmt.Sprintf("{%s}", key)
 		for i := 0; i < len(receiver.GroupIDList); i++ {
 			receiver.GroupIDList[i] = strings.ReplaceAll(receiver.GroupIDList[i], varName, value)
 		}
 		for i := 0; i < len(receiver.UserIDList); i++ {
 			receiver.UserIDList[i] = strings.ReplaceAll(receiver.UserIDList[i], varName, value)
+		}
+	}
+	if (receiver.GroupIDList == nil || len(receiver.GroupIDList) == 0) &&
+		(receiver.UserIDList == nil || len(receiver.UserIDList) == 0) {
+		switch event.Type {
+		case EventTypeFriendMessage:
+			receiver.UserIDList = append(receiver.UserIDList, event.Sender.UserIDList[0])
+		default:
+			receiver.GroupIDList = append(receiver.GroupIDList, event.Sender.GroupIDList[0])
 		}
 	}
 }

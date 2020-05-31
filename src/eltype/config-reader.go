@@ -13,6 +13,7 @@ import (
 
 // ConfigReader 配置读取对象
 type ConfigReader struct {
+	FreqUpperLimit   int64 `yaml:"feqLimit"`
 	Port             string
 	EnableWebsocket  bool
 	folder           string
@@ -43,6 +44,7 @@ func (reader *ConfigReader) Load(isDebug bool) {
 		reader.parseThisFile(filePath)
 		reader.CompleteConfigList()
 	} else {
+		reader.FreqUpperLimit = compiler.SourceConfig.FreqUpperLimit
 		reader.GlobalConfigList = compiler.SourceConfig.GlobalConfigList
 		reader.FriendConfigList = compiler.SourceConfig.FriendConfigList
 		reader.GroupConfigList = compiler.SourceConfig.GroupConfigList
@@ -89,31 +91,31 @@ func (reader *ConfigReader) parseThisFile(fileFullPath string) {
 }
 
 func (reader *ConfigReader) CompleteConfigList() {
-	var innerID int = 0
+	var innerID int64 = 1
 	for i := 0; i < len(reader.GlobalConfigList); i++ {
 		temp := reader.GlobalConfigList[i]
-		temp.Init()
+		temp.CompleteType()
 		temp.innerID = innerID
 		innerID++
 		reader.GlobalConfigList[i] = temp
 	}
 	for i := 0; i < len(reader.FriendConfigList); i++ {
 		temp := reader.FriendConfigList[i]
-		temp.Init()
+		temp.CompleteType()
 		temp.innerID = innerID
 		innerID++
 		reader.FriendConfigList[i] = temp
 	}
 	for i := 0; i < len(reader.GroupConfigList); i++ {
 		temp := reader.GroupConfigList[i]
-		temp.Init()
+		temp.CompleteType()
 		temp.innerID = innerID
 		innerID++
 		reader.GroupConfigList[i] = temp
 	}
 	for i := 0; i < len(reader.CronConfigList); i++ {
 		temp := reader.CronConfigList[i]
-		temp.Init()
+		temp.CompleteType()
 		temp.innerID = innerID
 		innerID++
 		reader.CronConfigList[i] = temp
@@ -121,6 +123,7 @@ func (reader *ConfigReader) CompleteConfigList() {
 }
 
 func (reader *ConfigReader) mergeReader(tempReader ConfigReader) {
+	reader.FreqUpperLimit = tempReader.FreqUpperLimit
 	mergeConfigList(&reader.GlobalConfigList, tempReader.GlobalConfigList)
 	mergeConfigList(&reader.FriendConfigList, tempReader.FriendConfigList)
 	mergeConfigList(&reader.GroupConfigList, tempReader.GroupConfigList)

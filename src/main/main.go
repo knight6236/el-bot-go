@@ -70,7 +70,7 @@ func main() {
 		}
 	}()
 
-	controller := eltype.NewController(reader, bot)
+	controller := eltype.NewController(&reader, bot)
 	fmt.Println("启动成功")
 
 	// 从bot.MessageChan获取收到事件并处理

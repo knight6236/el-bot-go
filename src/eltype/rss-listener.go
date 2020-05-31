@@ -17,20 +17,20 @@ type RssListener struct {
 	rssConfigList    []Config
 	rssDataMap       map[string]string
 	monthsMap        map[string]string
-	willBeSentConfig chan Config
-	willBeUsedEvent  chan Event
+	WillBeSentConfig chan Config
+	WillBeUsedEvent  chan Event
 }
 
-func NewRssListener(rssConfigList []Config) (RssListener, error) {
-	var listener RssListener
+func NewRssListener(rssConfigList []Config) (*RssListener, error) {
+	listener := new(RssListener)
 	monthsMap := map[string]string{"January": "01", "February": "02", "March": "03",
 		"April": "04", "May": "05", "June": "06", "July": "07", "August": "08", "September": "09",
 		"October": "10", "November": "11", "December": "12"}
 	listener.rssDataMap = make(map[string]string)
 	listener.monthsMap = monthsMap
 	listener.rssConfigList = rssConfigList
-	listener.willBeSentConfig = make(chan Config, 10)
-	listener.willBeUsedEvent = make(chan Event, 10)
+	listener.WillBeSentConfig = make(chan Config, 10)
+	listener.WillBeUsedEvent = make(chan Event, 10)
 	buf, err := ioutil.ReadFile(fmt.Sprintf("%s/%s", DataRoot, RssDataFileName))
 	if err != nil {
 		os.Create(fmt.Sprintf("%s/%s", DataRoot, RssDataFileName))
@@ -53,13 +53,13 @@ func (listener *RssListener) start() {
 				event := Event{
 					PreDefVarMap: temp,
 				}
-				listener.willBeSentConfig <- rssConfig
-				listener.willBeUsedEvent <- event
+				listener.WillBeSentConfig <- rssConfig
+				listener.WillBeUsedEvent <- event
 			}
 		}
 	})
 	if err != nil {
-		log.Println(err)
+		log.Printf("RssListener.start: %s", err.Error())
 		return
 	}
 	c.Start()
@@ -96,11 +96,11 @@ func (listener *RssListener) checkUpdate(url string) map[string]string {
 
 	ymlStr, err := yaml.Marshal(listener.rssDataMap)
 	if err != nil {
-		log.Println(err)
+		log.Printf("RssListener.checkUpdate: %s", err.Error())
 	}
 	err = ioutil.WriteFile(fmt.Sprintf("%s/%s", DataRoot, RssDataFileName), ymlStr, 0777)
 	if err != nil {
-		log.Println(err)
+		log.Printf("RssListener.checkUpdate: %s", err.Error())
 	}
 	return ret
 }

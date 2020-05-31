@@ -167,12 +167,12 @@ func (message *Message) CompleteType() {
 	}
 }
 
-func (message *Message) CompleteContent(preDefVarMap map[string]string) {
-	message.Sender.CompleteContent(preDefVarMap)
-	message.Receiver.CompleteContent(preDefVarMap)
+func (message *Message) CompleteContent(event Event) {
+	message.Sender.CompleteContent(event.PreDefVarMap)
+	message.Receiver.CompleteContent(event)
 	for i := 0; i < len(message.DetailList); i++ {
 		temp := message.DetailList[i]
-		temp.CompleteContent(preDefVarMap)
+		temp.CompleteContent(event.PreDefVarMap)
 		message.DetailList[i] = temp
 	}
 }
