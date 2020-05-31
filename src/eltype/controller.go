@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"sync"
 
 	"github.com/fsnotify/fsnotify"
 )
@@ -15,6 +16,7 @@ import (
 // @property	configReader	ConfigReader	配置读取类
 // @property	bot				*gomirai.Bot	机器人
 type Controller struct {
+	mute         sync.RWMutex
 	configReader *ConfigReader
 	cronChecker  *CronChecker
 	rssListener  *RssListener
@@ -73,9 +75,13 @@ func (controller *Controller) Commit(goMiraiEvent gomirai.InEvent) {
 		return
 	}
 
+	controller.mute.RLock()
+
 	configRelatedList := controller.getConfigRelatedList(event)
 
 	configHitList := controller.getConfigHitList(event, configRelatedList)
+
+	controller.mute.RUnlock()
 
 	event.addPerDefVar("el-count-overall",
 		strings.Replace(fmt.Sprintf("%v", controller.freqMonitor.CountMap), "map", "统计概要", 1))
@@ -299,23 +305,48 @@ func (controller *Controller) monitorFolder() {
 			case ev := <-watch.Events:
 				{
 					if ev.Op&fsnotify.Create == fsnotify.Create {
+						controller.mute.Lock()
 						controller.configReader.reLoad()
+						controller.cronChecker, _ = NewCronChecker(controller.configReader.CronConfigList)
+						controller.rssListener, _ = NewRssListener(controller.configReader.RssConfigList)
+						controller.freqMonitor, _ = NewFreqMonitor(controller.configReader.FreqUpperLimit)
+						controller.mute.Unlock()
 						log.Println("检测到配置目录下的文件被创建，已经自动更新配置。")
 					}
 					if ev.Op&fsnotify.Write == fsnotify.Write {
+						controller.mute.Lock()
 						controller.configReader.reLoad()
+						controller.cronChecker, _ = NewCronChecker(controller.configReader.CronConfigList)
+						controller.rssListener, _ = NewRssListener(controller.configReader.RssConfigList)
+						controller.freqMonitor, _ = NewFreqMonitor(controller.configReader.FreqUpperLimit)
+						controller.mute.Unlock()
 						log.Println("检测到配置目录下的文件被修改，已经自动更新配置。")
 					}
 					if ev.Op&fsnotify.Remove == fsnotify.Remove {
+						controller.mute.Lock()
 						controller.configReader.reLoad()
+						controller.cronChecker, _ = NewCronChecker(controller.configReader.CronConfigList)
+						controller.rssListener, _ = NewRssListener(controller.configReader.RssConfigList)
+						controller.freqMonitor, _ = NewFreqMonitor(controller.configReader.FreqUpperLimit)
+						controller.mute.Unlock()
 						log.Println("检测到配置目录下的文件被移除，已经自动更新配置。")
 					}
 					if ev.Op&fsnotify.Rename == fsnotify.Rename {
+						controller.mute.Lock()
 						controller.configReader.reLoad()
+						controller.cronChecker, _ = NewCronChecker(controller.configReader.CronConfigList)
+						controller.rssListener, _ = NewRssListener(controller.configReader.RssConfigList)
+						controller.freqMonitor, _ = NewFreqMonitor(controller.configReader.FreqUpperLimit)
+						controller.mute.Unlock()
 						log.Println("检测到配置目录下的文件被重命名，已经自动更新配置。")
 					}
 					if ev.Op&fsnotify.Chmod == fsnotify.Chmod {
+						controller.mute.Lock()
 						controller.configReader.reLoad()
+						controller.cronChecker, _ = NewCronChecker(controller.configReader.CronConfigList)
+						controller.rssListener, _ = NewRssListener(controller.configReader.RssConfigList)
+						controller.freqMonitor, _ = NewFreqMonitor(controller.configReader.FreqUpperLimit)
+						controller.mute.Unlock()
 						log.Println("检测到配置目录下的文件权限变化，已经自动更新配置。")
 					}
 				}
