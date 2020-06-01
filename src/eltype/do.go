@@ -5,3 +5,16 @@ type Do struct {
 	Message       Message     `yaml:"message"`
 	OperationList []Operation `yaml:"operation"`
 }
+
+func (do *Do) DeepCopy() Do {
+	var operationList []Operation
+	for _, operaiton := range do.OperationList {
+		operationList = append(operationList, operaiton.DeepCopy())
+	}
+	newDo := Do{
+		IsCount:       do.IsCount,
+		Message:       do.Message.DeepCopy(),
+		OperationList: operationList,
+	}
+	return newDo
+}

@@ -34,8 +34,8 @@ var doerConstructor = [...]func(configHitList []Config, recivedMessageList []Mes
 
 // NewController 构造一个 Controller
 // @param	configReader	ConfigReader	配置读取类
-func NewController(configReader *ConfigReader, bot *gomirai.Bot) Controller {
-	var controller Controller
+func NewController(configReader *ConfigReader, bot *gomirai.Bot) *Controller {
+	controller := new(Controller)
 	controller.configReader = configReader
 	controller.bot = bot
 	controller.cronChecker, _ = NewCronChecker(configReader.CronConfigList)
@@ -152,6 +152,7 @@ func (controller *Controller) getConfigHitList(event Event, configRelatedList []
 
 		for _, config := range handler.GetConfigHitList() {
 			if !configSet[config.innerID] {
+				config = config.DeepCopy()
 				config.CompleteType()
 				config.CompleteContent(event)
 				controller.freqMonitor.Commit(config)

@@ -25,6 +25,19 @@ type Config struct {
 	Do      Do     `yaml:"do"`
 }
 
+func (config *Config) DeepCopy() Config {
+	newConfig := Config{
+		innerID: config.innerID,
+		Type:    config.Type,
+		IsCount: config.IsCount,
+		Cron:    config.Cron,
+		RssURL:  config.RssURL,
+		When:    config.When.DeepCopy(),
+		Do:      config.Do.DeepCopy(),
+	}
+	return newConfig
+}
+
 func (config *Config) CompleteType() {
 	config.When.Message.CompleteType()
 	config.Do.Message.CompleteType()
