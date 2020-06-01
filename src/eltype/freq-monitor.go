@@ -7,9 +7,8 @@ import (
 	"github.com/robfig/cron"
 )
 
-var freqMonitorRWMute sync.RWMutex
-
 type FreqMonitor struct {
+	mute               sync.RWMutex
 	freqUpperLimit     int64
 	groupCountMap      map[int64]map[int64]int64
 	userCountMap       map[int64]map[int64]int64
@@ -34,7 +33,7 @@ func (monitor *FreqMonitor) Start() {
 }
 
 func (monitor *FreqMonitor) Commit(configHit Config) {
-	freqMonitorRWMute.Lock()
+	monitor.mute.Lock()
 	for _, groupID := range configHit.When.Message.Receiver.GroupIDList {
 		if monitor.groupCountMap[CastStringToInt64(groupID)] == nil {
 			monitor.groupCountMap[CastStringToInt64(groupID)] = make(map[int64]int64)
@@ -51,13 +50,13 @@ func (monitor *FreqMonitor) Commit(configHit Config) {
 	}
 	monitor.CountMap[configHit.CountID]++
 	// fmt.Printf("\n\n")
-	freqMonitorRWMute.Unlock()
+	monitor.mute.Unlock()
 	monitor.check()
 }
 
 func (monitor *FreqMonitor) IsBlocked(configInnerID int64, receiverType ReceiverType, receiverID int64) bool {
 	var isBlocked bool
-	freqMonitorRWMute.RLock()
+	monitor.mute.RLock()
 	switch receiverType {
 	case ReceiverTypeGroup:
 		isBlocked = monitor.groupBlockedConfig[receiverID][configInnerID]
@@ -66,7 +65,7 @@ func (monitor *FreqMonitor) IsBlocked(configInnerID int64, receiverType Receiver
 	default:
 		isBlocked = false
 	}
-	freqMonitorRWMute.RUnlock()
+	monitor.mute.RUnlock()
 	return isBlocked
 }
 
@@ -74,7 +73,7 @@ func (monitor *FreqMonitor) check() {
 	if monitor.freqUpperLimit == 0 {
 		return
 	}
-	freqMonitorRWMute.RLock()
+	monitor.mute.RLock()
 	for groupID, innerMap := range monitor.groupCountMap {
 		for innerID, freq := range innerMap {
 			if freq > monitor.freqUpperLimit {
@@ -95,18 +94,18 @@ func (monitor *FreqMonitor) check() {
 			}
 		}
 	}
-	freqMonitorRWMute.RUnlock()
+	monitor.mute.RUnlock()
 }
 
 func (monitor *FreqMonitor) autoClear() {
 	c := cron.New()
 	err := c.AddFunc("0 * * * * *", func() {
-		freqMonitorRWMute.Lock()
+		monitor.mute.Lock()
 		monitor.groupCountMap = make(map[int64]map[int64]int64)
 		monitor.userCountMap = make(map[int64]map[int64]int64)
 		monitor.groupBlockedConfig = make(map[int64]map[int64]bool)
 		monitor.userBlockedConfig = make(map[int64]map[int64]bool)
-		freqMonitorRWMute.Unlock()
+		monitor.mute.Unlock()
 	})
 	if err != nil {
 		log.Printf("Monitor.FreqMonitor: %s", err.Error())

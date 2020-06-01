@@ -28,7 +28,8 @@ func NewRssListener(rssConfigList []Config) (*RssListener, error) {
 		"October": "10", "November": "11", "December": "12"}
 	listener.rssDataMap = make(map[string]string)
 	listener.monthsMap = monthsMap
-	listener.rssConfigList = rssConfigList
+	listener.rssConfigList = make([]Config, len(rssConfigList))
+	copy(listener.rssConfigList, rssConfigList)
 	listener.WillBeSentConfig = make(chan Config, 10)
 	listener.WillBeUsedEvent = make(chan Event, 10)
 	buf, err := ioutil.ReadFile(fmt.Sprintf("%s/%s", DataRoot, RssDataFileName))

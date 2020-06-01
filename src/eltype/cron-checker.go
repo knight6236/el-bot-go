@@ -18,7 +18,8 @@ type CronJob struct {
 
 func NewCronChecker(cronConfigList []Config) (*CronChecker, error) {
 	checker := new(CronChecker)
-	checker.cronConfigList = cronConfigList
+	checker.cronConfigList = make([]Config, len(cronConfigList))
+	copy(checker.cronConfigList, cronConfigList)
 	checker.WillBeSentConfig = make(chan Config, 10)
 	return checker, nil
 }

@@ -1,12 +1,10 @@
 # el-bot-go
 
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/ElpsyCN/el-bot-go)
 [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/ElpsyCN/el-bot-go?color=blue&include_prereleases)](https://github.com/ElpsyCN/el-bot-go/releases)
 [![docs passing](https://img.shields.io/badge/docs-passing-brightgreen)](https://github.com/ElpsyCN/el-bot-go/blob/master/docs/dir.md)
 [![QQ Group](https://img.shields.io/badge/qq%20group-707408530-12B7F5)](https://shang.qq.com/wpa/qunwpa?idkey=5b0eef3e3256ce23981f3b0aa2457175c66ca9194efd266fd0e9a7dbe43ed653)
 [![GitHub issues](https://img.shields.io/github/issues/ElpsyCN/el-bot-go)](https://github.com/ElpsyCN/el-bot-go/issues)
-[![GitHub closed issues](https://img.shields.io/github/issues-closed/ElpsyCN/el-bot-go?color=success)](https://github.com/ElpsyCN/el-bot-go/issues)
-[![GitHub pull requests](https://img.shields.io/github/issues-pr/ElpsyCN/el-bot-go)](https://github.com/ElpsyCN/el-bot-go/pulls)
-[![GitHub closed pull requests](https://img.shields.io/github/issues-pr-closed/ElpsyCN/el-bot-go?color=success)](https://github.com/ElpsyCN/el-bot-go/pulls?q=is%3Apr+is%3Aclosed)
 [![GitHub](https://img.shields.io/github/license/ElpsyCN/el-bot-go?color=%233eb370)](https://github.com/ElpsyCN/el-bot-go/blob/master/LICENSE)
 
 [el-bot](https://github.com/ElpsyCN/el-bot)的 go 版本。
@@ -71,7 +69,7 @@
     1. 执行命令`sh start-el-bot.sh 机器人QQ号 自定义配置目录（相对于 config 目录）`，如果不使用自定义配置则为`"default"`
 7. 如果执行上一步时出现安装 `package`失败的情况，可以进入 [release](https://github.com/ElpsyCN/el-bot-go/releases) 下载对应的二进制文件到 `bin` 下，来使用编译好程序，跳过 `package `的安装的环节。
 
-## On Windows（Powershell）
+## On Windows（Cmd）
 
 1. 安装Golang和JRE
 2. clone: `git clone git@github.com:ElpsyCN/el-bot-go.git`
@@ -84,10 +82,10 @@
     port: 8080
     enableWebsocket: false
     ```
-5. 启动 mirai-console: `./start-console.bat`
+5. 启动 mirai-console: `start-console.bat`
 6. 启动 el-bot-go: 在另一个 cmd 执行命令 `start-el-bot-xxxx.bat 机器人的QQ号 配置所在路径`
     1. 选择合适的 bat 脚本 `start-el-bot-xxx.bat`
-    2. 执行命令`./start-el-bot-xxx.bat 机器人QQ号 自定义配置目录（相对于 config 目录）`，如果不使用自定义配置则为`"default"`
+    2. 执行命令`start-el-bot-xxx.bat 机器人QQ号 自定义配置目录（相对于 config 目录）`，如果不使用自定义配置则为`"default"`
 7. 如果执行上一步时出现安装 `package`失败的情况，可以进入 [release](https://github.com/ElpsyCN/el-bot-go/releases) 下载对应的二进制文件到 `bin` 下，来使用编译好程序，跳过 `package `的安装的环节。
 
 # 反馈
