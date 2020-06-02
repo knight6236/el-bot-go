@@ -43,6 +43,7 @@ func (doer *ImageDoer) getWillBeSentMessageList() {
 		for _, doMessageDetail := range config.Do.Message.DetailList {
 			var willBeSentMessage Message
 			var willBeSentMessageDetail MessageDetail
+			willBeSentMessage.IsQuote = config.Do.Message.IsQuote
 			willBeSentMessage.Sender = config.Do.Message.Sender.DeepCopy()
 			willBeSentMessage.Receiver = config.Do.Message.Receiver.DeepCopy()
 			willBeSentMessageDetail.innerType = MessageTypeImage

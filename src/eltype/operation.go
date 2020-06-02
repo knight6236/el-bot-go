@@ -45,6 +45,10 @@ func (operation *Operation) ToGoMiraiMessage() (gomirai.Message, bool) {
 	switch operation.innerType {
 	case OperationTypeAt:
 		goMiraimessage.Type = "At"
+		userID := CastStringToInt64(operation.UserID)
+		if userID == 0 {
+			return goMiraimessage, false
+		}
 		goMiraimessage.Target = CastStringToInt64(operation.UserID)
 	case OperationTypeAtAll:
 		goMiraimessage.Type = "AtAll"
@@ -72,12 +76,19 @@ func (operation Operation) ToString() string {
 	return ""
 }
 
-func (operation *Operation) CompleteContent(preDefVarMap map[string]string) {
-	for key, value := range preDefVarMap {
+func (operation *Operation) CompleteContent(event Event) {
+	for key, value := range event.PreDefVarMap {
 		varName := fmt.Sprintf("{%s}", key)
 		operation.GroupID = strings.ReplaceAll(operation.GroupID, varName, value)
 		operation.UserID = strings.ReplaceAll(operation.UserID, varName, value)
 		operation.Second = strings.ReplaceAll(operation.Second, varName, value)
+	}
+
+	if operation.GroupID == "" {
+		switch event.Type {
+		case EventTypeGroupMessage:
+			operation.GroupID = event.Sender.GroupIDList[0]
+		}
 	}
 }
 

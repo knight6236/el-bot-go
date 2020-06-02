@@ -43,7 +43,7 @@ func (monitor *FreqMonitor) Commit(configHit Config) {
 	}
 	for _, userID := range configHit.When.Message.Receiver.UserIDList {
 		if monitor.groupCountMap[CastStringToInt64(userID)] == nil {
-			monitor.groupCountMap[CastStringToInt64(userID)] = make(map[int64]int64)
+			monitor.userCountMap[CastStringToInt64(userID)] = make(map[int64]int64)
 		}
 		monitor.userCountMap[CastStringToInt64(userID)][configHit.innerID]++
 		// fmt.Printf("%v\n", monitor.userCountMap)

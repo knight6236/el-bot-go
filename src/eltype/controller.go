@@ -208,8 +208,8 @@ func (controller *Controller) convertToUnBlockConfig(configHit *Config) bool {
 }
 
 func (controller *Controller) sendMessageAndOperation(event Event, configHitList []Config) {
-	willBeSentGoMiraiGroupMessageMap := make(map[int64][]gomirai.Message)
-	willBeSentGoMiraiUserMessageMap := make(map[int64][]gomirai.Message)
+	willBeSentGoMiraiGroupMessageMap := make(map[int64]map[int64][]gomirai.Message)
+	willBeSentGoMiraiUserMessageMap := make(map[int64]map[int64][]gomirai.Message)
 	for i := 0; i < len(doerConstructor); i++ {
 		doer, err := (doerConstructor[i](configHitList, event.MessageList, event.PreDefVarMap))
 		if err != nil {
@@ -219,6 +219,12 @@ func (controller *Controller) sendMessageAndOperation(event Event, configHitList
 		for _, message := range doer.GetWillBeSentMessageList() {
 			message.CompleteType()
 			message.CompleteContent(event)
+			var quoteID int64
+			if message.IsQuote {
+				quoteID = event.MessageID
+			} else {
+				quoteID = 0
+			}
 			goMiraiMessageList, isSuccess := message.ToGoMiraiMessageList()
 			if !isSuccess {
 				continue
@@ -226,7 +232,11 @@ func (controller *Controller) sendMessageAndOperation(event Event, configHitList
 			for _, nativeGroupID := range message.Receiver.GroupIDList {
 				groupID := CastStringToInt64(nativeGroupID)
 				for _, goMiraiMessage := range goMiraiMessageList {
-					willBeSentGoMiraiGroupMessageMap[groupID] = append(willBeSentGoMiraiGroupMessageMap[groupID], goMiraiMessage)
+					if willBeSentGoMiraiGroupMessageMap[groupID] == nil {
+						willBeSentGoMiraiGroupMessageMap[groupID] = make(map[int64][]gomirai.Message)
+					}
+					willBeSentGoMiraiGroupMessageMap[groupID][quoteID] =
+						append(willBeSentGoMiraiGroupMessageMap[groupID][quoteID], goMiraiMessage)
 				}
 			}
 			for _, nativeUserID := range message.Receiver.UserIDList {
@@ -235,33 +245,42 @@ func (controller *Controller) sendMessageAndOperation(event Event, configHitList
 					if goMiraiMessage.Type == "At" || goMiraiMessage.Type == "AtAll" {
 						continue
 					}
-					willBeSentGoMiraiUserMessageMap[userID] = append(willBeSentGoMiraiUserMessageMap[userID], goMiraiMessage)
+					if willBeSentGoMiraiUserMessageMap[userID] == nil {
+						willBeSentGoMiraiUserMessageMap[userID] = make(map[int64][]gomirai.Message)
+					}
+					willBeSentGoMiraiUserMessageMap[userID][quoteID] =
+						append(willBeSentGoMiraiUserMessageMap[userID][quoteID], goMiraiMessage)
 				}
 			}
 		}
 
 		for _, operation := range doer.GetWillBeSentOperationList() {
-			operation.CompleteContent(event.PreDefVarMap)
+			operation.CompleteType()
+			operation.CompleteContent(event)
 			controller.sendOperation(operation)
 		}
 	}
-	for receiverID, willBeSentMessageList := range willBeSentGoMiraiGroupMessageMap {
-		controller.sendMessage(ReceiverTypeGroup, receiverID, willBeSentMessageList)
+	for receiverID, innerMap := range willBeSentGoMiraiGroupMessageMap {
+		for quoteID, willBeSentMessageList := range innerMap {
+			controller.sendMessage(ReceiverTypeGroup, receiverID, quoteID, willBeSentMessageList)
+		}
 	}
-	for receiverID, willBeSentMessageList := range willBeSentGoMiraiUserMessageMap {
-		controller.sendMessage(ReceiverTypeUser, receiverID, willBeSentMessageList)
+	for receiverID, innerMap := range willBeSentGoMiraiUserMessageMap {
+		for quoteID, willBeSentMessageList := range innerMap {
+			controller.sendMessage(ReceiverTypeUser, receiverID, quoteID, willBeSentMessageList)
+		}
 	}
 }
 
-func (controller *Controller) sendMessage(receiverType ReceiverType, receiverID int64, willBeSentGoMiraiMessageList []gomirai.Message) {
+func (controller *Controller) sendMessage(receiverType ReceiverType, receiverID int64, quoteID int64, willBeSentGoMiraiMessageList []gomirai.Message) {
 	switch receiverType {
 	case ReceiverTypeGroup:
-		_, err := controller.bot.SendGroupMessage(receiverID, 0, willBeSentGoMiraiMessageList)
+		_, err := controller.bot.SendGroupMessage(receiverID, quoteID, willBeSentGoMiraiMessageList)
 		if err != nil {
 			log.Printf("Controller.sendMessage: %s", err.Error())
 		}
 	case ReceiverTypeUser:
-		_, err := controller.bot.SendFriendMessage(receiverID, 0, willBeSentGoMiraiMessageList)
+		_, err := controller.bot.SendFriendMessage(receiverID, quoteID, willBeSentGoMiraiMessageList)
 		if err != nil {
 			log.Printf("Controller.sendMessage: %s", err.Error())
 		}
@@ -271,8 +290,17 @@ func (controller *Controller) sendMessage(receiverType ReceiverType, receiverID 
 func (controller *Controller) sendOperation(operation Operation) {
 	groupID := CastStringToInt64(operation.GroupID)
 	userID := CastStringToInt64(operation.UserID)
-
 	switch operation.innerType {
+	case OperationTypeAt:
+		goMiraiMessage, isSuccess := operation.ToGoMiraiMessage()
+		if isSuccess {
+			controller.bot.SendGroupMessage(CastStringToInt64(operation.GroupID), 0, []gomirai.Message{goMiraiMessage})
+		}
+	case OperationTypeAtAll:
+		goMiraiMessage, isSuccess := operation.ToGoMiraiMessage()
+		if isSuccess {
+			controller.bot.SendGroupMessage(CastStringToInt64(operation.GroupID), 0, []gomirai.Message{goMiraiMessage})
+		}
 	case OperationTypeMemberMute:
 		controller.bot.Mute(groupID, userID, CastStringToInt64(operation.Second))
 	case OperationTypeMemberUnMute:

@@ -5,8 +5,8 @@ type When struct {
 	OperationList []Operation `yaml:"operation"`
 }
 
-func (when *When) AddOperation(operaiton Operation) {
-	when.OperationList = append(when.OperationList, operaiton)
+func (when *When) AddOperation(operation Operation) {
+	when.OperationList = append(when.OperationList, operation)
 }
 
 func (when *When) DeepCopy() When {

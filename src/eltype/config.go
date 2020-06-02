@@ -60,12 +60,12 @@ func (config *Config) CompleteContent(event Event) {
 
 	for i := 0; i < len(config.When.OperationList); i++ {
 		temp := config.When.OperationList[i]
-		temp.CompleteContent(event.PreDefVarMap)
+		temp.CompleteContent(event)
 		config.When.OperationList[i] = temp
 	}
 	for i := 0; i < len(config.Do.OperationList); i++ {
 		temp := config.Do.OperationList[i]
-		temp.CompleteContent(event.PreDefVarMap)
+		temp.CompleteContent(event)
 		config.Do.OperationList[i] = temp
 	}
 }

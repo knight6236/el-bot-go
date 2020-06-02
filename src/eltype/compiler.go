@@ -202,5 +202,6 @@ func (echo *Echo) toConfig() Config {
 	messageDetail.Regex = ""
 	messageDetail.Text = "{el-regex-0}"
 	config.Do.Message.AddDetail(messageDetail)
+	config.Do.Message.IsQuote = true
 	return config
 }

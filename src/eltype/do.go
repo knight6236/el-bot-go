@@ -6,8 +6,8 @@ type Do struct {
 	OperationList []Operation `yaml:"operation"`
 }
 
-func (do *Do) AddOperation(operaiton Operation) {
-	do.OperationList = append(do.OperationList, operaiton)
+func (do *Do) AddOperation(operation Operation) {
+	do.OperationList = append(do.OperationList, operation)
 }
 
 func (do *Do) DeepCopy() Do {

@@ -26,6 +26,7 @@ const (
 )
 
 type Message struct {
+	IsQuote    bool            `yaml:"quote"`
 	Sender     Sender          `yaml:"sender"`
 	Receiver   Receiver        `yaml:"receiver"`
 	DetailList []MessageDetail `yaml:"detail"`
@@ -82,6 +83,7 @@ func (message *Message) DeepCopy() Message {
 	newMessage := Message{
 		Sender:   message.Sender.DeepCopy(),
 		Receiver: message.Receiver.DeepCopy(),
+		IsQuote:  message.IsQuote,
 	}
 	for _, detail := range message.DetailList {
 		newMessage.DetailList = append(newMessage.DetailList, detail.DeepCopy())

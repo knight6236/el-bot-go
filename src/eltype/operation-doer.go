@@ -35,28 +35,28 @@ func NewOperationDoer(configHitList []Config, recivedMessageList []Message, preD
 }
 
 func (doer *OperationDoer) getWillBeSentMessageList() {
-	for _, config := range doer.configHitList {
-		for _, doOperation := range config.Do.OperationList {
-			var willBeSentMessage Message
-			var willBeSentMessageDetail MessageDetail
-			switch doOperation.innerType {
-			case OperationTypeAt:
-				willBeSentMessage.Receiver.AddGroupID(doOperation.GroupID)
-				willBeSentMessage.Receiver.AddUserID(doOperation.UserID)
-				willBeSentMessageDetail.innerType = MessageTypeAt
-				willBeSentMessageDetail.GroupID = doOperation.GroupID
-				willBeSentMessageDetail.UserID = doOperation.UserID
-			case OperationTypeAtAll:
-				willBeSentMessage.Receiver.AddGroupID(doOperation.GroupID)
-				willBeSentMessageDetail.innerType = MessageTypeAtAll
-				willBeSentMessageDetail.GroupID = doOperation.GroupID
-			default:
-				continue
-			}
-			willBeSentMessage.AddDetail(willBeSentMessageDetail)
-			doer.willBeSentMessage = append(doer.willBeSentMessage, willBeSentMessage)
-		}
-	}
+	// for _, config := range doer.configHitList {
+	// 	for _, doOperation := range config.Do.OperationList {
+	// 		var willBeSentMessage Message
+	// 		var willBeSentMessageDetail MessageDetail
+	// 		switch doOperation.innerType {
+	// 		case OperationTypeAt:
+	// 			willBeSentMessage.Receiver.AddGroupID(doOperation.GroupID)
+	// 			willBeSentMessage.Receiver.AddUserID(doOperation.UserID)
+	// 			willBeSentMessageDetail.innerType = MessageTypeAt
+	// 			willBeSentMessageDetail.GroupID = doOperation.GroupID
+	// 			willBeSentMessageDetail.UserID = doOperation.UserID
+	// 		case OperationTypeAtAll:
+	// 			willBeSentMessage.Receiver.AddGroupID(doOperation.GroupID)
+	// 			willBeSentMessageDetail.innerType = MessageTypeAtAll
+	// 			willBeSentMessageDetail.GroupID = doOperation.GroupID
+	// 		default:
+	// 			continue
+	// 		}
+	// 		willBeSentMessage.AddDetail(willBeSentMessageDetail)
+	// 		doer.willBeSentMessage = append(doer.willBeSentMessage, willBeSentMessage)
+	// 	}
+	// }
 }
 
 func (doer *OperationDoer) getSendedOperationList() {
@@ -64,6 +64,10 @@ func (doer *OperationDoer) getSendedOperationList() {
 		for _, doOperation := range config.Do.OperationList {
 			var operation Operation
 			switch doOperation.innerType {
+			case OperationTypeAt:
+				operation = doOperation.DeepCopy()
+			case OperationTypeAtAll:
+				operation = doOperation.DeepCopy()
 			case OperationTypeMemberMute:
 				operation.innerType = OperationTypeMemberMute
 				groupID, isReplace := doer.replaceStrByPreDefVarMap(doOperation.GroupID)

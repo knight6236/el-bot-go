@@ -80,6 +80,8 @@ func NewEventFromGoMiraiEvent(goMiraiEvent gomirai.InEvent) (Event, error) {
 		return event, err
 	}
 
+	event.MessageID = goMiraiEvent.MessageChain[0].ID
+
 	event.parseGoMiraiMessageListToMessageList(goMiraiEvent)
 
 	for i := 0; i < len(event.OperationList); i++ {

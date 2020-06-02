@@ -37,11 +37,12 @@ func NewFaceDoer(configHitList []Config, recivedMessageList []Message, preDefVar
 func (doer *FaceDoer) getWillBeSentMessageList() {
 	for _, config := range doer.configHitList {
 		for _, doMessageDetail := range config.Do.Message.DetailList {
-			var willBeSentMessage Message
-			var willBeSentMessageDetail MessageDetail
-			willBeSentMessage.Sender = config.Do.Message.Sender.DeepCopy()
-			willBeSentMessage.Receiver = config.Do.Message.Receiver.DeepCopy()
-			willBeSentMessageDetail.innerType = MessageTypeImage
+			// var willBeSentMessage Message
+			// var willBeSentMessageDetail MessageDetail
+			// willBeSentMessage = config.Do.Message.DeepCopy()
+			// willBeSentMessage.Sender = config.Do.Message.Sender.DeepCopy()
+			// willBeSentMessage.Receiver = config.Do.Message.Receiver.DeepCopy()
+			// willBeSentMessageDetail.innerType = MessageTypeFace
 			if doMessageDetail.innerType == MessageTypeFace {
 				doer.willBeSentMessage = append(doer.willBeSentMessage, config.Do.Message.DeepCopy())
 			}
