@@ -30,7 +30,7 @@ func main() {
 	}
 
 	reader := eltype.NewConfigReader(os.Args[2])
-	reader.Load(false)
+	reader.Load(true)
 
 	address := "http://127.0.0.1:" + reader.Port
 	authKey := reader.AuthKey

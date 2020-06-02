@@ -24,7 +24,12 @@ type Transfer struct {
 	Target Target `yaml:"target"`
 }
 
+type Echo struct {
+	Enable bool `yaml:"enable"`
+}
+
 type SourceConfig struct {
+	Echo             Echo       `yaml:"echo"`
 	FreqUpperLimit   int64      `yaml:"freqLimit"`
 	GlobalConfigList []Config   `yaml:"global"`
 	FriendConfigList []Config   `yaml:"friend"`
@@ -93,6 +98,8 @@ func (compiler *Compiler) compileThisFile(filePath string) {
 		compiler.SourceConfig.GlobalConfigList = append(compiler.SourceConfig.GlobalConfigList, transfer.toConfig())
 	}
 
+	compiler.SourceConfig.GlobalConfigList = append(compiler.SourceConfig.GlobalConfigList, compiler.SourceConfig.Echo.toConfig())
+
 	compiler.mergeSourceConfig(tempSourceConfig)
 }
 
@@ -130,6 +137,7 @@ func (compiler *Compiler) CompleteConfigList() {
 
 func (compiler *Compiler) mergeSourceConfig(tempSourceConfig SourceConfig) {
 	compiler.SourceConfig.FreqUpperLimit = tempSourceConfig.FreqUpperLimit
+	compiler.SourceConfig.Echo = tempSourceConfig.Echo
 	mergeConfigList(&compiler.SourceConfig.GlobalConfigList, tempSourceConfig.GlobalConfigList)
 	mergeConfigList(&compiler.SourceConfig.FriendConfigList, tempSourceConfig.FriendConfigList)
 	mergeConfigList(&compiler.SourceConfig.GroupConfigList, tempSourceConfig.GroupConfigList)
@@ -181,5 +189,18 @@ func (transfer *Transfer) toConfig() Config {
 	config.Do.Message.AddDetail(messageDetail)
 	messageDetail.Text = ""
 
+	return config
+}
+
+func (echo *Echo) toConfig() Config {
+	var config Config
+	messageDetail := MessageDetail{
+		innerType: MessageTypePlain,
+		Regex:     "echo\\s(.+)",
+	}
+	config.When.Message.AddDetail(messageDetail)
+	messageDetail.Regex = ""
+	messageDetail.Text = "{el-regex-0}"
+	config.Do.Message.AddDetail(messageDetail)
 	return config
 }

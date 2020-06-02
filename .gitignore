@@ -41,3 +41,4 @@ build.bat
 build.sh
 config/custom
 bot.yml
+node_modules

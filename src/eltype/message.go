@@ -134,6 +134,9 @@ func (detail *MessageDetail) ToGoMiraiMessage() (gomirai.Message, bool) {
 	case MessageTypeFace:
 		goMiraiMessage.Type = "Face"
 		goMiraiMessage.FaceID = detail.FaceID
+		if detail.FaceName == "" {
+			return goMiraiMessage, false
+		}
 		goMiraiMessage.Name = detail.FaceName
 	case MessageTypeImage:
 		goMiraiMessage.Type = "Image"
@@ -150,6 +153,10 @@ func (detail *MessageDetail) ToGoMiraiMessage() (gomirai.Message, bool) {
 		goMiraiMessage.XML = detail.Text
 	case MessageTypeAt:
 		goMiraiMessage.Type = "At"
+		userID := CastStringToInt64(detail.UserID)
+		if userID == 0 {
+			return goMiraiMessage, false
+		}
 		goMiraiMessage.Target = CastStringToInt64(detail.UserID)
 	case MessageTypeAtAll:
 		goMiraiMessage.Type = "AtAll"

@@ -1,3 +1,6 @@
+echo:
+  enable: true
+
 # 当接收到的群消息或好友消息为 hello 或「你好」时回复「Hello World!（你好 世界！）」
 global:
   - when:
@@ -121,7 +124,6 @@ group:
     do:
       operation:
         - type: At
-          groupID: '{el-sender-group-id}'
           userID: '{el-sender-user-id}'
       message:
         detail:

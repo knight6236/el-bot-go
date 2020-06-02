@@ -6,6 +6,10 @@ type Do struct {
 	OperationList []Operation `yaml:"operation"`
 }
 
+func (do *Do) AddOperation(operaiton Operation) {
+	do.OperationList = append(do.OperationList, operaiton)
+}
+
 func (do *Do) DeepCopy() Do {
 	var operationList []Operation
 	for _, operaiton := range do.OperationList {
