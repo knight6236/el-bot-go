@@ -11,6 +11,10 @@
 
 一个基于 Mirai 的可快速配置的 QQ机器人 模板。
 
+# 快速开始
+
+[快速开始](https://github.com/ElpsyCN/el-bot-go/wiki/%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B)
+
 # 文档
 
 [使用文档 & 开发文档](docs/dir.md)
@@ -52,9 +56,7 @@
 + 配置触发次数统计
 + 反刷屏
 
-# 快速开始
-
-## On Unix Like
+<!-- ## On Unix Like
 
 1. 安装Golang和JRE
 2. clone: `git clone git@github.com:ElpsyCN/el-bot-go.git`
@@ -87,7 +89,7 @@
 6. 启动 el-bot-go: 在另一个 cmd 执行命令 `start-el-bot-xxxx.bat 机器人的QQ号 配置所在路径`
     1. 选择合适的 bat 脚本 `start-el-bot-xxx.bat`
     2. 执行命令`start-el-bot-xxx.bat 机器人QQ号 自定义配置目录（相对于 config 目录）`，如果不使用自定义配置则为`"default"`
-7. 如果执行上一步时出现安装 `package`失败的情况，可以进入 [release](https://github.com/ElpsyCN/el-bot-go/releases) 下载对应的二进制文件到 `bin` 下，来使用编译好程序，跳过 `package `的安装的环节。
+7. 如果执行上一步时出现安装 `package`失败的情况，可以进入 [release](https://github.com/ElpsyCN/el-bot-go/releases) 下载对应的二进制文件到 `bin` 下，来使用编译好程序，跳过 `package `的安装的环节。 -->
 
 # 反馈
 
