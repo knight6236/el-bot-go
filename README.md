@@ -1,8 +1,8 @@
 # el-bot-go
 
+![docs](https://github.com/ElpsyCN/el-bot-docs/workflows/docs/badge.svg)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/ElpsyCN/el-bot-go)
 [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/ElpsyCN/el-bot-go?color=blue&include_prereleases)](https://github.com/ElpsyCN/el-bot-go/releases)
-[![docs passing](https://img.shields.io/badge/docs-passing-brightgreen)](https://github.com/ElpsyCN/el-bot-go/blob/master/docs/dir.md)
 [![QQ Group](https://img.shields.io/badge/qq%20group-707408530-12B7F5)](https://shang.qq.com/wpa/qunwpa?idkey=5b0eef3e3256ce23981f3b0aa2457175c66ca9194efd266fd0e9a7dbe43ed653)
 [![GitHub issues](https://img.shields.io/github/issues/ElpsyCN/el-bot-go)](https://github.com/ElpsyCN/el-bot-go/issues)
 [![GitHub](https://img.shields.io/github/license/ElpsyCN/el-bot-go?color=%233eb370)](https://github.com/ElpsyCN/el-bot-go/blob/master/LICENSE)
@@ -11,13 +11,9 @@
 
 一个基于 Mirai 的可快速配置的 QQ机器人 模板。
 
-# 快速开始
-
-[快速开始](https://github.com/ElpsyCN/el-bot-go/wiki/%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B)
-
 # 文档
 
-[使用文档 & 开发文档](docs/dir.md)
+https://docs.bot.elpsy.cn
 
 # 功能
 
@@ -97,7 +93,7 @@
 
 您也可以加入 QQ 群（707408530）进行反馈与讨论。
 
-如果是通用的问题（如 BUG 反馈，新功能建议），最好在 Issue 中进行反馈，以便其他朋友参与讨论，减少重复。
+> 如果是通用的问题（如 BUG 反馈，新功能建议），最好在 Issue 中进行反馈，以便其他朋友参与讨论，减少重复。
 
 # 已知问题
 
