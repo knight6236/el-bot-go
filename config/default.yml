@@ -14,9 +14,9 @@ global:
       message:
         detail:
           - type: Plain
-            text: Hello World!
+            text: Hello
           - type: Plain
-            text: （你好 世界！）
+            text:  World!
 
 group:
   # 当接收到的群消息为 say 时，调用「一言API」，原文发送接口返回的消息
@@ -114,21 +114,6 @@ group:
         detail:
           - type: Plain
             text: 有大佬走了，群地位+1。
-  
-  # 当文本消息符合正则表达式时复读第一个子表达式的内容并 At 消息发送者
-  - when:
-      message:
-        detail:
-          - type: Plain
-            regex: 复读\s(.+)
-    do:
-      operation:
-        - type: At
-          userID: '{el-sender-user-id}'
-      message:
-        detail:
-          - type: Plain
-            text: '{el-regex-0}'
 
   # # 当收到的表情消息为 「撇嘴」时发送表情「微笑」
   - when:
