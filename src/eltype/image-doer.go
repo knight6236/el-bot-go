@@ -57,14 +57,8 @@ func (doer *ImageDoer) getWillBeSentMessageList() {
 						}
 						willBeSentMessageDetail.Path = filename
 					} else {
-						url, isReplace := doer.replaceStrByPreDefVarMap(doMessageDetail.URL)
-						if isReplace {
-							willBeSentMessageDetail.URL = url
-						} else {
-							willBeSentMessageDetail.URL = ""
-						}
+						willBeSentMessageDetail.URL = doMessageDetail.URL
 					}
-
 				} else if doMessageDetail.Path != "" {
 					willBeSentMessageDetail.Path = doMessageDetail.Path
 				}

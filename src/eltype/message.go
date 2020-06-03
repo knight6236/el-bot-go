@@ -2,6 +2,7 @@ package eltype
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"el-bot-go/src/gomirai"
@@ -142,7 +143,9 @@ func (detail *MessageDetail) ToGoMiraiMessage() (gomirai.Message, bool) {
 		goMiraiMessage.Name = detail.FaceName
 	case MessageTypeImage:
 		goMiraiMessage.Type = "Image"
-		if detail.Path == "" && detail.URL == "" {
+		isMatch, err := regexp.Match("[a-zA-z]+://[^\\s]*", []byte(detail.URL))
+		if detail.Path == "" && (detail.URL == "" || !isMatch || err != nil) {
+
 			return goMiraiMessage, false
 		}
 		goMiraiMessage.Path = detail.Path
