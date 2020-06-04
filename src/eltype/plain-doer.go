@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -66,7 +65,7 @@ func (doer *PlainDoer) getWillBeSentMessageList() {
 }
 
 func (doer *PlainDoer) getTextMessageDetail(detail MessageDetail) (MessageDetail, error) {
-	var newDetail MessageDetail
+	var newDetail MessageDetail = detail.DeepCopy()
 	text, isReplace := doer.replaceStrByPreDefVarMap(detail.Text)
 	if isReplace {
 		newDetail.Text = text
@@ -77,7 +76,7 @@ func (doer *PlainDoer) getTextMessageDetail(detail MessageDetail) (MessageDetail
 }
 
 func (doer *PlainDoer) getURLMessageDetail(detail MessageDetail) (MessageDetail, error) {
-	var newDetail MessageDetail
+	var newDetail MessageDetail = detail.DeepCopy()
 	res, err := http.Get(detail.URL)
 	if err != nil {
 		return detail, err
@@ -91,13 +90,8 @@ func (doer *PlainDoer) getURLMessageDetail(detail MessageDetail) (MessageDetail,
 	}
 	doer.preDefVarMap["el-url-text"] = string(bodyContent)
 
-	text, isReplace := doer.replaceStrByPreDefVarMap(detail.Text)
-	if isReplace {
-		newDetail.Text = text
-	}
-
 	if detail.JSON {
-		newDetail.Text = doer.replaceStrByJSON(bodyContent, newDetail.Text)
+		doer.addPreDefVarByJSON(bodyContent)
 	}
 
 	return newDetail, nil
@@ -116,33 +110,18 @@ func (doer PlainDoer) replaceStrByPreDefVarMap(text string) (string, bool) {
 	return text, isReplace
 }
 
-func (doer *PlainDoer) replaceStrByJSON(jsonByteList []byte, text string) string {
+func (doer *PlainDoer) addPreDefVarByJSON(jsonByteList []byte) {
 	var jsonMap interface{}
 	err := json.Unmarshal(jsonByteList, &jsonMap)
 	if err != nil {
-		return ""
+		return
 	}
 
-	for nativeKey, nativeValue := range jsonMap.(map[string]interface{}) {
-		key := fmt.Sprintf("{%s}", nativeKey)
-		switch nativeValue.(type) {
-		case string:
-			text = strings.ReplaceAll(text, key, nativeValue.(string))
-		case int:
-			value := strconv.Itoa(nativeValue.(int))
-			text = strings.ReplaceAll(text, key, value)
-		case int64:
-			value := strconv.FormatInt(nativeValue.(int64), 10)
-			text = strings.ReplaceAll(text, key, value)
-		case float64:
-			value := fmt.Sprintf("%.6f", nativeValue.(float64))
-			text = strings.ReplaceAll(text, key, value)
-		case bool:
-			value := strconv.FormatBool(nativeValue.(bool))
-			text = strings.ReplaceAll(text, key, value)
-		}
+	varNameList, valueList := parseJsonObj(jsonMap, 0)
+
+	for i := 0; i < len(varNameList); i++ {
+		doer.preDefVarMap[varNameList[i]] = valueList[i]
 	}
-	return text
 }
 
 // GetSendedMessageList 获取将要发送的信息列表
