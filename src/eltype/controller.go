@@ -330,53 +330,43 @@ func (controller *Controller) monitorFolder() {
 	//我们另启一个goroutine来处理监控对象的事件
 	go func() {
 		for {
+			isChange := false
 			select {
 			case ev := <-watch.Events:
 				{
 					if ev.Op&fsnotify.Create == fsnotify.Create {
-						controller.mute.Lock()
-						controller.configReader.reLoad()
-						controller.cronChecker, _ = NewCronChecker(controller.configReader.CronConfigList)
-						controller.rssListener, _ = NewRssListener(controller.configReader.RssConfigList)
-						controller.freqMonitor, _ = NewFreqMonitor(controller.configReader.FreqUpperLimit)
-						controller.mute.Unlock()
+						isChange = true
 						log.Println("检测到配置目录下的文件被创建，已经自动更新配置。")
 					}
 					if ev.Op&fsnotify.Write == fsnotify.Write {
-						controller.mute.Lock()
-						controller.configReader.reLoad()
-						controller.cronChecker, _ = NewCronChecker(controller.configReader.CronConfigList)
-						controller.rssListener, _ = NewRssListener(controller.configReader.RssConfigList)
-						controller.freqMonitor, _ = NewFreqMonitor(controller.configReader.FreqUpperLimit)
-						controller.mute.Unlock()
+						isChange = true
 						log.Println("检测到配置目录下的文件被修改，已经自动更新配置。")
 					}
 					if ev.Op&fsnotify.Remove == fsnotify.Remove {
-						controller.mute.Lock()
-						controller.configReader.reLoad()
-						controller.cronChecker, _ = NewCronChecker(controller.configReader.CronConfigList)
-						controller.rssListener, _ = NewRssListener(controller.configReader.RssConfigList)
-						controller.freqMonitor, _ = NewFreqMonitor(controller.configReader.FreqUpperLimit)
-						controller.mute.Unlock()
+						isChange = true
 						log.Println("检测到配置目录下的文件被移除，已经自动更新配置。")
 					}
 					if ev.Op&fsnotify.Rename == fsnotify.Rename {
-						controller.mute.Lock()
-						controller.configReader.reLoad()
-						controller.cronChecker, _ = NewCronChecker(controller.configReader.CronConfigList)
-						controller.rssListener, _ = NewRssListener(controller.configReader.RssConfigList)
-						controller.freqMonitor, _ = NewFreqMonitor(controller.configReader.FreqUpperLimit)
-						controller.mute.Unlock()
+						isChange = true
 						log.Println("检测到配置目录下的文件被重命名，已经自动更新配置。")
 					}
 					if ev.Op&fsnotify.Chmod == fsnotify.Chmod {
+						isChange = true
+						log.Println("检测到配置目录下的文件权限变化，已经自动更新配置。")
+					}
+					if isChange {
 						controller.mute.Lock()
 						controller.configReader.reLoad()
+						controller.cronChecker.Stop()
+						controller.rssListener.Stop()
+						controller.freqMonitor.Stop()
 						controller.cronChecker, _ = NewCronChecker(controller.configReader.CronConfigList)
 						controller.rssListener, _ = NewRssListener(controller.configReader.RssConfigList)
 						controller.freqMonitor, _ = NewFreqMonitor(controller.configReader.FreqUpperLimit)
+						controller.cronChecker.Start()
+						controller.rssListener.Start()
+						controller.freqMonitor.Start()
 						controller.mute.Unlock()
-						log.Println("检测到配置目录下的文件权限变化，已经自动更新配置。")
 					}
 				}
 			case err := <-watch.Errors:
@@ -394,15 +384,27 @@ func (controller *Controller) monitorFolder() {
 
 func (controller *Controller) listenCron() {
 	for true {
-		config := <-controller.cronChecker.WillBeSentConfig
-		controller.sendMessageAndOperation(Event{PreDefVarMap: map[string]string{"\\n": "\n"}}, []Config{config})
+		select {
+		case config := <-controller.cronChecker.WillBeSentConfig:
+			controller.sendMessageAndOperation(Event{PreDefVarMap: map[string]string{"\\n": "\n"}}, []Config{config})
+		case signalType := <-controller.cronChecker.Signal:
+			if signalType == SingalTypeStop {
+				return
+			}
+		}
 	}
 }
 
 func (controller *Controller) listenRss() {
 	for true {
-		config := <-controller.rssListener.WillBeSentConfig
-		event := <-controller.rssListener.WillBeUsedEvent
-		controller.sendMessageAndOperation(event, []Config{config})
+		select {
+		case config := <-controller.rssListener.WillBeSentConfig:
+			event := <-controller.rssListener.WillBeUsedEvent
+			controller.sendMessageAndOperation(event, []Config{config})
+		case signalType := <-controller.rssListener.Signal:
+			if signalType == SingalTypeStop {
+				return
+			}
+		}
 	}
 }

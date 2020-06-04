@@ -1,5 +1,11 @@
 package eltype
 
+type SingalType int
+
+const (
+	SingalTypeStop SingalType = iota
+)
+
 var DataRoot = "../../data"
 var RssDataFileName = "rss.yml"
 var ConfigRoot string = "../../config"

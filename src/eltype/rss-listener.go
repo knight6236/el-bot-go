@@ -15,10 +15,12 @@ import (
 
 type RssListener struct {
 	rssConfigList    []Config
+	cron             *cron.Cron
 	rssDataMap       map[string]string
 	monthsMap        map[string]string
 	WillBeSentConfig chan Config
 	WillBeUsedEvent  chan Event
+	Signal           chan SingalType
 }
 
 func NewRssListener(rssConfigList []Config) (*RssListener, error) {
@@ -32,6 +34,7 @@ func NewRssListener(rssConfigList []Config) (*RssListener, error) {
 	copy(listener.rssConfigList, rssConfigList)
 	listener.WillBeSentConfig = make(chan Config, 10)
 	listener.WillBeUsedEvent = make(chan Event, 10)
+	listener.Signal = make(chan SingalType, 2)
 	buf, err := ioutil.ReadFile(fmt.Sprintf("%s/%s", DataRoot, RssDataFileName))
 	if err != nil {
 		os.Create(fmt.Sprintf("%s/%s", DataRoot, RssDataFileName))
@@ -45,9 +48,15 @@ func (listener *RssListener) Start() {
 	go listener.start()
 }
 
+func (listener *RssListener) Stop() {
+	listener.cron.Stop()
+	listener.Signal <- SingalTypeStop
+	listener.Signal <- SingalTypeStop
+}
+
 func (listener *RssListener) start() {
-	c := cron.New()
-	err := c.AddFunc("0 0/1 * * * *", func() {
+	listener.cron = cron.New()
+	err := listener.cron.AddFunc("0 0/1 * * * *", func() {
 		for _, rssConfig := range listener.rssConfigList {
 			temp := listener.checkUpdate(rssConfig.RssURL)
 			if temp != nil {
@@ -63,8 +72,13 @@ func (listener *RssListener) start() {
 		log.Printf("RssListener.start: %s", err.Error())
 		return
 	}
-	c.Start()
-	select {}
+	listener.cron.Start()
+	select {
+	case signalType := <-listener.Signal:
+		if signalType == SingalTypeStop {
+			return
+		}
+	}
 }
 
 func (listener *RssListener) checkUpdate(url string) map[string]string {
