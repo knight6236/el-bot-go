@@ -395,7 +395,7 @@ func (controller *Controller) monitorFolder() {
 func (controller *Controller) listenCron() {
 	for true {
 		config := <-controller.cronChecker.WillBeSentConfig
-		controller.sendMessageAndOperation(Event{}, []Config{config})
+		controller.sendMessageAndOperation(Event{PreDefVarMap: map[string]string{"\\n": "\n"}}, []Config{config})
 	}
 }
 
