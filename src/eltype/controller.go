@@ -4,6 +4,7 @@ import (
 	"el-bot-go/src/gomirai"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"sync"
 
@@ -16,12 +17,16 @@ import (
 // @property	configReader	ConfigReader	配置读取类
 // @property	bot				*gomirai.Bot	机器人
 type Controller struct {
-	mute         sync.RWMutex
-	configReader *ConfigReader
-	cronChecker  *CronChecker
-	rssListener  *RssListener
-	freqMonitor  *FreqMonitor
-	bot          *gomirai.Bot
+	isSuspend         bool
+	blockedGroupIDSet map[string]bool
+	blockedUserIDSet  map[string]bool
+	controlMute       sync.RWMutex
+	configMute        sync.RWMutex
+	configReader      *ConfigReader
+	cronChecker       *CronChecker
+	rssListener       *RssListener
+	freqMonitor       *FreqMonitor
+	bot               *gomirai.Bot
 }
 
 var handlerConstructor = [...]func(configList []Config, messageList []Message, operationList []Operation,
@@ -30,7 +35,7 @@ var handlerConstructor = [...]func(configList []Config, messageList []Message, o
 
 var doerConstructor = [...]func(configHitList []Config, recivedMessageList []Message,
 	preDefVarMap map[string]string) (IDoer, error){
-	NewPlainDoer, NewImageDoer, NewOperationDoer, NewFaceDoer, NewXMLDoer}
+	NewPlainDoer, NewImageDoer, NewOperationDoer, NewFaceDoer, NewXMLDoer, NewControlDoer}
 
 // NewController 构造一个 Controller
 // @param	configReader	ConfigReader	配置读取类
@@ -38,6 +43,8 @@ func NewController(configReader *ConfigReader, bot *gomirai.Bot) *Controller {
 	controller := new(Controller)
 	controller.configReader = configReader
 	controller.bot = bot
+	controller.blockedGroupIDSet = make(map[string]bool)
+	controller.blockedUserIDSet = make(map[string]bool)
 	controller.cronChecker, _ = NewCronChecker(configReader.CronConfigList)
 	controller.rssListener, _ = NewRssListener(configReader.RssConfigList)
 	controller.freqMonitor, _ = NewFreqMonitor(configReader.FreqUpperLimit)
@@ -75,13 +82,9 @@ func (controller *Controller) Commit(goMiraiEvent gomirai.InEvent) {
 		return
 	}
 
-	controller.mute.RLock()
-
 	configRelatedList := controller.getConfigRelatedList(event)
 
 	configHitList := controller.getConfigHitList(event, configRelatedList)
-
-	controller.mute.RUnlock()
 
 	event.addPerDefVar("el-count-overall",
 		strings.Replace(fmt.Sprintf("%v", controller.freqMonitor.CountMap), "map", "统计概要", 1))
@@ -91,6 +94,7 @@ func (controller *Controller) Commit(goMiraiEvent gomirai.InEvent) {
 }
 
 func (controller *Controller) getConfigRelatedList(event Event) []Config {
+	controller.configMute.RLock()
 	var configList []Config
 	switch event.Type {
 	case EventTypeGroupMessage:
@@ -106,10 +110,12 @@ func (controller *Controller) getConfigRelatedList(event Event) []Config {
 			controller.getConfigRelatedConfigList(event.Type, controller.configReader.GlobalConfigList, event.Sender),
 			controller.getConfigRelatedConfigList(event.Type, controller.configReader.GroupConfigList, event.Sender))
 	}
+	controller.configMute.RUnlock()
 	return configList
 }
 
 func (controller *Controller) getConfigRelatedConfigList(eventType EventType, configList []Config, sender Sender) []Config {
+	controller.configMute.RLock()
 	var ret []Config
 	for _, config := range configList {
 		if (config.When.Message.Sender.UserIDList == nil || len(config.When.Message.Sender.UserIDList) == 0) &&
@@ -138,10 +144,12 @@ func (controller *Controller) getConfigRelatedConfigList(eventType EventType, co
 
 	LOOP_END:
 	}
+	controller.configMute.RUnlock()
 	return ret
 }
 
 func (controller *Controller) getConfigHitList(event Event, configRelatedList []Config) []Config {
+	controller.configMute.RLock()
 	configSet := make(map[int64]bool)
 	var configHitList []Config
 	for i := 0; i < len(handlerConstructor); i++ {
@@ -163,6 +171,7 @@ func (controller *Controller) getConfigHitList(event Event, configRelatedList []
 			}
 		}
 	}
+	controller.configMute.RUnlock()
 	return configHitList
 }
 
@@ -208,8 +217,11 @@ func (controller *Controller) convertToUnBlockConfig(configHit *Config) bool {
 }
 
 func (controller *Controller) sendMessageAndOperation(event Event, configHitList []Config) {
+	controller.configMute.RLock()
 	willBeSentGoMiraiGroupMessageMap := make(map[int64]map[int64][]gomirai.Message)
 	willBeSentGoMiraiUserMessageMap := make(map[int64]map[int64][]gomirai.Message)
+	var willBeSentOperaitonList []Operation
+	var willBeSentControlList []Control
 	for i := 0; i < len(doerConstructor); i++ {
 		doer, err := (doerConstructor[i](configHitList, event.MessageList, event.PreDefVarMap))
 		if err != nil {
@@ -255,11 +267,26 @@ func (controller *Controller) sendMessageAndOperation(event Event, configHitList
 		}
 
 		for _, operation := range doer.GetWillBeSentOperationList() {
-			operation.CompleteType()
-			operation.CompleteContent(event)
-			controller.sendOperation(operation)
+			willBeSentOperaitonList = append(willBeSentOperaitonList, operation)
+		}
+
+		for _, control := range doer.GetwillBeSentControlList() {
+			willBeSentControlList = append(willBeSentControlList, control)
 		}
 	}
+	controller.configMute.RUnlock()
+
+	for _, operation := range willBeSentOperaitonList {
+		operation.CompleteType()
+		operation.CompleteContent(event)
+		controller.sendOperation(operation)
+	}
+	for _, control := range willBeSentControlList {
+		control.CompleteType()
+		control.CompleteContent(event)
+		controller.sendControl(control)
+	}
+
 	for receiverID, innerMap := range willBeSentGoMiraiGroupMessageMap {
 		for quoteID, willBeSentMessageList := range innerMap {
 			controller.sendMessage(ReceiverTypeGroup, receiverID, quoteID, willBeSentMessageList)
@@ -273,6 +300,17 @@ func (controller *Controller) sendMessageAndOperation(event Event, configHitList
 }
 
 func (controller *Controller) sendMessage(receiverType ReceiverType, receiverID int64, quoteID int64, willBeSentGoMiraiMessageList []gomirai.Message) {
+	controller.configMute.RLock()
+	defer controller.configMute.RUnlock()
+	if controller.isSuspend {
+		return
+	}
+	if receiverType == ReceiverTypeGroup && controller.blockedGroupIDSet[CastInt64ToString(receiverID)] {
+		return
+	}
+	if receiverType == ReceiverTypeUser && controller.blockedUserIDSet[CastInt64ToString(receiverID)] {
+		return
+	}
 	switch receiverType {
 	case ReceiverTypeGroup:
 		_, err := controller.bot.SendGroupMessage(receiverID, quoteID, willBeSentGoMiraiMessageList)
@@ -288,6 +326,17 @@ func (controller *Controller) sendMessage(receiverType ReceiverType, receiverID 
 }
 
 func (controller *Controller) sendOperation(operation Operation) {
+	controller.configMute.RLock()
+	defer controller.configMute.RUnlock()
+	if controller.isSuspend {
+		return
+	}
+	if operation.GroupID != "" && controller.blockedGroupIDSet[operation.GroupID] {
+		return
+	}
+	if operation.UserID != "" && controller.blockedUserIDSet[operation.UserID] {
+		return
+	}
 	groupID := CastStringToInt64(operation.GroupID)
 	userID := CastStringToInt64(operation.UserID)
 	switch operation.innerType {
@@ -309,6 +358,49 @@ func (controller *Controller) sendOperation(operation Operation) {
 		controller.bot.MuteAll(groupID)
 	case OperationTypeGroupUnMuteAll:
 		controller.bot.UnmuteAll(groupID)
+	}
+}
+
+func (controller *Controller) sendControl(control Control) {
+	controller.configMute.Lock()
+	defer controller.configMute.Unlock()
+
+	switch control.innerType {
+	case ControlTypeSuspend:
+		controller.isSuspend = true
+	case ControlTypeActive:
+		controller.isSuspend = false
+	case ControlTypeDestory:
+		log.Println("接收到终止指令，程序自动终止。")
+		os.Exit(0)
+	case ControlTypeRestart:
+		// TODO
+	case ControlTypeBlock:
+		for _, groupID := range control.GroupIDList {
+			if groupID == "" {
+				continue
+			}
+			controller.blockedGroupIDSet[groupID] = true
+		}
+		for _, userID := range control.UserIDList {
+			if userID == "" {
+				continue
+			}
+			controller.blockedUserIDSet[userID] = true
+		}
+	case ControlTypeUnblock:
+		for _, groupID := range control.GroupIDList {
+			if groupID == "" {
+				continue
+			}
+			controller.blockedGroupIDSet[groupID] = false
+		}
+		for _, userID := range control.UserIDList {
+			if userID == "" {
+				continue
+			}
+			controller.blockedUserIDSet[userID] = false
+		}
 	}
 }
 
@@ -355,7 +447,7 @@ func (controller *Controller) monitorFolder() {
 						log.Println("检测到配置目录下的文件权限变化，已经自动更新配置。")
 					}
 					if isChange {
-						controller.mute.Lock()
+						controller.configMute.Lock()
 						controller.configReader.reLoad()
 						controller.cronChecker.Stop()
 						controller.rssListener.Stop()
@@ -366,7 +458,7 @@ func (controller *Controller) monitorFolder() {
 						controller.cronChecker.Start()
 						controller.rssListener.Start()
 						controller.freqMonitor.Start()
-						controller.mute.Unlock()
+						controller.configMute.Unlock()
 					}
 				}
 			case err := <-watch.Errors:

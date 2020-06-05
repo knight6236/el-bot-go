@@ -31,7 +31,9 @@ func NewRssListener(rssConfigList []Config) (*RssListener, error) {
 	listener.rssDataMap = make(map[string]string)
 	listener.monthsMap = monthsMap
 	listener.rssConfigList = make([]Config, len(rssConfigList))
-	copy(listener.rssConfigList, rssConfigList)
+	for _, config := range rssConfigList {
+		listener.rssConfigList = append(listener.rssConfigList, config)
+	}
 	listener.WillBeSentConfig = make(chan Config, 10)
 	listener.WillBeUsedEvent = make(chan Event, 10)
 	listener.Signal = make(chan SingalType, 2)

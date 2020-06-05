@@ -16,6 +16,7 @@ type XMLDoer struct {
 	recivedMessageList  []Message
 	willBeSentMessage   []Message
 	willBeSentOperation []Operation
+	willBeSentControl   []Control
 	preDefVarMap        map[string]string
 }
 
@@ -75,4 +76,9 @@ func (doer XMLDoer) GetWillBeSentMessageList() []Message {
 // GetSendedOperationList 获取将要执行的动作列表
 func (doer XMLDoer) GetWillBeSentOperationList() []Operation {
 	return doer.willBeSentOperation
+}
+
+// GetwillBeSentControlList 获取将要执行的动作列表
+func (doer XMLDoer) GetwillBeSentControlList() []Control {
+	return doer.willBeSentControl
 }

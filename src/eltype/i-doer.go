@@ -6,4 +6,5 @@ type IDoer interface {
 	replaceStrByPreDefVarMap(text string) (string, bool)
 	GetWillBeSentMessageList() []Message
 	GetWillBeSentOperationList() []Operation
+	GetwillBeSentControlList() []Control
 }
