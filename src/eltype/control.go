@@ -20,31 +20,31 @@ const (
 )
 
 type Control struct {
-	innerType   ControlType
-	Type        string   `yaml:"type"`
-	GroupIDList []string `yaml:"group"`
-	UserIDList  []string `yaml:"user"`
+	InnerType   ControlType `json:"-"`
+	Type        string      `yaml:"type" json:"type"`
+	GroupIDList []string    `yaml:"group" json:"group"`
+	UserIDList  []string    `yaml:"user" json:"user"`
 }
 
 func (control *Control) CompleteType() {
 	if control.Type != "" {
 		switch control.Type {
 		case "Suspend":
-			control.innerType = ControlTypeSuspend
+			control.InnerType = ControlTypeSuspend
 		case "Active":
-			control.innerType = ControlTypeActive
+			control.InnerType = ControlTypeActive
 		case "Destory":
-			control.innerType = ControlTypeDestory
+			control.InnerType = ControlTypeDestory
 		case "Restart":
-			control.innerType = ControlTypeRestart
+			control.InnerType = ControlTypeRestart
 		case "Block":
-			control.innerType = ControlTypeBlock
+			control.InnerType = ControlTypeBlock
 		case "Unblock":
-			control.innerType = ControlTypeUnblock
+			control.InnerType = ControlTypeUnblock
 		}
 	}
 
-	switch control.innerType {
+	switch control.InnerType {
 	case ControlTypeSuspend:
 		control.Type = "Suspend"
 	case ControlTypeActive:
@@ -73,7 +73,7 @@ func (control *Control) CompleteContent(event Event) {
 
 func (control *Control) DeepCopy() Control {
 	var newControl Control
-	newControl.innerType = control.innerType
+	newControl.InnerType = control.InnerType
 	newControl.Type = control.Type
 	for _, groupID := range control.GroupIDList {
 		newControl.GroupIDList = append(newControl.GroupIDList, groupID)

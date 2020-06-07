@@ -1,17 +1,19 @@
 package eltype
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"regexp"
+	"runtime"
 
 	"gopkg.in/yaml.v2"
 )
 
 type Listen struct {
 	GroupIDList []string `yaml:"group"`
-	UserIDList  []string `yaml:"user"`
+	// UserIDList  []string `yaml:"user"`
 }
 
 type Target struct {
@@ -24,28 +26,30 @@ type Transfer struct {
 	Target Target `yaml:"target"`
 }
 
-type Echo struct {
-	Enable bool `yaml:"enable"`
-}
+// type Echo struct {
+// 	Enable bool `yaml:"enable"`
+// }
 
 type SourceConfig struct {
-	Echo             Echo       `yaml:"echo"`
-	FreqUpperLimit   int64      `yaml:"freqLimit"`
-	GlobalConfigList []Config   `yaml:"global"`
-	FriendConfigList []Config   `yaml:"friend"`
-	GroupConfigList  []Config   `yaml:"group"`
-	CronConfigList   []Config   `yaml:"crontab"`
-	RssConfigList    []Config   `yaml:"rss"`
-	TransferList     []Transfer `yaml:"transfer"`
+	// Echo             Echo           `yaml:"echo" json:"echo"`
+	FreqUpperLimit   int64      `yaml:"freqLimit" json:"freqLimit"`
+	GlobalConfigList []Config   `yaml:"global" json:"global"`
+	FriendConfigList []Config   `yaml:"friend" json:"friend"`
+	GroupConfigList  []Config   `yaml:"group" json:"group"`
+	CronConfigList   []Config   `yaml:"crontab" json:"crontab"`
+	RssConfigList    []Config   `yaml:"rss" json:"rss"`
+	TransferList     []Transfer `yaml:"transfer" json:"transfer"`
 }
 
 type Compiler struct {
+	pluginReader *PluginReader
 	SourceConfig SourceConfig
 	folder       string
 }
 
 func NewCompiler(folder string) (Compiler, error) {
 	var compiler Compiler
+	compiler.pluginReader, _ = NewPluginReader()
 	compiler.folder = folder
 	return compiler, nil
 }
@@ -58,6 +62,56 @@ func (compiler *Compiler) Compile() {
 	}
 
 	compiler.CompleteConfigList()
+}
+
+func (compiler *Compiler) callPlugin(configMap map[string]interface{}) {
+	for _, plugin := range compiler.pluginReader.PluginList {
+		obj := configMap[plugin.ConfigKeyword].(map[interface{}]interface{})
+		jsonMap := make(map[string]interface{})
+		for key, value := range obj {
+			jsonMap[key.(string)] = value
+		}
+		if obj == nil {
+			continue
+		}
+		jsonStr, err := json.Marshal(jsonMap)
+		var ret string
+		switch plugin.Type {
+		case Binary:
+			if runtime.GOOS == "windows" {
+				ret, err = ExecCommand(plugin.Path, string(jsonStr))
+			} else {
+				ret, err = ExecCommand("/bin/bash", "-c", string(jsonStr))
+			}
+		case Java:
+			if runtime.GOOS == "windows" {
+				ret, err = ExecCommand("java", "-jar", plugin.Path, string(jsonStr))
+			} else {
+				ret, err = ExecCommand("/bin/bash", "-c", fmt.Sprintf("java -jar %s %s", plugin.Path, string(jsonStr)))
+			}
+		case Python:
+			if runtime.GOOS == "windows" {
+				ret, err = ExecCommand("python", plugin.Path, string(jsonStr))
+			} else {
+				ret, err = ExecCommand("/bin/bash", "-c", fmt.Sprintf("%s %s %s", PythonCommand, plugin.Path, string(jsonStr)))
+			}
+		case JavaScript:
+			if runtime.GOOS == "windows" {
+				ret, err = ExecCommand("node", plugin.Path, string(jsonStr))
+			} else {
+				ret, err = ExecCommand("/bin/bash", "-c", fmt.Sprintf("node %s %s", plugin.Path, string(jsonStr)))
+			}
+		default:
+			return
+		}
+
+		if err != nil {
+			continue
+		}
+		var tempSourceConfig SourceConfig
+		json.Unmarshal([]byte(ret), &tempSourceConfig)
+		compiler.mergeSourceConfig(tempSourceConfig)
+	}
 }
 
 func (compiler *Compiler) WriteFile() string {
@@ -93,56 +147,59 @@ func (compiler *Compiler) compileThisFile(filePath string) {
 	}
 	var tempSourceConfig SourceConfig
 	yaml.Unmarshal(buf, &tempSourceConfig)
+	var configMap map[string]interface{}
+	yaml.Unmarshal(buf, &configMap)
+	compiler.callPlugin(configMap)
 
 	for _, transfer := range tempSourceConfig.TransferList {
-		compiler.SourceConfig.GlobalConfigList = append(compiler.SourceConfig.GlobalConfigList, transfer.toConfig())
+		compiler.SourceConfig.GroupConfigList = append(compiler.SourceConfig.GroupConfigList, transfer.toConfig())
 	}
 
-	compiler.SourceConfig.GlobalConfigList = append(compiler.SourceConfig.GlobalConfigList, compiler.SourceConfig.Echo.toConfig())
+	// compiler.SourceConfig.GlobalConfigList = append(compiler.SourceConfig.GlobalConfigList, compiler.SourceConfig.Echo.toConfig())
 
 	compiler.mergeSourceConfig(tempSourceConfig)
 }
 
 func (compiler *Compiler) CompleteConfigList() {
-	var innerID int64 = 1
+	var InnerID int64 = 1
 	for i := 0; i < len(compiler.SourceConfig.GlobalConfigList); i++ {
 		temp := compiler.SourceConfig.GlobalConfigList[i]
 		temp.CompleteType()
-		temp.innerID = innerID
-		innerID++
+		temp.InnerID = InnerID
+		InnerID++
 		compiler.SourceConfig.GlobalConfigList[i] = temp
 	}
 	for i := 0; i < len(compiler.SourceConfig.FriendConfigList); i++ {
 		temp := compiler.SourceConfig.FriendConfigList[i]
 		temp.CompleteType()
-		temp.innerID = innerID
-		innerID++
+		temp.InnerID = InnerID
+		InnerID++
 		compiler.SourceConfig.FriendConfigList[i] = temp
 	}
 	for i := 0; i < len(compiler.SourceConfig.GroupConfigList); i++ {
 		temp := compiler.SourceConfig.GroupConfigList[i]
 		temp.CompleteType()
-		temp.innerID = innerID
-		innerID++
+		temp.InnerID = InnerID
+		InnerID++
 		compiler.SourceConfig.GroupConfigList[i] = temp
 	}
 	for i := 0; i < len(compiler.SourceConfig.CronConfigList); i++ {
 		temp := compiler.SourceConfig.CronConfigList[i]
 		temp.CompleteType()
-		temp.innerID = innerID
-		innerID++
+		temp.InnerID = InnerID
+		InnerID++
 		compiler.SourceConfig.CronConfigList[i] = temp
 	}
 }
 
 func (compiler *Compiler) mergeSourceConfig(tempSourceConfig SourceConfig) {
 	compiler.SourceConfig.FreqUpperLimit = tempSourceConfig.FreqUpperLimit
-	compiler.SourceConfig.Echo = tempSourceConfig.Echo
-	mergeConfigList(&compiler.SourceConfig.GlobalConfigList, tempSourceConfig.GlobalConfigList)
-	mergeConfigList(&compiler.SourceConfig.FriendConfigList, tempSourceConfig.FriendConfigList)
-	mergeConfigList(&compiler.SourceConfig.GroupConfigList, tempSourceConfig.GroupConfigList)
-	mergeConfigList(&compiler.SourceConfig.CronConfigList, tempSourceConfig.CronConfigList)
-	mergeConfigList(&compiler.SourceConfig.RssConfigList, tempSourceConfig.RssConfigList)
+	// compiler.SourceConfig.Echo = tempSourceConfig.Echo
+	MergeConfigList(&compiler.SourceConfig.GlobalConfigList, tempSourceConfig.GlobalConfigList)
+	MergeConfigList(&compiler.SourceConfig.FriendConfigList, tempSourceConfig.FriendConfigList)
+	MergeConfigList(&compiler.SourceConfig.GroupConfigList, tempSourceConfig.GroupConfigList)
+	MergeConfigList(&compiler.SourceConfig.CronConfigList, tempSourceConfig.CronConfigList)
+	MergeConfigList(&compiler.SourceConfig.RssConfigList, tempSourceConfig.RssConfigList)
 }
 
 func (transfer *Transfer) toConfig() Config {
@@ -150,9 +207,9 @@ func (transfer *Transfer) toConfig() Config {
 	for _, groupID := range transfer.Listen.GroupIDList {
 		config.When.Message.Sender.AddGroupID(groupID)
 	}
-	for _, UserID := range transfer.Listen.UserIDList {
-		config.When.Message.Sender.AddUserID(UserID)
-	}
+	// for _, UserID := range transfer.Listen.UserIDList {
+	// 	config.When.Message.Sender.AddUserID(UserID)
+	// }
 	for _, groupID := range transfer.Target.GroupIDList {
 		config.Do.Message.Receiver.AddGroupID(groupID)
 	}
@@ -161,30 +218,30 @@ func (transfer *Transfer) toConfig() Config {
 	}
 
 	var messageDetail MessageDetail
-	messageDetail.innerType = MessageTypePlain
+	messageDetail.InnerType = MessageTypePlain
 	messageDetail.Regex = "(?:.|\\n)+"
 	config.When.Message.AddDetail(messageDetail)
 	messageDetail.Regex = ""
 
-	messageDetail.innerType = MessageTypeImage
+	messageDetail.InnerType = MessageTypeImage
 	config.When.Message.AddDetail(messageDetail)
 
-	messageDetail.innerType = MessageTypeXML
+	messageDetail.InnerType = MessageTypeXML
 	config.When.Message.AddDetail(messageDetail)
 
-	messageDetail.innerType = MessageTypePlain
+	messageDetail.InnerType = MessageTypePlain
 	messageDetail.Text = "{el-message-text}"
 	config.Do.Message.AddDetail(messageDetail)
 	messageDetail.Text = ""
 
-	messageDetail.innerType = MessageTypeImage
+	messageDetail.InnerType = MessageTypeImage
 	for i := 0; i < 20; i++ {
 		messageDetail.URL = fmt.Sprintf("{el-message-image-url-%d}", i)
 		config.Do.Message.AddDetail(messageDetail)
 	}
 	messageDetail.URL = ""
 
-	messageDetail.innerType = MessageTypeXML
+	messageDetail.InnerType = MessageTypeXML
 	messageDetail.Text = "{el-message-xml}"
 	config.Do.Message.AddDetail(messageDetail)
 	messageDetail.Text = ""
@@ -192,16 +249,16 @@ func (transfer *Transfer) toConfig() Config {
 	return config
 }
 
-func (echo *Echo) toConfig() Config {
-	var config Config
-	messageDetail := MessageDetail{
-		innerType: MessageTypePlain,
-		Regex:     "echo\\s(.+)",
-	}
-	config.When.Message.AddDetail(messageDetail)
-	messageDetail.Regex = ""
-	messageDetail.Text = "{el-regex-0}"
-	config.Do.Message.AddDetail(messageDetail)
-	config.Do.Message.IsQuote = true
-	return config
-}
+// func (echo *Echo) toConfig() Config {
+// 	var config Config
+// 	messageDetail := MessageDetail{
+// 		InnerType: MessageTypePlain,
+// 		Regex:     "echo\\s(.+)",
+// 	}
+// 	config.When.Message.AddDetail(messageDetail)
+// 	messageDetail.Regex = ""
+// 	messageDetail.Text = "{el-regex-0}"
+// 	config.Do.Message.AddDetail(messageDetail)
+// 	config.Do.Message.IsQuote = true
+// 	return config
+// }

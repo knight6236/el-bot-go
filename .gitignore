@@ -34,7 +34,6 @@ config/obj/*.yml
 src/main/__debug_bin
 *.bin
 *.jar
-plugins/
 device.json
 content/*.txt
 build.bat
@@ -42,3 +41,4 @@ build.sh
 config/custom
 bot.yml
 node_modules
+mirai

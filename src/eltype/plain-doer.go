@@ -45,8 +45,8 @@ func (doer *PlainDoer) getWillBeSentMessageList() {
 			willBeSentMessage.IsQuote = config.Do.Message.IsQuote
 			willBeSentMessage.Sender = config.Do.Message.Sender.DeepCopy()
 			willBeSentMessage.Receiver = config.Do.Message.Receiver.DeepCopy()
-			willBeSentMessageDetail.innerType = MessageTypePlain
-			if doMessageDetail.innerType == MessageTypePlain {
+			willBeSentMessageDetail.InnerType = MessageTypePlain
+			if doMessageDetail.InnerType == MessageTypePlain {
 				if doMessageDetail.URL == "" {
 					willBeSentMessageDetail, err := doer.getTextMessageDetail(doMessageDetail)
 					willBeSentMessage.AddDetail(willBeSentMessageDetail)
@@ -118,7 +118,7 @@ func (doer *PlainDoer) addPreDefVarByJSON(jsonByteList []byte) {
 		return
 	}
 
-	varNameList, valueList := parseJsonObj(jsonMap, 0)
+	varNameList, valueList := ParseJsonObj(jsonMap, 0)
 
 	for i := 0; i < len(varNameList); i++ {
 		doer.preDefVarMap[varNameList[i]] = valueList[i]

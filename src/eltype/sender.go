@@ -25,8 +25,8 @@ const (
 // @property	Name		string			Sender 的名称
 // @property	Permission	string			Sender 其它信息
 type Sender struct {
-	GroupIDList []string `yaml:"group"`
-	UserIDList  []string `yaml:"user"`
+	GroupIDList []string `yaml:"group" json:"group"`
+	UserIDList  []string `yaml:"user" json:"user"`
 }
 
 // NewSender 构造一个 Sender

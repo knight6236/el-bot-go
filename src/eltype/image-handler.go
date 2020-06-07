@@ -34,8 +34,8 @@ func (handler *ImageHandler) searchHitConfig() {
 		for _, whenMessageDetail := range config.When.Message.DetailList {
 			for _, message := range handler.messageList {
 				for _, messageDetail := range message.DetailList {
-					if messageDetail.innerType == MessageTypeImage &&
-						whenMessageDetail.innerType == MessageTypeImage {
+					if messageDetail.InnerType == MessageTypeImage &&
+						whenMessageDetail.InnerType == MessageTypeImage {
 						handler.configHitList = append(handler.configHitList, config)
 					}
 				}

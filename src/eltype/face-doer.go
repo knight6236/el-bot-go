@@ -43,8 +43,8 @@ func (doer *FaceDoer) getWillBeSentMessageList() {
 			// willBeSentMessage = config.Do.Message.DeepCopy()
 			// willBeSentMessage.Sender = config.Do.Message.Sender.DeepCopy()
 			// willBeSentMessage.Receiver = config.Do.Message.Receiver.DeepCopy()
-			// willBeSentMessageDetail.innerType = MessageTypeFace
-			if doMessageDetail.innerType == MessageTypeFace {
+			// willBeSentMessageDetail.InnerType = MessageTypeFace
+			if doMessageDetail.InnerType == MessageTypeFace {
 				doer.willBeSentMessage = append(doer.willBeSentMessage, config.Do.Message.DeepCopy())
 			}
 		}

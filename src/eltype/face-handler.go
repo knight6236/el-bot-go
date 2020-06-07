@@ -38,8 +38,8 @@ func (handler *FaceHandler) searchHitConfig() {
 		for _, message := range handler.messageList {
 			for _, messageDetail := range message.DetailList {
 				for _, whenMessageDetail := range config.When.Message.DetailList {
-					if messageDetail.innerType == MessageTypeFace &&
-						whenMessageDetail.innerType == MessageTypeFace &&
+					if messageDetail.InnerType == MessageTypeFace &&
+						whenMessageDetail.InnerType == MessageTypeFace &&
 						whenMessageDetail.FaceName == messageDetail.FaceName {
 						handler.configHitList = append(handler.configHitList, config)
 						goto TOP_LOOP

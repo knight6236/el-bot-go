@@ -49,7 +49,7 @@ func (handler *PlainHandler) searchHitConfig() {
 }
 
 func (handler *PlainHandler) checkText(detail MessageDetail) bool {
-	if detail.innerType != MessageTypePlain {
+	if detail.InnerType != MessageTypePlain {
 		return false
 	}
 
@@ -68,7 +68,7 @@ func (handler *PlainHandler) checkText(detail MessageDetail) bool {
 }
 
 func (handler *PlainHandler) checkRegex(detail MessageDetail) bool {
-	if detail.innerType != MessageTypePlain {
+	if detail.InnerType != MessageTypePlain {
 		return false
 	}
 	pattern := detail.Regex
@@ -81,7 +81,7 @@ func (handler *PlainHandler) checkRegex(detail MessageDetail) bool {
 
 	for _, message := range handler.messageList {
 		for _, messageDetail := range message.DetailList {
-			if messageDetail.innerType == MessageTypePlain && messageDetail.Text != "" {
+			if messageDetail.InnerType == MessageTypePlain && messageDetail.Text != "" {
 				buf.WriteString(messageDetail.Text)
 			}
 		}

@@ -1,12 +1,13 @@
 package eltype
 
 import (
-	"el-bot-go/src/gomirai"
 	"fmt"
 	"log"
 	"os"
 	"strings"
 	"sync"
+
+	"github.com/ADD-SP/gomirai"
 
 	"github.com/fsnotify/fsnotify"
 )
@@ -86,7 +87,7 @@ func (controller *Controller) Commit(goMiraiEvent gomirai.InEvent) {
 
 	configHitList := controller.getConfigHitList(event, configRelatedList)
 
-	event.addPerDefVar("el-count-overall",
+	event.AddPerDefVar("el-count-overall",
 		strings.Replace(fmt.Sprintf("%v", controller.freqMonitor.CountMap), "map", "统计概要", 1))
 
 	controller.sendMessageAndOperation(event, configHitList)
@@ -98,15 +99,15 @@ func (controller *Controller) getConfigRelatedList(event Event) []Config {
 	var configList []Config
 	switch event.Type {
 	case EventTypeGroupMessage:
-		mergeConfigList(&configList,
+		MergeConfigList(&configList,
 			controller.getConfigRelatedConfigList(event.Type, controller.configReader.GlobalConfigList, event.Sender),
 			controller.getConfigRelatedConfigList(event.Type, controller.configReader.GroupConfigList, event.Sender))
 	case EventTypeFriendMessage:
-		mergeConfigList(&configList,
+		MergeConfigList(&configList,
 			controller.getConfigRelatedConfigList(event.Type, controller.configReader.GlobalConfigList, event.Sender),
 			controller.getConfigRelatedConfigList(event.Type, controller.configReader.FriendConfigList, event.Sender))
 	default:
-		mergeConfigList(&configList,
+		MergeConfigList(&configList,
 			controller.getConfigRelatedConfigList(event.Type, controller.configReader.GlobalConfigList, event.Sender),
 			controller.getConfigRelatedConfigList(event.Type, controller.configReader.GroupConfigList, event.Sender))
 	}
@@ -159,14 +160,14 @@ func (controller *Controller) getConfigHitList(event Event, configRelatedList []
 		}
 
 		for _, config := range handler.GetConfigHitList() {
-			if !configSet[config.innerID] {
+			if !configSet[config.InnerID] {
 				config = config.DeepCopy()
 				config.CompleteType()
 				config.CompleteContent(event)
 				controller.freqMonitor.Commit(config)
 				if !controller.convertToUnBlockConfig(&config) {
 					configHitList = append(configHitList, config)
-					configSet[config.innerID] = true
+					configSet[config.InnerID] = true
 				}
 			}
 		}
@@ -178,7 +179,7 @@ func (controller *Controller) getConfigHitList(event Event, configRelatedList []
 func (controller *Controller) convertToUnBlockConfig(configHit *Config) bool {
 	isAllBlocked := true
 	for i := 0; i < len(configHit.Do.Message.Receiver.GroupIDList); i++ {
-		isBlocked := controller.freqMonitor.IsBlocked(configHit.innerID,
+		isBlocked := controller.freqMonitor.IsBlocked(configHit.InnerID,
 			ReceiverTypeGroup, CastStringToInt64(configHit.Do.Message.Receiver.GroupIDList[i]))
 		isAllBlocked = isAllBlocked && isBlocked
 		if isBlocked {
@@ -186,7 +187,7 @@ func (controller *Controller) convertToUnBlockConfig(configHit *Config) bool {
 		}
 	}
 	for i := 0; i < len(configHit.Do.Message.Receiver.UserIDList); i++ {
-		isBlocked := controller.freqMonitor.IsBlocked(configHit.innerID,
+		isBlocked := controller.freqMonitor.IsBlocked(configHit.InnerID,
 			ReceiverTypeUser, CastStringToInt64(configHit.Do.Message.Receiver.UserIDList[i]))
 		isAllBlocked = isAllBlocked && isBlocked
 		if isBlocked {
@@ -194,9 +195,9 @@ func (controller *Controller) convertToUnBlockConfig(configHit *Config) bool {
 		}
 	}
 	for i := 0; i < len(configHit.Do.OperationList); i++ {
-		switch configHit.Do.OperationList[i].innerType {
+		switch configHit.Do.OperationList[i].InnerType {
 		case OperationTypeAt:
-			isBlocked := controller.freqMonitor.IsBlocked(configHit.innerID,
+			isBlocked := controller.freqMonitor.IsBlocked(configHit.InnerID,
 				ReceiverTypeGroup,
 				CastStringToInt64(configHit.Do.OperationList[i].GroupID))
 			isAllBlocked = isAllBlocked && isBlocked
@@ -204,7 +205,7 @@ func (controller *Controller) convertToUnBlockConfig(configHit *Config) bool {
 				configHit.Do.OperationList[i].GroupID = "0"
 			}
 		case OperationTypeAtAll:
-			isBlocked := controller.freqMonitor.IsBlocked(configHit.innerID,
+			isBlocked := controller.freqMonitor.IsBlocked(configHit.InnerID,
 				ReceiverTypeGroup,
 				CastStringToInt64(configHit.Do.OperationList[i].GroupID))
 			isAllBlocked = isAllBlocked && isBlocked
@@ -339,7 +340,7 @@ func (controller *Controller) sendOperation(operation Operation) {
 	}
 	groupID := CastStringToInt64(operation.GroupID)
 	userID := CastStringToInt64(operation.UserID)
-	switch operation.innerType {
+	switch operation.InnerType {
 	case OperationTypeAt:
 		goMiraiMessage, isSuccess := operation.ToGoMiraiMessage()
 		if isSuccess {
@@ -365,7 +366,7 @@ func (controller *Controller) sendControl(control Control) {
 	controller.configMute.Lock()
 	defer controller.configMute.Unlock()
 
-	switch control.innerType {
+	switch control.InnerType {
 	case ControlTypeSuspend:
 		controller.isSuspend = true
 	case ControlTypeActive:

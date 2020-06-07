@@ -91,41 +91,41 @@ func (reader *ConfigReader) parseThisFile(fileFullPath string) {
 }
 
 func (reader *ConfigReader) CompleteConfigList() {
-	var innerID int64 = 1
+	var InnerID int64 = 1
 	for i := 0; i < len(reader.GlobalConfigList); i++ {
 		temp := reader.GlobalConfigList[i]
 		temp.CompleteType()
-		temp.innerID = innerID
-		innerID++
+		temp.InnerID = InnerID
+		InnerID++
 		reader.GlobalConfigList[i] = temp
 	}
 	for i := 0; i < len(reader.FriendConfigList); i++ {
 		temp := reader.FriendConfigList[i]
 		temp.CompleteType()
-		temp.innerID = innerID
-		innerID++
+		temp.InnerID = InnerID
+		InnerID++
 		reader.FriendConfigList[i] = temp
 	}
 	for i := 0; i < len(reader.GroupConfigList); i++ {
 		temp := reader.GroupConfigList[i]
 		temp.CompleteType()
-		temp.innerID = innerID
-		innerID++
+		temp.InnerID = InnerID
+		InnerID++
 		reader.GroupConfigList[i] = temp
 	}
 	for i := 0; i < len(reader.CronConfigList); i++ {
 		temp := reader.CronConfigList[i]
 		temp.CompleteType()
-		temp.innerID = innerID
-		innerID++
+		temp.InnerID = InnerID
+		InnerID++
 		reader.CronConfigList[i] = temp
 	}
 }
 
 func (reader *ConfigReader) mergeReader(tempReader ConfigReader) {
 	reader.FreqUpperLimit = tempReader.FreqUpperLimit
-	mergeConfigList(&reader.GlobalConfigList, tempReader.GlobalConfigList)
-	mergeConfigList(&reader.FriendConfigList, tempReader.FriendConfigList)
-	mergeConfigList(&reader.GroupConfigList, tempReader.GroupConfigList)
-	mergeConfigList(&reader.CronConfigList, tempReader.CronConfigList)
+	MergeConfigList(&reader.GlobalConfigList, tempReader.GlobalConfigList)
+	MergeConfigList(&reader.FriendConfigList, tempReader.FriendConfigList)
+	MergeConfigList(&reader.GroupConfigList, tempReader.GroupConfigList)
+	MergeConfigList(&reader.CronConfigList, tempReader.CronConfigList)
 }

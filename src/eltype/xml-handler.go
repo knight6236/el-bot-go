@@ -34,8 +34,8 @@ func (handler *XMLHandler) searchHitConfig() {
 		for _, whenMessageDetail := range config.When.Message.DetailList {
 			for _, message := range handler.messageList {
 				for _, messageDetail := range message.DetailList {
-					if messageDetail.innerType == MessageTypeXML &&
-						whenMessageDetail.innerType == MessageTypeXML {
+					if messageDetail.InnerType == MessageTypeXML &&
+						whenMessageDetail.InnerType == MessageTypeXML {
 						handler.configHitList = append(handler.configHitList, config)
 					}
 				}

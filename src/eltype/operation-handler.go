@@ -37,7 +37,7 @@ func (handler *OperationHandler) searchHitConfig() {
 	SECOND_LOOP:
 		for _, operation := range handler.operationList {
 			for _, doOperation := range config.When.OperationList {
-				if operation.innerType == doOperation.innerType {
+				if operation.InnerType == doOperation.InnerType {
 					handler.configHitList = append(handler.configHitList, config)
 					goto TOP_LOOP
 				}

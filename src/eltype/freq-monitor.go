@@ -47,14 +47,14 @@ func (monitor *FreqMonitor) Commit(configHit Config) {
 		if monitor.groupCountMap[CastStringToInt64(groupID)] == nil {
 			monitor.groupCountMap[CastStringToInt64(groupID)] = make(map[int64]int64)
 		}
-		monitor.groupCountMap[CastStringToInt64(groupID)][configHit.innerID]++
+		monitor.groupCountMap[CastStringToInt64(groupID)][configHit.InnerID]++
 		// fmt.Printf("%v\n", monitor.groupCountMap)
 	}
 	for _, userID := range configHit.When.Message.Receiver.UserIDList {
 		if monitor.groupCountMap[CastStringToInt64(userID)] == nil {
 			monitor.userCountMap[CastStringToInt64(userID)] = make(map[int64]int64)
 		}
-		monitor.userCountMap[CastStringToInt64(userID)][configHit.innerID]++
+		monitor.userCountMap[CastStringToInt64(userID)][configHit.InnerID]++
 		// fmt.Printf("%v\n", monitor.userCountMap)
 	}
 	monitor.CountMap[configHit.CountID]++
@@ -84,22 +84,22 @@ func (monitor *FreqMonitor) check() {
 	}
 	monitor.mute.RLock()
 	for groupID, innerMap := range monitor.groupCountMap {
-		for innerID, freq := range innerMap {
+		for InnerID, freq := range innerMap {
 			if freq > monitor.freqUpperLimit {
 				if monitor.groupBlockedConfig[groupID] == nil {
 					monitor.groupBlockedConfig[groupID] = make(map[int64]bool)
 				}
-				monitor.groupBlockedConfig[groupID][innerID] = true
+				monitor.groupBlockedConfig[groupID][InnerID] = true
 			}
 		}
 	}
 	for userID, innerMap := range monitor.userCountMap {
-		for innerID, freq := range innerMap {
+		for InnerID, freq := range innerMap {
 			if freq > monitor.freqUpperLimit {
 				if monitor.userBlockedConfig[userID] == nil {
 					monitor.userBlockedConfig[userID] = map[int64]bool{}
 				}
-				monitor.userBlockedConfig[userID][innerID] = true
+				monitor.userBlockedConfig[userID][InnerID] = true
 			}
 		}
 	}

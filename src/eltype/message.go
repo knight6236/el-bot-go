@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"el-bot-go/src/gomirai"
+	"github.com/ADD-SP/gomirai"
 )
 
 // MessageType 消息类型
@@ -27,25 +27,25 @@ const (
 )
 
 type Message struct {
-	IsQuote    bool            `yaml:"quote"`
-	Sender     Sender          `yaml:"sender"`
-	Receiver   Receiver        `yaml:"receiver"`
-	DetailList []MessageDetail `yaml:"detail"`
+	IsQuote    bool            `yaml:"quote" json:"quote"`
+	Sender     Sender          `yaml:"sender" json:"sender"`
+	Receiver   Receiver        `yaml:"receiver" json:"receiver"`
+	DetailList []MessageDetail `yaml:"detail" json:"detail"`
 }
 
 type MessageDetail struct {
-	innerType MessageType
-	UserID    string `yaml:"userID"`
-	GroupID   string `yaml:"groupID"`
-	Type      string `yaml:"type"`
-	Text      string `yaml:"text"`
-	Regex     string `yaml:"regex"`
-	URL       string `yaml:"url"`
-	JSON      bool   `yaml:"json"`
-	Path      string `yaml:"path"`
-	ReDirect  bool   `yaml:"reDirect"`
+	InnerType MessageType `json:"-"`
+	UserID    string      `yaml:"userID" json:"userID"`
+	GroupID   string      `yaml:"groupID" json:"groupID"`
+	Type      string      `yaml:"type" json:"type"`
+	Text      string      `yaml:"text" json:"text"`
+	Regex     string      `yaml:"regex" json:"regex"`
+	URL       string      `yaml:"url" json:"url"`
+	JSON      bool        `yaml:"json" json:"json"`
+	Path      string      `yaml:"path" json:"path"`
+	ReDirect  bool        `yaml:"reDirect" json:"reDirect"`
 	FaceID    int64
-	FaceName  string `yaml:"faceName"`
+	FaceName  string `yaml:"faceName" json:"faceName"`
 }
 
 // NewMessageFromGoMiraiMessage 从 gomirai.Message 中 构造一个 Message
@@ -55,23 +55,23 @@ func NewMessageFromGoMiraiMessage(goMiraiEvent gomirai.InEvent, goMiraiMessage g
 	var messageDetail MessageDetail
 	switch goMiraiMessage.Type {
 	case "Image":
-		messageDetail.innerType = MessageTypeImage
+		messageDetail.InnerType = MessageTypeImage
 		messageDetail.URL = goMiraiMessage.URL
 	case "Plain":
-		messageDetail.innerType = MessageTypePlain
+		messageDetail.InnerType = MessageTypePlain
 		messageDetail.Text = goMiraiMessage.Text
 	case "Face":
-		messageDetail.innerType = MessageTypeFace
+		messageDetail.InnerType = MessageTypeFace
 		messageDetail.FaceID = goMiraiMessage.FaceID
 		messageDetail.FaceName = goMiraiMessage.Name
 	case "Xml":
-		messageDetail.innerType = MessageTypeXML
+		messageDetail.InnerType = MessageTypeXML
 		messageDetail.Text = goMiraiMessage.XML
 	case "At":
-		messageDetail.innerType = MessageTypeAt
+		messageDetail.InnerType = MessageTypeAt
 		messageDetail.UserID = CastInt64ToString(goMiraiMessage.Target)
 	case "AtAll":
-		messageDetail.innerType = MessageTypeAtAll
+		messageDetail.InnerType = MessageTypeAtAll
 		messageDetail.GroupID = CastInt64ToString(goMiraiEvent.SenderGroup.Group.ID)
 	default:
 		return message, fmt.Errorf("%s 是不受支持的消息类型", goMiraiMessage.Type)
@@ -94,7 +94,7 @@ func (message *Message) DeepCopy() Message {
 
 func (detail *MessageDetail) DeepCopy() MessageDetail {
 	return MessageDetail{
-		innerType: detail.innerType,
+		InnerType: detail.InnerType,
 		Type:      detail.Type,
 		Text:      detail.Text,
 		Regex:     detail.Regex,
@@ -127,7 +127,7 @@ func (message *Message) ToGoMiraiMessageList() ([]gomirai.Message, bool) {
 func (detail *MessageDetail) ToGoMiraiMessage() (gomirai.Message, bool) {
 	detail.CompleteType()
 	var goMiraiMessage gomirai.Message
-	switch detail.innerType {
+	switch detail.InnerType {
 	case MessageTypePlain:
 		goMiraiMessage.Type = "Plain"
 		if detail.Text == "" {
@@ -192,19 +192,19 @@ func (message *Message) CompleteContent(event Event) {
 func (detail *MessageDetail) CompleteType() {
 	switch detail.Type {
 	case "Plain":
-		detail.innerType = MessageTypePlain
+		detail.InnerType = MessageTypePlain
 	case "Image":
-		detail.innerType = MessageTypeImage
+		detail.InnerType = MessageTypeImage
 	case "Face":
-		detail.innerType = MessageTypeFace
+		detail.InnerType = MessageTypeFace
 	case "Xml":
-		detail.innerType = MessageTypeXML
+		detail.InnerType = MessageTypeXML
 	case "At":
-		detail.innerType = MessageTypeAt
+		detail.InnerType = MessageTypeAt
 	case "AtAll":
-		detail.innerType = MessageTypeAtAll
+		detail.InnerType = MessageTypeAtAll
 	}
-	switch detail.innerType {
+	switch detail.InnerType {
 	case MessageTypePlain:
 		detail.Type = "Plain"
 	case MessageTypeImage:

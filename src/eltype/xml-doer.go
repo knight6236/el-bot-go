@@ -42,8 +42,8 @@ func (doer *XMLDoer) getWillBeSentMessageList() {
 			willBeSentMessage.IsQuote = config.Do.Message.IsQuote
 			willBeSentMessage.Sender = config.Do.Message.Sender.DeepCopy()
 			willBeSentMessage.Receiver = config.Do.Message.Receiver.DeepCopy()
-			willBeSentMessageDetail.innerType = MessageTypeXML
-			if doMessageDetail.innerType == MessageTypeXML {
+			willBeSentMessageDetail.InnerType = MessageTypeXML
+			if doMessageDetail.InnerType == MessageTypeXML {
 				xml, isReplace := doer.replaceStrByPreDefVarMap(doMessageDetail.Text)
 				if isReplace {
 					willBeSentMessageDetail.Text = xml

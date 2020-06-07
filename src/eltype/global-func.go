@@ -1,9 +1,12 @@
 package eltype
 
 import (
-	"el-bot-go/src/gomirai"
 	"fmt"
+	"io/ioutil"
+	"os/exec"
 	"strconv"
+
+	"github.com/ADD-SP/gomirai"
 )
 
 func CastInt64ToString(nativeValue int64) string {
@@ -18,7 +21,7 @@ func CastStringToInt64(str string) int64 {
 	return value
 }
 
-func mergeConfigList(dest *[]Config, lists ...[]Config) {
+func MergeConfigList(dest *[]Config, lists ...[]Config) {
 	for _, list := range lists {
 		for _, item := range list {
 			*dest = append(*dest, item)
@@ -26,7 +29,7 @@ func mergeConfigList(dest *[]Config, lists ...[]Config) {
 	}
 }
 
-func mergeGoMiraiMessageList(dest *[]gomirai.Message, lists ...[]gomirai.Message) {
+func MergeGoMiraiMessageList(dest *[]gomirai.Message, lists ...[]gomirai.Message) {
 	for _, list := range lists {
 		for _, item := range list {
 			*dest = append(*dest, item)
@@ -34,7 +37,7 @@ func mergeGoMiraiMessageList(dest *[]gomirai.Message, lists ...[]gomirai.Message
 	}
 }
 
-func parseJsonObj(obj interface{}, callDepth int) ([]string, []string) {
+func ParseJsonObj(obj interface{}, callDepth int) ([]string, []string) {
 	var varNameList []string
 	var valueList []string
 	if callDepth >= 20 {
@@ -68,7 +71,7 @@ func parseJsonObj(obj interface{}, callDepth int) ([]string, []string) {
 	case []interface{}:
 		for i := 0; i < len(obj.([]interface{})); i++ {
 			name := fmt.Sprintf("[%d]", i)
-			tmp0, tmp1 := parseJsonObj(obj.([]interface{})[i], callDepth+1)
+			tmp0, tmp1 := ParseJsonObj(obj.([]interface{})[i], callDepth+1)
 			for j := 0; j < len(tmp0); j++ {
 				if tmp0[j] == "" || tmp0[j][0] == '[' {
 					varNameList = append(varNameList, fmt.Sprintf("%s%s", name, tmp0[j]))
@@ -81,7 +84,7 @@ func parseJsonObj(obj interface{}, callDepth int) ([]string, []string) {
 	case map[string]interface{}:
 		for key, value := range obj.(map[string]interface{}) {
 			name := key
-			tmp0, tmp1 := parseJsonObj(value, callDepth+1)
+			tmp0, tmp1 := ParseJsonObj(value, callDepth+1)
 			for j := 0; j < len(tmp0); j++ {
 				if tmp0[j] == "" || tmp0[j][0] == '[' {
 					varNameList = append(varNameList, fmt.Sprintf("%s%s", name, tmp0[j]))
@@ -93,4 +96,32 @@ func parseJsonObj(obj interface{}, callDepth int) ([]string, []string) {
 		}
 	}
 	return varNameList, valueList
+}
+
+func ExecCommand(command string, args ...string) (string, error) {
+	var cmd *exec.Cmd
+	switch len(args) {
+	case 1:
+		cmd = exec.Command(command, args[0])
+	case 2:
+		cmd = exec.Command(command, args[0], args[1])
+	case 3:
+		cmd = exec.Command(command, args[0], args[1], args[2])
+	case 4:
+		cmd = exec.Command(command, args[0], args[1], args[2], args[3])
+
+	}
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return "", err
+	}
+	defer stdout.Close()
+	if err := cmd.Start(); err != nil {
+		return "", err
+	}
+	if opBytes, err := ioutil.ReadAll(stdout); err != nil {
+		return "", err
+	} else {
+		return string(opBytes), nil
+	}
 }

@@ -47,8 +47,8 @@ func (doer *ImageDoer) getWillBeSentMessageList() {
 			willBeSentMessage.IsQuote = config.Do.Message.IsQuote
 			willBeSentMessage.Sender = config.Do.Message.Sender.DeepCopy()
 			willBeSentMessage.Receiver = config.Do.Message.Receiver.DeepCopy()
-			willBeSentMessageDetail.innerType = MessageTypeImage
-			if doMessageDetail.innerType == MessageTypeImage {
+			willBeSentMessageDetail.InnerType = MessageTypeImage
+			if doMessageDetail.InnerType == MessageTypeImage {
 				if doMessageDetail.URL != "" {
 					if doMessageDetail.ReDirect == true {
 						filename, err := doer.downloadImage(doMessageDetail.URL)

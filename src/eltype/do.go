@@ -1,10 +1,10 @@
 package eltype
 
 type Do struct {
-	IsCount       bool        `yaml:"isCount"`
-	Message       Message     `yaml:"message"`
-	OperationList []Operation `yaml:"operation"`
-	ControlList   []Control   `yaml:"control"`
+	IsCount       bool        `yaml:"isCount" json:"isCount"`
+	Message       Message     `yaml:"message" json:"message"`
+	OperationList []Operation `yaml:"operation" json:"operation"`
+	ControlList   []Control   `yaml:"control" json:"control"`
 }
 
 func (do *Do) AddOperation(operation Operation) {

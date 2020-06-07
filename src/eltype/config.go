@@ -15,19 +15,19 @@ const (
 )
 
 type Config struct {
-	innerID int64
-	Type    ConfigType
-	IsCount bool
-	RssURL  string `yaml:"url"`
-	CountID string `yaml:"countID"`
-	Cron    string `yaml:"cron"`
-	When    When   `yaml:"when"`
-	Do      Do     `yaml:"do"`
+	InnerID int64      `json:"-"`
+	Type    ConfigType `json:"-"`
+	IsCount bool       `json:"-"`
+	RssURL  string     `yaml:"url" json:"url"`
+	CountID string     `yaml:"countID" json:"countID"`
+	Cron    string     `yaml:"cron" json:"cron"`
+	When    When       `yaml:"when" json:"when"`
+	Do      Do         `yaml:"do" json:"do"`
 }
 
 func (config *Config) DeepCopy() Config {
 	newConfig := Config{
-		innerID: config.innerID,
+		InnerID: config.InnerID,
 		Type:    config.Type,
 		IsCount: config.IsCount,
 		Cron:    config.Cron,

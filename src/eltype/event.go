@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"el-bot-go/src/gomirai"
+	"github.com/ADD-SP/gomirai"
 )
 
 // EventType 事件类型
@@ -99,18 +99,18 @@ func (event *Event) makeGroupMessageEventTemplate(goMiraiEvent gomirai.InEvent) 
 	event.Type = EventTypeGroupMessage
 	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.SenderGroup.Group.ID))
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.SenderGroup.ID))
-	event.addPerDefVar("el-sender-group-id", goMiraiEvent.SenderGroup.Group.ID)
-	event.addPerDefVar("el-sender-group-name", goMiraiEvent.OperatorGroup.Group.Name)
-	event.addPerDefVar("el-sender-user-id", goMiraiEvent.SenderGroup.ID)
-	event.addPerDefVar("el-sender-user-name", goMiraiEvent.SenderGroup.MemberName)
+	event.AddPerDefVar("el-sender-group-id", goMiraiEvent.SenderGroup.Group.ID)
+	event.AddPerDefVar("el-sender-group-name", goMiraiEvent.OperatorGroup.Group.Name)
+	event.AddPerDefVar("el-sender-user-id", goMiraiEvent.SenderGroup.ID)
+	event.AddPerDefVar("el-sender-user-name", goMiraiEvent.SenderGroup.MemberName)
 	return nil
 }
 
 func (event *Event) makeFriendMessageEventTemplate(goMiraiEvent gomirai.InEvent) error {
 	event.Type = EventTypeFriendMessage
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.SenderFriend.ID))
-	event.addPerDefVar("el-sender-user-id", goMiraiEvent.SenderFriend.ID)
-	event.addPerDefVar("el-sender-user-name", goMiraiEvent.SenderFriend.NickName)
+	event.AddPerDefVar("el-sender-user-id", goMiraiEvent.SenderFriend.ID)
+	event.AddPerDefVar("el-sender-user-name", goMiraiEvent.SenderFriend.NickName)
 	return nil
 }
 
@@ -121,7 +121,7 @@ func (event *Event) makeMemberMuteEventTemplate(goMiraiEvent gomirai.InEvent) er
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
 	operation := Operation{
-		innerType:    OperationTypeMemberMute,
+		InnerType:    OperationTypeMemberMute,
 		GroupID:      CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID),
 		GroupName:    goMiraiEvent.OperatorGroup.Group.Name,
 		OperatorID:   goMiraiEvent.OperatorGroup.ID,
@@ -131,20 +131,20 @@ func (event *Event) makeMemberMuteEventTemplate(goMiraiEvent gomirai.InEvent) er
 		Second:       CastInt64ToString(goMiraiEvent.DurationSeconds),
 	}
 
-	event.addPerDefVar("el-sender-group-id", operation.GroupID)
-	event.addPerDefVar("el-sender-group-name", operation.GroupName)
+	event.AddPerDefVar("el-sender-group-id", operation.GroupID)
+	event.AddPerDefVar("el-sender-group-name", operation.GroupName)
 
-	event.addPerDefVar("el-operator-group-id", operation.GroupID)
-	event.addPerDefVar("el-operator-group-name", operation.GroupName)
-	event.addPerDefVar("el-operator-user-id", operation.OperatorID)
-	event.addPerDefVar("el-operator-user-name", operation.OperatorName)
+	event.AddPerDefVar("el-operator-group-id", operation.GroupID)
+	event.AddPerDefVar("el-operator-group-name", operation.GroupName)
+	event.AddPerDefVar("el-operator-user-id", operation.OperatorID)
+	event.AddPerDefVar("el-operator-user-name", operation.OperatorName)
 
-	event.addPerDefVar("el-target-group-id", operation.GroupID)
-	event.addPerDefVar("el-target-group-name", operation.GroupName)
-	event.addPerDefVar("el-target-user-id", operation.UserID)
-	event.addPerDefVar("el-target-user-name", operation.UserName)
+	event.AddPerDefVar("el-target-group-id", operation.GroupID)
+	event.AddPerDefVar("el-target-group-name", operation.GroupName)
+	event.AddPerDefVar("el-target-user-id", operation.UserID)
+	event.AddPerDefVar("el-target-user-name", operation.UserName)
 
-	event.addPerDefVar("el-mute-second-", operation.Second)
+	event.AddPerDefVar("el-mute-second-", operation.Second)
 
 	event.OperationList = append(event.OperationList, operation)
 	return nil
@@ -157,7 +157,7 @@ func (event *Event) makeMemberUnmuteEventTemplate(goMiraiEvent gomirai.InEvent) 
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
 	operation := Operation{
-		innerType:    OperationTypeMemberUnMute,
+		InnerType:    OperationTypeMemberUnMute,
 		GroupID:      CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID),
 		GroupName:    goMiraiEvent.OperatorGroup.Group.Name,
 		OperatorID:   goMiraiEvent.OperatorGroup.ID,
@@ -166,18 +166,18 @@ func (event *Event) makeMemberUnmuteEventTemplate(goMiraiEvent gomirai.InEvent) 
 		UserName:     goMiraiEvent.Member.MemberName,
 	}
 
-	event.addPerDefVar("el-sender-group-id", operation.GroupID)
-	event.addPerDefVar("el-sender-group-name", operation.GroupName)
+	event.AddPerDefVar("el-sender-group-id", operation.GroupID)
+	event.AddPerDefVar("el-sender-group-name", operation.GroupName)
 
-	event.addPerDefVar("el-operator-group-id", operation.GroupID)
-	event.addPerDefVar("el-operator-group-name", operation.GroupName)
-	event.addPerDefVar("el-operator-user-id", operation.OperatorID)
-	event.addPerDefVar("el-operator-user-name", operation.OperatorName)
+	event.AddPerDefVar("el-operator-group-id", operation.GroupID)
+	event.AddPerDefVar("el-operator-group-name", operation.GroupName)
+	event.AddPerDefVar("el-operator-user-id", operation.OperatorID)
+	event.AddPerDefVar("el-operator-user-name", operation.OperatorName)
 
-	event.addPerDefVar("el-target-group-id", operation.GroupID)
-	event.addPerDefVar("el-target-group-name", operation.GroupName)
-	event.addPerDefVar("el-target-user-id", operation.UserID)
-	event.addPerDefVar("el-target-user-name", operation.UserName)
+	event.AddPerDefVar("el-target-group-id", operation.GroupID)
+	event.AddPerDefVar("el-target-group-name", operation.GroupName)
+	event.AddPerDefVar("el-target-user-id", operation.UserID)
+	event.AddPerDefVar("el-target-user-name", operation.UserName)
 
 	event.OperationList = append(event.OperationList, operation)
 	return nil
@@ -197,23 +197,23 @@ func (event *Event) makeGroupMuteAllEventTemplate(goMiraiEvent gomirai.InEvent) 
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
 	operation := Operation{
-		innerType:    operationType,
+		InnerType:    operationType,
 		GroupID:      CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID),
 		GroupName:    goMiraiEvent.OperatorGroup.Group.Name,
 		OperatorID:   goMiraiEvent.OperatorGroup.ID,
 		OperatorName: goMiraiEvent.OperatorGroup.MemberName,
 	}
 
-	event.addPerDefVar("el-sender-group-id", operation.GroupID)
-	event.addPerDefVar("el-sender-group-name", operation.GroupName)
+	event.AddPerDefVar("el-sender-group-id", operation.GroupID)
+	event.AddPerDefVar("el-sender-group-name", operation.GroupName)
 
-	event.addPerDefVar("el-operator-group-id", operation.GroupID)
-	event.addPerDefVar("el-operator-group-name", operation.GroupName)
-	event.addPerDefVar("el-operator-user-id", operation.OperatorID)
-	event.addPerDefVar("el-operator-user-name", operation.OperatorName)
+	event.AddPerDefVar("el-operator-group-id", operation.GroupID)
+	event.AddPerDefVar("el-operator-group-name", operation.GroupName)
+	event.AddPerDefVar("el-operator-user-id", operation.OperatorID)
+	event.AddPerDefVar("el-operator-user-name", operation.OperatorName)
 
-	event.addPerDefVar("el-target-group-id", operation.GroupID)
-	event.addPerDefVar("el-target-group-name", operation.GroupName)
+	event.AddPerDefVar("el-target-group-id", operation.GroupID)
+	event.AddPerDefVar("el-target-group-name", operation.GroupName)
 
 	event.OperationList = append(event.OperationList, operation)
 	return nil
@@ -225,20 +225,20 @@ func (event *Event) makeMemberJoinEventTemplate(goMiraiEvent gomirai.InEvent) er
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
 	operation := Operation{
-		innerType: OperationTypeMemberJoin,
+		InnerType: OperationTypeMemberJoin,
 		GroupID:   CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID),
 		GroupName: goMiraiEvent.OperatorGroup.Group.Name,
 		UserID:    CastInt64ToString(goMiraiEvent.Member.ID),
 		UserName:  goMiraiEvent.Member.MemberName,
 	}
 
-	event.addPerDefVar("el-sender-group-id", operation.GroupID)
-	event.addPerDefVar("el-sender-group-name", operation.GroupName)
+	event.AddPerDefVar("el-sender-group-id", operation.GroupID)
+	event.AddPerDefVar("el-sender-group-name", operation.GroupName)
 
-	event.addPerDefVar("el-target-group-id", operation.GroupID)
-	event.addPerDefVar("el-target-group-name", operation.GroupName)
-	event.addPerDefVar("el-target-user-id", operation.UserID)
-	event.addPerDefVar("el-target-user-name", operation.UserName)
+	event.AddPerDefVar("el-target-group-id", operation.GroupID)
+	event.AddPerDefVar("el-target-group-name", operation.GroupName)
+	event.AddPerDefVar("el-target-user-id", operation.UserID)
+	event.AddPerDefVar("el-target-user-name", operation.UserName)
 
 	event.OperationList = append(event.OperationList, operation)
 	return nil
@@ -250,7 +250,7 @@ func (event *Event) makeMemberLeaveByKickEventTemplate(goMiraiEvent gomirai.InEv
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
 	operation := Operation{
-		innerType:    OperationTypeMemberLeaveByKick,
+		InnerType:    OperationTypeMemberLeaveByKick,
 		GroupID:      CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID),
 		GroupName:    goMiraiEvent.OperatorGroup.Group.Name,
 		OperatorID:   goMiraiEvent.OperatorGroup.ID,
@@ -259,18 +259,18 @@ func (event *Event) makeMemberLeaveByKickEventTemplate(goMiraiEvent gomirai.InEv
 		UserName:     goMiraiEvent.Member.MemberName,
 	}
 
-	event.addPerDefVar("el-sender-group-id", operation.GroupID)
-	event.addPerDefVar("el-sender-group-name", operation.GroupName)
+	event.AddPerDefVar("el-sender-group-id", operation.GroupID)
+	event.AddPerDefVar("el-sender-group-name", operation.GroupName)
 
-	event.addPerDefVar("el-operator-group-id", operation.GroupID)
-	event.addPerDefVar("el-operator-group-name", operation.GroupName)
-	event.addPerDefVar("el-operator-user-id", operation.OperatorID)
-	event.addPerDefVar("el-operator-user-name", operation.OperatorName)
+	event.AddPerDefVar("el-operator-group-id", operation.GroupID)
+	event.AddPerDefVar("el-operator-group-name", operation.GroupName)
+	event.AddPerDefVar("el-operator-user-id", operation.OperatorID)
+	event.AddPerDefVar("el-operator-user-name", operation.OperatorName)
 
-	event.addPerDefVar("el-target-group-id", operation.GroupID)
-	event.addPerDefVar("el-target-group-name", operation.GroupName)
-	event.addPerDefVar("el-target-user-id", operation.UserID)
-	event.addPerDefVar("el-target-user-name", operation.UserName)
+	event.AddPerDefVar("el-target-group-id", operation.GroupID)
+	event.AddPerDefVar("el-target-group-name", operation.GroupName)
+	event.AddPerDefVar("el-target-user-id", operation.UserID)
+	event.AddPerDefVar("el-target-user-name", operation.UserName)
 
 	event.OperationList = append(event.OperationList, operation)
 	return nil
@@ -282,20 +282,20 @@ func (event *Event) makeMemberLeaveByQuitEventTemplate(goMiraiEvent gomirai.InEv
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
 	operation := Operation{
-		innerType: OperationTypeMemberLeaveByQuit,
+		InnerType: OperationTypeMemberLeaveByQuit,
 		GroupID:   CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID),
 		GroupName: goMiraiEvent.OperatorGroup.Group.Name,
 		UserID:    CastInt64ToString(goMiraiEvent.Member.ID),
 		UserName:  goMiraiEvent.Member.MemberName,
 	}
 
-	event.addPerDefVar("el-sender-group-id", operation.GroupID)
-	event.addPerDefVar("el-sender-group-name", operation.GroupName)
+	event.AddPerDefVar("el-sender-group-id", operation.GroupID)
+	event.AddPerDefVar("el-sender-group-name", operation.GroupName)
 
-	event.addPerDefVar("el-target-group-id", operation.GroupID)
-	event.addPerDefVar("el-target-group-name", operation.GroupName)
-	event.addPerDefVar("el-target-user-id", operation.UserID)
-	event.addPerDefVar("el-target-user-name", operation.UserName)
+	event.AddPerDefVar("el-target-group-id", operation.GroupID)
+	event.AddPerDefVar("el-target-group-name", operation.GroupName)
+	event.AddPerDefVar("el-target-user-id", operation.UserID)
+	event.AddPerDefVar("el-target-user-name", operation.UserName)
 
 	event.OperationList = append(event.OperationList, operation)
 	return nil
@@ -318,22 +318,22 @@ func (event *Event) addSomePreDefVar() {
 	imageIndex := 0
 	for _, message := range event.MessageList {
 		for _, messageDetail := range message.DetailList {
-			if messageDetail.innerType == MessageTypePlain {
+			if messageDetail.InnerType == MessageTypePlain {
 				text = text + messageDetail.Text
-			} else if messageDetail.innerType == MessageTypeXML {
+			} else if messageDetail.InnerType == MessageTypeXML {
 				xml = xml + messageDetail.Text
-			} else if messageDetail.innerType == MessageTypeImage {
-				event.addPerDefVar(fmt.Sprintf("el-message-image-url-%d", imageIndex), messageDetail.URL)
+			} else if messageDetail.InnerType == MessageTypeImage {
+				event.AddPerDefVar(fmt.Sprintf("el-message-image-url-%d", imageIndex), messageDetail.URL)
 				imageIndex++
 			}
 		}
 	}
-	event.addPerDefVar("\\n", "\n")
-	event.addPerDefVar("el-message-text", text)
-	event.addPerDefVar("el-message-xml", xml)
+	event.AddPerDefVar("\\n", "\n")
+	event.AddPerDefVar("el-message-text", text)
+	event.AddPerDefVar("el-message-xml", xml)
 }
 
-func (event *Event) addPerDefVar(varName string, value interface{}) {
+func (event *Event) AddPerDefVar(varName string, value interface{}) {
 	switch value.(type) {
 	case string:
 		event.PreDefVarMap[varName] = value.(string)

@@ -1,9 +1,10 @@
 package eltype
 
 import (
-	"el-bot-go/src/gomirai"
 	"fmt"
 	"strings"
+
+	"github.com/ADD-SP/gomirai"
 )
 
 // OperationType 操作/事件类型
@@ -29,20 +30,20 @@ const (
 )
 
 type Operation struct {
-	innerType    OperationType
-	Type         string `yaml:"type"`
-	GroupID      string `yaml:"groupID"`
-	GroupName    string
-	OperatorID   int64
-	OperatorName string
-	UserID       string `yaml:"userID"`
+	InnerType    OperationType `json:"-"`
+	Type         string        `yaml:"type" json:"type"`
+	GroupID      string        `yaml:"groupID" json:"groupID"`
+	GroupName    string        `json:"-"`
+	OperatorID   int64         `json:"-"`
+	OperatorName string        `json:"-"`
+	UserID       string        `yaml:"userID" json:"userID"`
 	UserName     string
-	Second       string `yaml:"second"`
+	Second       string `yaml:"second" json:"second"`
 }
 
 func (operation *Operation) ToGoMiraiMessage() (gomirai.Message, bool) {
 	var goMiraimessage gomirai.Message
-	switch operation.innerType {
+	switch operation.InnerType {
 	case OperationTypeAt:
 		goMiraimessage.Type = "At"
 		userID := CastStringToInt64(operation.UserID)
@@ -96,27 +97,27 @@ func (operation *Operation) CompleteType() {
 	if operation.Type != "" {
 		switch operation.Type {
 		case "At":
-			operation.innerType = OperationTypeAt
+			operation.InnerType = OperationTypeAt
 		case "AtAll":
-			operation.innerType = OperationTypeAtAll
+			operation.InnerType = OperationTypeAtAll
 		case "MemberMute":
-			operation.innerType = OperationTypeMemberMute
+			operation.InnerType = OperationTypeMemberMute
 		case "MemberUnMute":
-			operation.innerType = OperationTypeMemberUnMute
+			operation.InnerType = OperationTypeMemberUnMute
 		case "GroupMuteAll":
-			operation.innerType = OperationTypeGroupMuteAll
+			operation.InnerType = OperationTypeGroupMuteAll
 		case "GroupUnMuteAll":
-			operation.innerType = OperationTypeGroupUnMuteAll
+			operation.InnerType = OperationTypeGroupUnMuteAll
 		case "MemberJoin":
-			operation.innerType = OperationTypeMemberJoin
+			operation.InnerType = OperationTypeMemberJoin
 		case "MemberLeaveByKick":
-			operation.innerType = OperationTypeMemberLeaveByKick
+			operation.InnerType = OperationTypeMemberLeaveByKick
 		case "MemberLeaveByQuit":
-			operation.innerType = OperationTypeMemberLeaveByQuit
+			operation.InnerType = OperationTypeMemberLeaveByQuit
 		}
 	}
 
-	switch operation.innerType {
+	switch operation.InnerType {
 	case OperationTypeAt:
 		operation.Type = "At"
 	case OperationTypeAtAll:
@@ -140,7 +141,7 @@ func (operation *Operation) CompleteType() {
 
 func (operation *Operation) DeepCopy() Operation {
 	return Operation{
-		innerType:    operation.innerType,
+		InnerType:    operation.InnerType,
 		Type:         operation.Type,
 		GroupID:      operation.GroupID,
 		GroupName:    operation.GroupName,

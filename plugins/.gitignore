@@ -1,0 +1,6 @@
+*.bin
+*.exe
+*.py
+*.jar
+*.js
+!/javaScript/ElpsyCN-echo.js

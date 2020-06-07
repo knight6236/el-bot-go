@@ -40,16 +40,16 @@ func (doer *OperationDoer) getWillBeSentMessageList() {
 	// 	for _, doOperation := range config.Do.OperationList {
 	// 		var willBeSentMessage Message
 	// 		var willBeSentMessageDetail MessageDetail
-	// 		switch doOperation.innerType {
+	// 		switch doOperation.InnerType {
 	// 		case OperationTypeAt:
 	// 			willBeSentMessage.Receiver.AddGroupID(doOperation.GroupID)
 	// 			willBeSentMessage.Receiver.AddUserID(doOperation.UserID)
-	// 			willBeSentMessageDetail.innerType = MessageTypeAt
+	// 			willBeSentMessageDetail.InnerType = MessageTypeAt
 	// 			willBeSentMessageDetail.GroupID = doOperation.GroupID
 	// 			willBeSentMessageDetail.UserID = doOperation.UserID
 	// 		case OperationTypeAtAll:
 	// 			willBeSentMessage.Receiver.AddGroupID(doOperation.GroupID)
-	// 			willBeSentMessageDetail.innerType = MessageTypeAtAll
+	// 			willBeSentMessageDetail.InnerType = MessageTypeAtAll
 	// 			willBeSentMessageDetail.GroupID = doOperation.GroupID
 	// 		default:
 	// 			continue
@@ -64,13 +64,13 @@ func (doer *OperationDoer) getSendedOperationList() {
 	for _, config := range doer.configHitList {
 		for _, doOperation := range config.Do.OperationList {
 			var operation Operation
-			switch doOperation.innerType {
+			switch doOperation.InnerType {
 			case OperationTypeAt:
 				operation = doOperation.DeepCopy()
 			case OperationTypeAtAll:
 				operation = doOperation.DeepCopy()
 			case OperationTypeMemberMute:
-				operation.innerType = OperationTypeMemberMute
+				operation.InnerType = OperationTypeMemberMute
 				groupID, isReplace := doer.replaceStrByPreDefVarMap(doOperation.GroupID)
 				if !isReplace {
 					operation.GroupID = doOperation.GroupID
@@ -85,7 +85,7 @@ func (doer *OperationDoer) getSendedOperationList() {
 
 				operation.Second = doOperation.Second
 			case OperationTypeMemberUnMute:
-				operation.innerType = OperationTypeMemberUnMute
+				operation.InnerType = OperationTypeMemberUnMute
 				groupID, isReplace := doer.replaceStrByPreDefVarMap(doOperation.GroupID)
 				if !isReplace {
 					operation.GroupID = doOperation.GroupID
@@ -98,14 +98,14 @@ func (doer *OperationDoer) getSendedOperationList() {
 				}
 				operation.UserID = userID
 			case OperationTypeGroupMuteAll:
-				operation.innerType = OperationTypeGroupMuteAll
+				operation.InnerType = OperationTypeGroupMuteAll
 				groupID, isReplace := doer.replaceStrByPreDefVarMap(doOperation.GroupID)
 				if !isReplace {
 					operation.GroupID = doOperation.GroupID
 				}
 				operation.GroupID = groupID
 			case OperationTypeGroupUnMuteAll:
-				operation.innerType = OperationTypeGroupUnMuteAll
+				operation.InnerType = OperationTypeGroupUnMuteAll
 				groupID, isReplace := doer.replaceStrByPreDefVarMap(doOperation.GroupID)
 				if !isReplace {
 					operation.GroupID = doOperation.GroupID

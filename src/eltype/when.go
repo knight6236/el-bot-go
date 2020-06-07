@@ -1,8 +1,8 @@
 package eltype
 
 type When struct {
-	Message       Message     `yaml:"message"`
-	OperationList []Operation `yaml:"operation"`
+	Message       Message     `yaml:"message" json:"message"`
+	OperationList []Operation `yaml:"operation" json:"operation"`
 }
 
 func (when *When) AddOperation(operation Operation) {

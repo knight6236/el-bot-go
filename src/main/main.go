@@ -2,13 +2,14 @@ package main
 
 import (
 	"el-bot-go/src/eltype"
-	"el-bot-go/src/gomirai"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/ADD-SP/gomirai"
 )
 
 func main() {
@@ -19,6 +20,8 @@ func main() {
 	eltype.DataRoot = os.Getenv("DATA_ROOT")
 	eltype.DefaultConfigFileName = os.Getenv("DEFAULT_CONFIG_FILE_NAME")
 	eltype.RssDataFileName = os.Getenv("RSS_DATA_FILE_NAME")
+	eltype.PlguinFolder = os.Getenv("PLUGIN_FOLDER")
+	eltype.PythonCommand = os.Getenv("PYCMD")
 
 	switch len(os.Args) {
 	case 0:
