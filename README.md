@@ -1,6 +1,6 @@
 # el-bot-go
 
-![docs](https://github.com/ElpsyCN/el-bot-docs/workflows/docs/badge.svg)
+[![docs](https://github.com/ElpsyCN/el-bot-docs/workflows/docs/badge.svg)](https://docs.bot.elpsy.cn)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/ElpsyCN/el-bot-go)
 [![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/ElpsyCN/el-bot-go?color=blue&include_prereleases)](https://github.com/ElpsyCN/el-bot-go/releases)
 [![QQ Group](https://img.shields.io/badge/qq%20group-707408530-12B7F5)](https://shang.qq.com/wpa/qunwpa?idkey=5b0eef3e3256ce23981f3b0aa2457175c66ca9194efd266fd0e9a7dbe43ed653)
