@@ -9,13 +9,12 @@ import (
 
 // PlainHandler 判断是否命中和表情有关的配置
 // @property	configList		[]Config			要判断的配置列表
-// @property	messageList		[]Message			要判断的消息列表
 // @property	operationList	[]Operation			要判断的配置列表
 // @property	configHitList	[]Config			命中的配置列表
 // @property	preDefVarMap	map[string]string	预定义变量 Map
 type PlainHandler struct {
 	configList    []Config
-	messageList   []Message
+	message       Message
 	configHitList []Config
 	operationList []Operation
 	preDefVarMap  *map[string]string
@@ -26,11 +25,11 @@ type PlainHandler struct {
 // @param	messageList		[]Message			要判断的消息列表
 // @param	operationList	[]Operation			要判断的配置列表
 // @param	preDefVarMap	map[string]string	预定义变量 Map
-func NewPlainHandler(configList []Config, messageList []Message, operationList []Operation,
+func NewPlainHandler(configList []Config, message Message, operationList []Operation,
 	preDefVarMap *map[string]string) (IHandler, error) {
 	var handler PlainHandler
 	handler.configList = configList
-	handler.messageList = messageList
+	handler.message = message
 	handler.preDefVarMap = preDefVarMap
 	handler.searchHitConfig()
 	return handler, nil
@@ -56,14 +55,12 @@ func (handler *PlainHandler) checkText(detail MessageDetail) bool {
 	if detail.Text == "" {
 		return false
 	}
-	for _, message := range handler.messageList {
-		for _, messageDetail := range message.DetailList {
-			if messageDetail.Text == detail.Text {
-				return true
-			}
+	for _, messageDetail := range handler.message.DetailList {
+		if messageDetail.Text == detail.Text {
+			return true
 		}
-
 	}
+
 	return false
 }
 
@@ -79,11 +76,10 @@ func (handler *PlainHandler) checkRegex(detail MessageDetail) bool {
 
 	var buf bytes.Buffer
 
-	for _, message := range handler.messageList {
-		for _, messageDetail := range message.DetailList {
-			if messageDetail.InnerType == MessageTypePlain && messageDetail.Text != "" {
-				buf.WriteString(messageDetail.Text)
-			}
+	for _, messageDetail := range handler.message.DetailList {
+		if messageDetail.InnerType == MessageTypePlain && messageDetail.Text != "" {
+			buf.WriteString(messageDetail.Text)
+
 		}
 	}
 

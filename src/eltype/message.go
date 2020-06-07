@@ -27,6 +27,7 @@ const (
 )
 
 type Message struct {
+	At         bool            `yaml:"at" json:"at"`
 	IsQuote    bool            `yaml:"quote" json:"quote"`
 	Sender     Sender          `yaml:"sender" json:"sender"`
 	Receiver   Receiver        `yaml:"receiver" json:"receiver"`
@@ -50,38 +51,46 @@ type MessageDetail struct {
 
 // NewMessageFromGoMiraiMessage 从 gomirai.Message 中 构造一个 Message
 // @param	goMiraiMessage	gomirai.Message
-func NewMessageFromGoMiraiMessage(goMiraiEvent gomirai.InEvent, goMiraiMessage gomirai.Message) (Message, error) {
+func NewMessageFromGoMiraiMessage(goMiraiEvent gomirai.InEvent) (Message, error) {
 	var message Message
-	var messageDetail MessageDetail
-	switch goMiraiMessage.Type {
-	case "Image":
-		messageDetail.InnerType = MessageTypeImage
-		messageDetail.URL = goMiraiMessage.URL
-	case "Plain":
-		messageDetail.InnerType = MessageTypePlain
-		messageDetail.Text = goMiraiMessage.Text
-	case "Face":
-		messageDetail.InnerType = MessageTypeFace
-		messageDetail.FaceID = goMiraiMessage.FaceID
-		messageDetail.FaceName = goMiraiMessage.Name
-	case "Xml":
-		messageDetail.InnerType = MessageTypeXML
-		messageDetail.Text = goMiraiMessage.XML
-	case "At":
-		messageDetail.InnerType = MessageTypeAt
-		messageDetail.UserID = CastInt64ToString(goMiraiMessage.Target)
-	case "AtAll":
-		messageDetail.InnerType = MessageTypeAtAll
-		messageDetail.GroupID = CastInt64ToString(goMiraiEvent.SenderGroup.Group.ID)
-	default:
-		return message, fmt.Errorf("%s 是不受支持的消息类型", goMiraiMessage.Type)
+	for _, goMiraiMessage := range goMiraiEvent.MessageChain {
+		var messageDetail MessageDetail
+		switch goMiraiMessage.Type {
+		case "Image":
+			messageDetail.InnerType = MessageTypeImage
+			messageDetail.URL = goMiraiMessage.URL
+		case "Plain":
+			messageDetail.InnerType = MessageTypePlain
+			messageDetail.Text = goMiraiMessage.Text
+		case "Face":
+			messageDetail.InnerType = MessageTypeFace
+			messageDetail.FaceID = goMiraiMessage.FaceID
+			messageDetail.FaceName = goMiraiMessage.Name
+		case "Xml":
+			messageDetail.InnerType = MessageTypeXML
+			messageDetail.Text = goMiraiMessage.XML
+		case "At":
+			messageDetail.InnerType = MessageTypeAt
+			messageDetail.UserID = CastInt64ToString(goMiraiMessage.Target)
+			if QQ == goMiraiMessage.Target {
+				message.At = true
+			}
+		case "AtAll":
+			messageDetail.InnerType = MessageTypeAtAll
+			messageDetail.GroupID = CastInt64ToString(goMiraiEvent.SenderGroup.Group.ID)
+		default:
+			continue
+			// return message, fmt.Errorf("%s 是不受支持的消息类型", goMiraiMessage.Type)
+		}
+		message.AddDetail(messageDetail)
 	}
-	message.AddDetail(messageDetail)
+
 	return message, nil
 }
 
 func (message *Message) DeepCopy() Message {
 	newMessage := Message{
+		At:       message.At,
 		Sender:   message.Sender.DeepCopy(),
 		Receiver: message.Receiver.DeepCopy(),
 		IsQuote:  message.IsQuote,

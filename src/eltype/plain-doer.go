@@ -16,7 +16,7 @@ import (
 // @property	preDefVarMap		map[string]string	预定义变量Map
 type PlainDoer struct {
 	configHitList       []Config
-	recivedMessageList  []Message
+	recivedMessage      Message
 	willBeSentMessage   []Message
 	willBeSentOperation []Operation
 	willBeSentControl   []Control
@@ -28,10 +28,10 @@ type PlainDoer struct {
 // @param	recivedMessageList	[]Message			接收到的消息列表
 // @param	sendedMessageList	[]Message			将要发送的消息列表
 // @param	preDefVarMap		map[string]string	预定义变量Map
-func NewPlainDoer(configHitList []Config, recivedMessageList []Message, preDefVarMap map[string]string) (IDoer, error) {
+func NewPlainDoer(configHitList []Config, recivedMessage Message, preDefVarMap map[string]string) (IDoer, error) {
 	var doer PlainDoer
 	doer.configHitList = configHitList
-	doer.recivedMessageList = recivedMessageList
+	doer.recivedMessage = recivedMessage
 	doer.preDefVarMap = preDefVarMap
 	doer.getWillBeSentMessageList()
 	return doer, nil

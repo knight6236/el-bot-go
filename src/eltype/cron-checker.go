@@ -32,10 +32,10 @@ func (checker *CronChecker) Start() {
 	go checker.start()
 }
 
-func (checker *CronChecker) Stop() {
+func (checker *CronChecker) Destory() {
 	checker.cron.Stop()
-	checker.Signal <- SingalTypeStop
-	checker.Signal <- SingalTypeStop
+	checker.Signal <- Destory
+	checker.Signal <- Destory
 }
 
 func (checker *CronChecker) start() {
@@ -49,7 +49,7 @@ func (checker *CronChecker) start() {
 	checker.cron.Start()
 	select {
 	case sigalType := <-checker.Signal:
-		if sigalType == SingalTypeStop {
+		if sigalType == Destory {
 			return
 		}
 	}

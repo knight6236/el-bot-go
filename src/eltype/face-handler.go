@@ -8,7 +8,7 @@ package eltype
 // @property	preDefVarMap	map[string]string	预定义变量 Map
 type FaceHandler struct {
 	configList    []Config
-	messageList   []Message
+	message       Message
 	operationList []Operation
 	configHitList []Config
 	preDefVarMap  *map[string]string
@@ -19,11 +19,11 @@ type FaceHandler struct {
 // @param	messageList		[]Message			要判断的消息列表
 // @param	operationList	[]Operation			要判断的配置列表
 // @param	preDefVarMap	map[string]string	预定义变量 Map
-func NewFaceHandler(configList []Config, messageList []Message, operationList []Operation,
+func NewFaceHandler(configList []Config, message Message, operationList []Operation,
 	preDefVarMap *map[string]string) (IHandler, error) {
 	var handler FaceHandler
 	handler.configList = configList
-	handler.messageList = messageList
+	handler.message = message
 	handler.preDefVarMap = preDefVarMap
 	handler.searchHitConfig()
 	return handler, nil
@@ -35,17 +35,16 @@ func (handler *FaceHandler) searchHitConfig() {
 	TOP_LOOP:
 		continue
 	SECOND_LOOP:
-		for _, message := range handler.messageList {
-			for _, messageDetail := range message.DetailList {
-				for _, whenMessageDetail := range config.When.Message.DetailList {
-					if messageDetail.InnerType == MessageTypeFace &&
-						whenMessageDetail.InnerType == MessageTypeFace &&
-						whenMessageDetail.FaceName == messageDetail.FaceName {
-						handler.configHitList = append(handler.configHitList, config)
-						goto TOP_LOOP
-					}
+		for _, messageDetail := range handler.message.DetailList {
+			for _, whenMessageDetail := range config.When.Message.DetailList {
+				if messageDetail.InnerType == MessageTypeFace &&
+					whenMessageDetail.InnerType == MessageTypeFace &&
+					whenMessageDetail.FaceName == messageDetail.FaceName {
+					handler.configHitList = append(handler.configHitList, config)
+					goto TOP_LOOP
 				}
 			}
+
 		}
 	}
 }

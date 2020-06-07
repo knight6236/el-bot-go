@@ -3,7 +3,8 @@ package eltype
 type SingalType int
 
 const (
-	SingalTypeStop SingalType = iota
+	Stop SingalType = iota
+	Destory
 )
 
 var DataRoot = "../../data"
@@ -15,3 +16,4 @@ var DefaultConfigFileName string = "default.yml"
 var ImageFolder string = "../../mirai/plugins/MiraiAPIHTTP/images"
 var PlguinFolder string = "../../plugins"
 var PythonCommand string = "python"
+var QQ int64

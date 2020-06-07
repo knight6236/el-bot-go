@@ -35,10 +35,10 @@ func (monitor *FreqMonitor) Start() {
 	go monitor.autoClear()
 }
 
-func (monitor *FreqMonitor) Stop() {
+func (monitor *FreqMonitor) Destory() {
 	monitor.cron.Stop()
-	monitor.Singal <- SingalTypeStop
-	monitor.Singal <- SingalTypeStop
+	monitor.Singal <- Destory
+	monitor.Singal <- Destory
 }
 
 func (monitor *FreqMonitor) Commit(configHit Config) {
@@ -122,7 +122,7 @@ func (monitor *FreqMonitor) autoClear() {
 	monitor.cron.Start()
 	select {
 	case signalType := <-monitor.Singal:
-		if signalType == SingalTypeStop {
+		if signalType == Destory {
 			return
 		}
 	}

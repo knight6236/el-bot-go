@@ -27,10 +27,10 @@ type ConfigReader struct {
 
 // NewConfigReader 使用配置文件路径构造一个 ConfigReader
 // @param	filePath	string			配置文件路径
-func NewConfigReader(folder string) ConfigReader {
-	var reader ConfigReader
+func NewConfigReader(folder string) (*ConfigReader, error) {
+	reader := new(ConfigReader)
 	reader.folder = folder
-	return reader
+	return reader, nil
 }
 
 func (reader *ConfigReader) Load(isDebug bool) {

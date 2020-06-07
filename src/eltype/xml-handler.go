@@ -8,7 +8,7 @@ package eltype
 // @property	preDefVarMap	map[string]string	预定义变量 Map
 type XMLHandler struct {
 	configList    []Config
-	messageList   []Message
+	message       Message
 	configHitList []Config
 	operationList []Operation
 	preDefVarMap  *map[string]string
@@ -19,11 +19,11 @@ type XMLHandler struct {
 // @param	messageList		[]Message			要判断的消息列表
 // @param	operationList	[]Operation			要判断的配置列表
 // @param	preDefVarMap	map[string]string	预定义变量 Map
-func NewXMLHandler(configList []Config, messageList []Message, operationList []Operation,
+func NewXMLHandler(configList []Config, message Message, operationList []Operation,
 	preDefVarMap *map[string]string) (IHandler, error) {
 	var handler XMLHandler
 	handler.configList = configList
-	handler.messageList = messageList
+	handler.message = message
 	handler.preDefVarMap = preDefVarMap
 	handler.searchHitConfig()
 	return handler, nil
@@ -32,13 +32,12 @@ func NewXMLHandler(configList []Config, messageList []Message, operationList []O
 func (handler *XMLHandler) searchHitConfig() {
 	for _, config := range handler.configList {
 		for _, whenMessageDetail := range config.When.Message.DetailList {
-			for _, message := range handler.messageList {
-				for _, messageDetail := range message.DetailList {
-					if messageDetail.InnerType == MessageTypeXML &&
-						whenMessageDetail.InnerType == MessageTypeXML {
-						handler.configHitList = append(handler.configHitList, config)
-					}
+			for _, messageDetail := range handler.message.DetailList {
+				if messageDetail.InnerType == MessageTypeXML &&
+					whenMessageDetail.InnerType == MessageTypeXML {
+					handler.configHitList = append(handler.configHitList, config)
 				}
+
 			}
 		}
 	}

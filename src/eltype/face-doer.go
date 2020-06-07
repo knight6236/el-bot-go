@@ -15,7 +15,7 @@ import (
 // @property	preDefVarMap		map[string]string	预定义变量Map
 type FaceDoer struct {
 	configHitList       []Config
-	recivedMessageList  []Message
+	recivedMessage      Message
 	willBeSentMessage   []Message
 	willBeSentOperation []Operation
 	willBeSentControl   []Control
@@ -26,10 +26,10 @@ type FaceDoer struct {
 // @param	configHitList		[]Config			命中的配置列表
 // @param	recivedMessageList	[]Message			接收到的消息列表
 // @param	preDefVarMap		map[string]string	预定义变量 Map
-func NewFaceDoer(configHitList []Config, recivedMessageList []Message, preDefVarMap map[string]string) (IDoer, error) {
+func NewFaceDoer(configHitList []Config, recivedMessage Message, preDefVarMap map[string]string) (IDoer, error) {
 	var doer FaceDoer
 	doer.configHitList = configHitList
-	doer.recivedMessageList = recivedMessageList
+	doer.recivedMessage = recivedMessage
 	doer.preDefVarMap = preDefVarMap
 	doer.getWillBeSentMessageList()
 	return doer, nil

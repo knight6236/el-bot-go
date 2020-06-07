@@ -17,7 +17,7 @@ import (
 // @property	preDefVarMap		map[string]string	预定义变量Map
 type ImageDoer struct {
 	configHitList       []Config
-	recivedMessageList  []Message
+	recivedMessage      Message
 	willBeSentMessage   []Message
 	willBeSentOperation []Operation
 	willBeSentControl   []Control
@@ -30,10 +30,10 @@ type ImageDoer struct {
 // @param	sendedMessageList	[]Message			将要发送的消息列表
 // @property	sendedOperationList	[]Operation			将要执行的动作列表
 // @param	preDefVarMap		map[string]string	预定义变量Map
-func NewImageDoer(configHitList []Config, recivedMessageList []Message, preDefVarMap map[string]string) (IDoer, error) {
+func NewImageDoer(configHitList []Config, recivedMessage Message, preDefVarMap map[string]string) (IDoer, error) {
 	var doer ImageDoer
 	doer.configHitList = configHitList
-	doer.recivedMessageList = recivedMessageList
+	doer.recivedMessage = recivedMessage
 	doer.preDefVarMap = preDefVarMap
 	doer.getWillBeSentMessageList()
 	return doer, nil

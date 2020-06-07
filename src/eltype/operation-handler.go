@@ -8,7 +8,7 @@ package eltype
 // @property	preDefVarMap	map[string]string	预定义变量 Map
 type OperationHandler struct {
 	configList    []Config
-	messageList   []Message
+	message       Message
 	operationList []Operation
 	configHitList []Config
 	preDefVarMap  *map[string]string
@@ -19,7 +19,7 @@ type OperationHandler struct {
 // @param	messageList		[]Message			要判断的消息列表
 // @param	operationList	[]Operation			要判断的配置列表
 // @param	preDefVarMap	map[string]string	预定义变量 Map
-func NewOperationHandler(configList []Config, messageList []Message, operationList []Operation,
+func NewOperationHandler(configList []Config, message Message, operationList []Operation,
 	preDefVarMap *map[string]string) (IHandler, error) {
 	var handler OperationHandler
 	handler.configList = configList

@@ -66,14 +66,15 @@ func (compiler *Compiler) Compile() {
 
 func (compiler *Compiler) callPlugin(configMap map[string]interface{}) {
 	for _, plugin := range compiler.pluginReader.PluginList {
-		obj := configMap[plugin.ConfigKeyword].(map[interface{}]interface{})
-		jsonMap := make(map[string]interface{})
-		for key, value := range obj {
-			jsonMap[key.(string)] = value
-		}
+		obj := configMap[plugin.ConfigKeyword]
 		if obj == nil {
 			continue
 		}
+		jsonMap := make(map[string]interface{})
+		for key, value := range obj.(map[interface{}]interface{}) {
+			jsonMap[key.(string)] = value
+		}
+
 		jsonStr, err := json.Marshal(jsonMap)
 		var ret string
 		switch plugin.Type {

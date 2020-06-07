@@ -19,6 +19,8 @@ import (
 // @property	bot				*gomirai.Bot	机器人
 type Controller struct {
 	isSuspend         bool
+	firstFolder       string
+	configStack       *Stack
 	blockedGroupIDSet map[string]bool
 	blockedUserIDSet  map[string]bool
 	controlMute       sync.RWMutex
@@ -30,11 +32,11 @@ type Controller struct {
 	bot               *gomirai.Bot
 }
 
-var handlerConstructor = [...]func(configList []Config, messageList []Message, operationList []Operation,
+var handlerConstructor = [...]func(configList []Config, message Message, operationList []Operation,
 	preDefVarMap *map[string]string) (IHandler, error){
 	NewPlainHandler, NewImageHandler, NewOperationHandler, NewFaceHandler, NewXMLHandler}
 
-var doerConstructor = [...]func(configHitList []Config, recivedMessageList []Message,
+var doerConstructor = [...]func(configHitList []Config, recivedMessage Message,
 	preDefVarMap map[string]string) (IDoer, error){
 	NewPlainDoer, NewImageDoer, NewOperationDoer, NewFaceDoer, NewXMLDoer, NewControlDoer}
 
@@ -43,7 +45,9 @@ var doerConstructor = [...]func(configHitList []Config, recivedMessageList []Mes
 func NewController(configReader *ConfigReader, bot *gomirai.Bot) *Controller {
 	controller := new(Controller)
 	controller.configReader = configReader
+	controller.firstFolder = configReader.folder
 	controller.bot = bot
+	controller.configStack, _ = NewStack()
 	controller.blockedGroupIDSet = make(map[string]bool)
 	controller.blockedUserIDSet = make(map[string]bool)
 	controller.cronChecker, _ = NewCronChecker(configReader.CronConfigList)
@@ -100,35 +104,39 @@ func (controller *Controller) getConfigRelatedList(event Event) []Config {
 	switch event.Type {
 	case EventTypeGroupMessage:
 		MergeConfigList(&configList,
-			controller.getConfigRelatedConfigList(event.Type, controller.configReader.GlobalConfigList, event.Sender),
-			controller.getConfigRelatedConfigList(event.Type, controller.configReader.GroupConfigList, event.Sender))
+			controller.getConfigRelatedConfigList(event, controller.configReader.GlobalConfigList),
+			controller.getConfigRelatedConfigList(event, controller.configReader.GroupConfigList))
 	case EventTypeFriendMessage:
 		MergeConfigList(&configList,
-			controller.getConfigRelatedConfigList(event.Type, controller.configReader.GlobalConfigList, event.Sender),
-			controller.getConfigRelatedConfigList(event.Type, controller.configReader.FriendConfigList, event.Sender))
+			controller.getConfigRelatedConfigList(event, controller.configReader.GlobalConfigList),
+			controller.getConfigRelatedConfigList(event, controller.configReader.FriendConfigList))
 	default:
 		MergeConfigList(&configList,
-			controller.getConfigRelatedConfigList(event.Type, controller.configReader.GlobalConfigList, event.Sender),
-			controller.getConfigRelatedConfigList(event.Type, controller.configReader.GroupConfigList, event.Sender))
+			controller.getConfigRelatedConfigList(event, controller.configReader.GlobalConfigList),
+			controller.getConfigRelatedConfigList(event, controller.configReader.GroupConfigList))
 	}
 	controller.configMute.RUnlock()
 	return configList
 }
 
-func (controller *Controller) getConfigRelatedConfigList(eventType EventType, configList []Config, sender Sender) []Config {
+func (controller *Controller) getConfigRelatedConfigList(event Event, configList []Config) []Config {
 	controller.configMute.RLock()
 	var ret []Config
 	for _, config := range configList {
+		if config.When.Message.At && !event.Message.At {
+			continue
+		}
+
 		if (config.When.Message.Sender.UserIDList == nil || len(config.When.Message.Sender.UserIDList) == 0) &&
 			(config.When.Message.Sender.GroupIDList == nil || len(config.When.Message.Sender.GroupIDList) == 0) {
 			ret = append(ret, config)
 			continue
 		}
 
-		switch eventType {
+		switch event.Type {
 		case EventTypeFriendMessage:
 			for _, friendID := range config.When.Message.Sender.UserIDList {
-				if friendID == sender.UserIDList[0] {
+				if friendID == event.Sender.UserIDList[0] {
 					ret = append(ret, config)
 					goto LOOP_END
 				}
@@ -136,7 +144,7 @@ func (controller *Controller) getConfigRelatedConfigList(eventType EventType, co
 
 		default:
 			for _, groupID := range config.When.Message.Sender.GroupIDList {
-				if groupID == sender.GroupIDList[0] {
+				if groupID == event.Sender.GroupIDList[0] {
 					ret = append(ret, config)
 					goto LOOP_END
 				}
@@ -154,7 +162,7 @@ func (controller *Controller) getConfigHitList(event Event, configRelatedList []
 	configSet := make(map[int64]bool)
 	var configHitList []Config
 	for i := 0; i < len(handlerConstructor); i++ {
-		handler, err := (handlerConstructor[i](configRelatedList, event.MessageList, event.OperationList, &event.PreDefVarMap))
+		handler, err := (handlerConstructor[i](configRelatedList, event.Message, event.OperationList, &event.PreDefVarMap))
 		if err != nil {
 			continue
 		}
@@ -224,7 +232,7 @@ func (controller *Controller) sendMessageAndOperation(event Event, configHitList
 	var willBeSentOperaitonList []Operation
 	var willBeSentControlList []Control
 	for i := 0; i < len(doerConstructor); i++ {
-		doer, err := (doerConstructor[i](configHitList, event.MessageList, event.PreDefVarMap))
+		doer, err := (doerConstructor[i](configHitList, event.Message, event.PreDefVarMap))
 		if err != nil {
 			continue
 		}
@@ -362,21 +370,76 @@ func (controller *Controller) sendOperation(operation Operation) {
 	}
 }
 
-func (controller *Controller) sendControl(control Control) {
-	controller.configMute.Lock()
-	defer controller.configMute.Unlock()
+func (controller *Controller) EnterConfig(folder string) {
+	controller.configStack.Push(controller.configReader.folder)
+	controller.switchConfig(folder, false)
+	log.Printf("已经切换到新的配置: %s", folder)
+}
 
+func (controller *Controller) BackToPrevConfig() {
+	folder := controller.configStack.Pop()
+	if folder == "" {
+		log.Println("配置栈不平衡，请检查配置文件。已经恢复到启动时的配置。")
+	}
+	controller.switchConfig(folder, false)
+	log.Printf("已经回到上一个配置: %s", folder)
+}
+
+func (controller *Controller) switchConfig(folder string, clearStack bool) {
+	controller.configMute.Lock()
+	controller.cronChecker.Destory()
+	controller.rssListener.Destory()
+	controller.freqMonitor.Destory()
+	controller.configReader, _ = NewConfigReader(folder)
+	controller.cronChecker, _ = NewCronChecker(controller.configReader.CronConfigList)
+	controller.rssListener, _ = NewRssListener(controller.configReader.RssConfigList)
+	controller.freqMonitor, _ = NewFreqMonitor(controller.configReader.FreqUpperLimit)
+	controller.configReader.Load(false)
+	controller.cronChecker.Start()
+	controller.rssListener.Start()
+	controller.freqMonitor.Start()
+	if clearStack {
+		controller.configStack, _ = NewStack()
+	}
+	controller.configMute.Unlock()
+}
+
+func (controller *Controller) reLoadConfig() {
+	controller.configMute.Lock()
+	controller.configReader.reLoad()
+	controller.cronChecker.Destory()
+	controller.rssListener.Destory()
+	controller.freqMonitor.Destory()
+	controller.cronChecker, _ = NewCronChecker(controller.configReader.CronConfigList)
+	controller.rssListener, _ = NewRssListener(controller.configReader.RssConfigList)
+	controller.freqMonitor, _ = NewFreqMonitor(controller.configReader.FreqUpperLimit)
+	controller.cronChecker.Start()
+	controller.rssListener.Start()
+	controller.freqMonitor.Start()
+	controller.configMute.Unlock()
+}
+
+func (controller *Controller) sendControl(control Control) {
 	switch control.InnerType {
 	case ControlTypeSuspend:
+		controller.configMute.Lock()
 		controller.isSuspend = true
+		controller.configMute.Unlock()
 	case ControlTypeActive:
+		controller.configMute.Lock()
 		controller.isSuspend = false
+		controller.configMute.Unlock()
 	case ControlTypeDestory:
 		log.Println("接收到终止指令，程序自动终止。")
 		os.Exit(0)
+	case ControlTypeEnterConfig:
+		controller.EnterConfig(control.Folder)
+	case ControlTypeBackToPrevConfig:
+		controller.BackToPrevConfig()
 	case ControlTypeRestart:
 		// TODO
 	case ControlTypeBlock:
+		controller.configMute.Lock()
 		for _, groupID := range control.GroupIDList {
 			if groupID == "" {
 				continue
@@ -389,7 +452,9 @@ func (controller *Controller) sendControl(control Control) {
 			}
 			controller.blockedUserIDSet[userID] = true
 		}
+		controller.configMute.Unlock()
 	case ControlTypeUnblock:
+		controller.configMute.Lock()
 		for _, groupID := range control.GroupIDList {
 			if groupID == "" {
 				continue
@@ -402,6 +467,7 @@ func (controller *Controller) sendControl(control Control) {
 			}
 			controller.blockedUserIDSet[userID] = false
 		}
+		controller.configMute.Unlock()
 	}
 }
 
@@ -450,9 +516,9 @@ func (controller *Controller) monitorFolder() {
 					if isChange {
 						controller.configMute.Lock()
 						controller.configReader.reLoad()
-						controller.cronChecker.Stop()
-						controller.rssListener.Stop()
-						controller.freqMonitor.Stop()
+						controller.cronChecker.Destory()
+						controller.rssListener.Destory()
+						controller.freqMonitor.Destory()
 						controller.cronChecker, _ = NewCronChecker(controller.configReader.CronConfigList)
 						controller.rssListener, _ = NewRssListener(controller.configReader.RssConfigList)
 						controller.freqMonitor, _ = NewFreqMonitor(controller.configReader.FreqUpperLimit)
@@ -481,7 +547,7 @@ func (controller *Controller) listenCron() {
 		case config := <-controller.cronChecker.WillBeSentConfig:
 			controller.sendMessageAndOperation(Event{PreDefVarMap: map[string]string{"\\n": "\n"}}, []Config{config})
 		case signalType := <-controller.cronChecker.Signal:
-			if signalType == SingalTypeStop {
+			if signalType == Destory {
 				return
 			}
 		}
@@ -495,7 +561,7 @@ func (controller *Controller) listenRss() {
 			event := <-controller.rssListener.WillBeUsedEvent
 			controller.sendMessageAndOperation(event, []Config{config})
 		case signalType := <-controller.rssListener.Signal:
-			if signalType == SingalTypeStop {
+			if signalType == Destory {
 				return
 			}
 		}

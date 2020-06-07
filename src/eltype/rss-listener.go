@@ -50,10 +50,10 @@ func (listener *RssListener) Start() {
 	go listener.start()
 }
 
-func (listener *RssListener) Stop() {
+func (listener *RssListener) Destory() {
 	listener.cron.Stop()
-	listener.Signal <- SingalTypeStop
-	listener.Signal <- SingalTypeStop
+	listener.Signal <- Destory
+	listener.Signal <- Destory
 }
 
 func (listener *RssListener) start() {
@@ -77,7 +77,7 @@ func (listener *RssListener) start() {
 	listener.cron.Start()
 	select {
 	case signalType := <-listener.Signal:
-		if signalType == SingalTypeStop {
+		if signalType == Destory {
 			return
 		}
 	}

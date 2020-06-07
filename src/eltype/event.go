@@ -44,7 +44,7 @@ type Event struct {
 	Type          EventType
 	MessageID     int64
 	Sender        Sender
-	MessageList   []Message
+	Message       Message
 	OperationList []Operation
 	PreDefVarMap  map[string]string
 }
@@ -302,30 +302,25 @@ func (event *Event) makeMemberLeaveByQuitEventTemplate(goMiraiEvent gomirai.InEv
 }
 
 func (event *Event) parseGoMiraiMessageListToMessageList(goMiraiEvent gomirai.InEvent) {
-	for _, goMiraiMessage := range goMiraiEvent.MessageChain {
-		message, err := NewMessageFromGoMiraiMessage(goMiraiEvent, goMiraiMessage)
-		if err != nil {
-			continue
-		}
-		message.CompleteType()
-		event.MessageList = append(event.MessageList, message)
+	message, err := NewMessageFromGoMiraiMessage(goMiraiEvent)
+	if err != nil {
+		return
 	}
+	event.Message = message
 }
 
 func (event *Event) addSomePreDefVar() {
 	text := ""
 	xml := ""
 	imageIndex := 0
-	for _, message := range event.MessageList {
-		for _, messageDetail := range message.DetailList {
-			if messageDetail.InnerType == MessageTypePlain {
-				text = text + messageDetail.Text
-			} else if messageDetail.InnerType == MessageTypeXML {
-				xml = xml + messageDetail.Text
-			} else if messageDetail.InnerType == MessageTypeImage {
-				event.AddPerDefVar(fmt.Sprintf("el-message-image-url-%d", imageIndex), messageDetail.URL)
-				imageIndex++
-			}
+	for _, detail := range event.Message.DetailList {
+		if detail.InnerType == MessageTypePlain {
+			text = text + detail.Text
+		} else if detail.InnerType == MessageTypeXML {
+			xml = xml + detail.Text
+		} else if detail.InnerType == MessageTypeImage {
+			event.AddPerDefVar(fmt.Sprintf("el-message-image-url-%d", imageIndex), detail.URL)
+			imageIndex++
 		}
 	}
 	event.AddPerDefVar("\\n", "\n")

@@ -17,10 +17,13 @@ const (
 	ControlTypeBlock
 	// ControlTypeUnblock 取消被屏蔽的一些消息接收者
 	ControlTypeUnblock
+	ControlTypeEnterConfig
+	ControlTypeBackToPrevConfig
 )
 
 type Control struct {
 	InnerType   ControlType `json:"-"`
+	Folder      string      `yaml:"folder" json:"folder"`
 	Type        string      `yaml:"type" json:"type"`
 	GroupIDList []string    `yaml:"group" json:"group"`
 	UserIDList  []string    `yaml:"user" json:"user"`
@@ -41,6 +44,10 @@ func (control *Control) CompleteType() {
 			control.InnerType = ControlTypeBlock
 		case "Unblock":
 			control.InnerType = ControlTypeUnblock
+		case "EnterConfig":
+			control.InnerType = ControlTypeEnterConfig
+		case "BackToPrevConfig":
+			control.InnerType = ControlTypeBackToPrevConfig
 		}
 	}
 
@@ -57,6 +64,10 @@ func (control *Control) CompleteType() {
 		control.Type = "Block"
 	case ControlTypeUnblock:
 		control.Type = "Unblock"
+	case ControlTypeEnterConfig:
+		control.Type = "EnterConfig"
+	case ControlTypeBackToPrevConfig:
+		control.Type = "BackToPrevConfig"
 	}
 }
 
@@ -75,6 +86,7 @@ func (control *Control) DeepCopy() Control {
 	var newControl Control
 	newControl.InnerType = control.InnerType
 	newControl.Type = control.Type
+	newControl.Folder = control.Folder
 	for _, groupID := range control.GroupIDList {
 		newControl.GroupIDList = append(newControl.GroupIDList, groupID)
 	}

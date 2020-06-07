@@ -32,7 +32,9 @@ func main() {
 		log.Println("缺少启动参数和「自定义配置目录（相对于 config 目录）」")
 	}
 
-	reader := eltype.NewConfigReader(os.Args[2])
+	eltype.QQ = eltype.CastStringToInt64(os.Args[1])
+
+	reader, _ := eltype.NewConfigReader(os.Args[2])
 	reader.Load(true)
 
 	address := "http://127.0.0.1:" + reader.Port
@@ -73,7 +75,7 @@ func main() {
 		}
 	}()
 
-	controller := eltype.NewController(&reader, bot)
+	controller := eltype.NewController(reader, bot)
 	fmt.Println("启动成功")
 
 	// 从bot.MessageChan获取收到事件并处理
