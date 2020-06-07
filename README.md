@@ -19,6 +19,7 @@ https://docs.bot.elpsy.cn
 
 只列出已经实现的功能，其它功能见[开发进度](https://github.com/ElpsyCN/el-bot-go/projects/1)。
 
++ 插件系统
 + 识别文本消息
   + 识别固定文本消息
   + 通过正则表达式识别文本消息
@@ -57,41 +58,6 @@ https://docs.bot.elpsy.cn
 + RSS 订阅
 + 配置触发次数统计
 + 反刷屏
-
-<!-- ## On Unix Like
-
-1. 安装Golang和JRE
-2. clone: `git clone git@github.com:ElpsyCN/el-bot-go.git`
-3. 下载依赖: `sh install.sh`
-4. 创建文件`plugins/MiraiAPIHTTP/setting.yml`并填入下列内容
-    ```yml
-    authKey: qwertyuiop
-    port: 8080
-    enableWebsocket: false
-    ```
-5. 启动 mirai-console: `sh start-console.sh`并按照提示进行操作
-6. 启动 el-bot-go: 在另一个 shell 运行脚本：
-    1. 执行命令`sh start-el-bot.sh 机器人QQ号 自定义配置目录（相对于 config 目录）`，如果不使用自定义配置则为`"default"`
-7. 如果执行上一步时出现安装 `package`失败的情况，可以进入 [release](https://github.com/ElpsyCN/el-bot-go/releases) 下载对应的二进制文件到 `bin` 下，来使用编译好程序，跳过 `package `的安装的环节。
-
-## On Windows（Cmd）
-
-1. 安装Golang和JRE
-2. clone: `git clone git@github.com:ElpsyCN/el-bot-go.git`
-3. 下载依赖：
-    + 下载[mirai-console-wrapper-1.2.0-all](https://github.com/mamoe/mirai-console-wrapper/releases/download/1.2.0/mirai-console-wrapper-1.2.0-all.jar)到项目根目录
-    + 下载[mirai-api-http-v1.7.1](https://github.com/mamoe/mirai-api-http/releases/download/v1.7.1/mirai-api-http-v1.7.1.jar)到`plugins/`
-4. 创建文件`plugins/MiraiAPIHTTP/setting.yml`并填入下列内容
-    ```yml
-    authKey: qwertyuiop
-    port: 8080
-    enableWebsocket: false
-    ```
-5. 启动 mirai-console: `start-console.bat`
-6. 启动 el-bot-go: 在另一个 cmd 执行命令 `start-el-bot-xxxx.bat 机器人的QQ号 配置所在路径`
-    1. 选择合适的 bat 脚本 `start-el-bot-xxx.bat`
-    2. 执行命令`start-el-bot-xxx.bat 机器人QQ号 自定义配置目录（相对于 config 目录）`，如果不使用自定义配置则为`"default"`
-7. 如果执行上一步时出现安装 `package`失败的情况，可以进入 [release](https://github.com/ElpsyCN/el-bot-go/releases) 下载对应的二进制文件到 `bin` 下，来使用编译好程序，跳过 `package `的安装的环节。 -->
 
 # 反馈
 
