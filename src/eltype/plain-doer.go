@@ -118,7 +118,7 @@ func (doer *PlainDoer) addPreDefVarByJSON(jsonByteList []byte) {
 		return
 	}
 
-	varNameList, valueList := ParseJsonObj(jsonMap, 0)
+	varNameList, valueList := ParseJsonObjToPreDefVar(jsonMap, 0)
 
 	for i := 0; i < len(varNameList); i++ {
 		doer.preDefVarMap[varNameList[i]] = valueList[i]

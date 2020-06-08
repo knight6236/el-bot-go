@@ -70,12 +70,10 @@ func (compiler *Compiler) callPlugin(configMap map[string]interface{}) {
 		if obj == nil {
 			continue
 		}
-		jsonMap := make(map[string]interface{})
-		for key, value := range obj.(map[interface{}]interface{}) {
-			jsonMap[key.(string)] = value
-		}
+		jsonMap := JsonParse(obj.(map[interface{}]interface{}), 0)
 
 		jsonStr, err := json.Marshal(jsonMap)
+		fmt.Println(string(jsonStr))
 		var ret string
 		switch plugin.Type {
 		case Binary:
@@ -109,6 +107,7 @@ func (compiler *Compiler) callPlugin(configMap map[string]interface{}) {
 		if err != nil {
 			continue
 		}
+		fmt.Println(ret)
 		var tempSourceConfig SourceConfig
 		json.Unmarshal([]byte(ret), &tempSourceConfig)
 		compiler.mergeSourceConfig(tempSourceConfig)

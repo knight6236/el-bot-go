@@ -37,7 +37,7 @@ func MergeGoMiraiMessageList(dest *[]gomirai.Message, lists ...[]gomirai.Message
 	}
 }
 
-func ParseJsonObj(obj interface{}, callDepth int) ([]string, []string) {
+func ParseJsonObjToPreDefVar(obj interface{}, callDepth int) ([]string, []string) {
 	var varNameList []string
 	var valueList []string
 	if callDepth >= 20 {
@@ -71,7 +71,7 @@ func ParseJsonObj(obj interface{}, callDepth int) ([]string, []string) {
 	case []interface{}:
 		for i := 0; i < len(obj.([]interface{})); i++ {
 			name := fmt.Sprintf("[%d]", i)
-			tmp0, tmp1 := ParseJsonObj(obj.([]interface{})[i], callDepth+1)
+			tmp0, tmp1 := ParseJsonObjToPreDefVar(obj.([]interface{})[i], callDepth+1)
 			for j := 0; j < len(tmp0); j++ {
 				if tmp0[j] == "" || tmp0[j][0] == '[' {
 					varNameList = append(varNameList, fmt.Sprintf("%s%s", name, tmp0[j]))
@@ -84,7 +84,7 @@ func ParseJsonObj(obj interface{}, callDepth int) ([]string, []string) {
 	case map[string]interface{}:
 		for key, value := range obj.(map[string]interface{}) {
 			name := key
-			tmp0, tmp1 := ParseJsonObj(value, callDepth+1)
+			tmp0, tmp1 := ParseJsonObjToPreDefVar(value, callDepth+1)
 			for j := 0; j < len(tmp0); j++ {
 				if tmp0[j] == "" || tmp0[j][0] == '[' {
 					varNameList = append(varNameList, fmt.Sprintf("%s%s", name, tmp0[j]))
@@ -96,6 +96,38 @@ func ParseJsonObj(obj interface{}, callDepth int) ([]string, []string) {
 		}
 	}
 	return varNameList, valueList
+}
+
+func JsonParse(obj interface{}, callDepth int) interface{} {
+	if callDepth >= 20 {
+		return nil
+	}
+	switch obj.(type) {
+	case []interface{}:
+		var ret []interface{}
+		for i := 0; i < len(obj.([]interface{})); i++ {
+			temp := JsonParse(obj.([]interface{})[i], callDepth+1)
+			ret = append(ret, temp)
+		}
+		return ret
+	case map[string]interface{}:
+		ret := make(map[string]interface{})
+		for key, value := range obj.(map[string]interface{}) {
+			temp := JsonParse(value, callDepth+1)
+			ret[key] = temp
+		}
+		return ret
+	case map[interface{}]interface{}:
+		ret := make(map[string]interface{})
+		for key, value := range obj.(map[interface{}]interface{}) {
+			temp := JsonParse(value, callDepth+1)
+			ret[key.(string)] = temp
+		}
+		return ret
+	case string, int, int8, int32, int64, bool, float32, float64:
+		return obj
+	}
+	return nil
 }
 
 func ExecCommand(command string, args ...string) (string, error) {
