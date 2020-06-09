@@ -19,7 +19,7 @@ https://docs.bot.elpsy.cn
 
 只列出已经实现的功能，其它功能见[开发进度](https://github.com/ElpsyCN/el-bot-go/projects/1)。
 
-+ 插件系统
+<!-- + 插件系统 -->
 + 识别文本消息
   + 识别固定文本消息
   + 通过正则表达式识别文本消息
