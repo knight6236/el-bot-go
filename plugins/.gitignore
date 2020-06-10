@@ -3,4 +3,4 @@
 *.py
 *.jar
 *.js
-!/javaScript/ElpsyCN-*.js
+!/compile/javaScript/ElpsyCN-*.js
