@@ -47,8 +47,8 @@ type Compiler struct {
 	folder       string
 }
 
-func NewCompiler(folder string) (Compiler, error) {
-	var compiler Compiler
+func NewCompiler(folder string) (*Compiler, error) {
+	compiler := new(Compiler)
 	compiler.pluginReader, _ = NewPluginReader()
 	compiler.folder = folder
 	return compiler, nil
@@ -66,6 +66,9 @@ func (compiler *Compiler) Compile() {
 
 func (compiler *Compiler) callPlugin(configMap map[string]interface{}) {
 	for _, plugin := range compiler.pluginReader.PluginMap {
+		if plugin.IsProcMsg {
+			continue
+		}
 		obj := configMap[plugin.ConfigKeyword]
 		if obj == nil {
 			continue

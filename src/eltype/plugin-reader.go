@@ -103,12 +103,15 @@ func (reader *PluginReader) ReadFolder(folder string, pluginType PluginType, isM
 	}
 
 	for _, fileInfo := range fileInfos {
+		if fileInfo.Name() == ".gitkeep" {
+			continue
+		}
 		keyword := ""
 		randKey := ""
 		if isMsgProc {
-			randKey = RandString(25)
+			randKey = RandStringBytesMaskImpr(25)
 			for !reader.randKeySet[randKey] {
-				randKey = RandString(25)
+				randKey = RandStringBytesMaskImpr(25)
 			}
 			reader.randKeySet[randKey] = true
 

@@ -6,12 +6,9 @@ import (
 	"math/rand"
 	"os/exec"
 	"strconv"
-	"time"
 
 	"github.com/ADD-SP/gomirai"
 )
-
-var r *rand.Rand = rand.New(rand.NewSource(time.Now().Unix()))
 
 func CastInt64ToString(nativeValue int64) string {
 	return strconv.FormatInt(nativeValue, 10)
@@ -163,12 +160,43 @@ func ExecCommand(command string, args ...string) (string, error) {
 	}
 }
 
-// RandString 生成随机长度的字符串
-func RandString(len int) string {
-	bytes := make([]byte, len)
-	for i := 0; i < len; i++ {
-		b := r.Intn(26) + 65
-		bytes[i] = byte(b)
+func Exec(command string, args ...string) error {
+	var cmd *exec.Cmd
+	switch len(args) {
+	case 1:
+		cmd = exec.Command(command, args[0])
+	case 2:
+		cmd = exec.Command(command, args[0], args[1])
+	case 3:
+		cmd = exec.Command(command, args[0], args[1], args[2])
+	case 4:
+		cmd = exec.Command(command, args[0], args[1], args[2], args[3])
+
 	}
-	return string(bytes)
+	return cmd.Start()
+}
+
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+const (
+	letterIdxBits = 6                    // 6 bits to represent a letter index
+	letterIdxMask = 1<<letterIdxBits - 1 // All 1-bits, as many as letterIdxBits
+	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
+)
+
+func RandStringBytesMaskImpr(n int) string {
+	b := make([]byte, n)
+	// A rand.Int63() generates 63 random bits, enough for letterIdxMax letters!
+	for i, cache, remain := n-1, rand.Int63(), letterIdxMax; i >= 0; {
+		if remain == 0 {
+			cache, remain = rand.Int63(), letterIdxMax
+		}
+		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
+			b[i] = letterBytes[idx]
+			i--
+		}
+		cache >>= letterIdxBits
+		remain--
+	}
+
+	return string(b)
 }

@@ -29,6 +29,7 @@ type Controller struct {
 	cronChecker       *CronChecker
 	rssListener       *RssListener
 	freqMonitor       *FreqMonitor
+	pluginServer      *PluginServer
 	bot               *gomirai.Bot
 }
 
@@ -53,12 +54,15 @@ func NewController(configReader *ConfigReader, bot *gomirai.Bot) *Controller {
 	controller.cronChecker, _ = NewCronChecker(configReader.CronConfigList)
 	controller.rssListener, _ = NewRssListener(configReader.RssConfigList)
 	controller.freqMonitor, _ = NewFreqMonitor(configReader.FreqUpperLimit)
+	controller.pluginServer, _ = NewPluginServer(configReader.Compiler.pluginReader)
 	controller.cronChecker.Start()
 	controller.rssListener.Start()
 	controller.freqMonitor.Start()
+	controller.pluginServer.Start()
 	go controller.monitorFolder()
 	go controller.listenCron()
 	go controller.listenRss()
+	go controller.listenPluginMessageAndOperation()
 	return controller
 }
 
@@ -86,6 +90,8 @@ func (controller *Controller) Commit(goMiraiEvent gomirai.InEvent) {
 	if err != nil {
 		return
 	}
+
+	controller.pluginServer.ReceivedEvent <- event
 
 	configRelatedList := controller.getConfigRelatedList(event)
 
@@ -564,6 +570,28 @@ func (controller *Controller) listenRss() {
 			if signalType == Destory {
 				return
 			}
+		}
+	}
+}
+
+func (controller *Controller) listenPluginMessageAndOperation() {
+	for true {
+		select {
+		case message := <-controller.pluginServer.WillBeSentMessage:
+			willBeSentGoMiraiMessageList, isSuccess := message.ToGoMiraiMessageList()
+			if isSuccess {
+				for _, groupID := range message.Receiver.GroupIDList {
+					controller.sendMessage(ReceiverTypeGroup, CastStringToInt64(groupID),
+						message.QuoteID, willBeSentGoMiraiMessageList)
+				}
+				for _, userID := range message.Receiver.UserIDList {
+					controller.sendMessage(ReceiverTypeUser, CastStringToInt64(userID),
+						message.QuoteID, willBeSentGoMiraiMessageList)
+				}
+			}
+		case operaiton := <-controller.pluginServer.WillBeSentOperation:
+			operaiton.CompleteType()
+			controller.sendOperation(operaiton)
 		}
 	}
 }
