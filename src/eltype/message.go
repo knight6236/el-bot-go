@@ -22,7 +22,9 @@ const (
 	MessageTypeEvent
 	// MessageTypeXML XML消息类型
 	MessageTypeXML
+	// MessageTypeAt At
 	MessageTypeAt
+	// MessageTypeAtAll AtAll
 	MessageTypeAtAll
 )
 

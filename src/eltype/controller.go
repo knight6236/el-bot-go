@@ -101,7 +101,7 @@ func (controller *Controller) Commit(goMiraiEvent gomirai.InEvent) {
 func (controller *Controller) getConfigRelatedList(event Event) []Config {
 	controller.configMute.RLock()
 	var configList []Config
-	switch event.Type {
+	switch event.InnerType {
 	case EventTypeGroupMessage:
 		MergeConfigList(&configList,
 			controller.getConfigRelatedConfigList(event, controller.configReader.GlobalConfigList),
@@ -133,7 +133,7 @@ func (controller *Controller) getConfigRelatedConfigList(event Event, configList
 			continue
 		}
 
-		switch event.Type {
+		switch event.InnerType {
 		case EventTypeFriendMessage:
 			for _, friendID := range config.When.Message.Sender.UserIDList {
 				if friendID == event.Sender.UserIDList[0] {

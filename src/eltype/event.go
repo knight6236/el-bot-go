@@ -41,16 +41,16 @@ const (
 // @property	OperationList	[]Operation			接收到的事件/操作列表
 // @property	PreDefVarMap	map[string]string	预定义变量 Map
 type Event struct {
-	Type          EventType
+	InnerType     EventType
+	Type          string `json:"type"`
 	MessageID     int64
-	Sender        Sender
-	Message       Message
-	OperationList []Operation
+	Sender        Sender      `json:"sender"`
+	Message       Message     `json:"message"`
+	OperationList []Operation `json:"operation"`
 	PreDefVarMap  map[string]string
 }
 
 // NewEventFromGoMiraiEvent 从 gomirai.InEvent 中构造一个 Event
-// @param	goMiraiEvent	gomirai.InEvent		事件
 func NewEventFromGoMiraiEvent(goMiraiEvent gomirai.InEvent) (Event, error) {
 	var event Event
 	event.PreDefVarMap = make(map[string]string)
@@ -98,7 +98,7 @@ func NewEventFromGoMiraiEvent(goMiraiEvent gomirai.InEvent) (Event, error) {
 }
 
 func (event *Event) makeGroupMessageEventTemplate(goMiraiEvent gomirai.InEvent) error {
-	event.Type = EventTypeGroupMessage
+	event.InnerType = EventTypeGroupMessage
 	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.SenderGroup.Group.ID))
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.SenderGroup.ID))
 	event.AddPerDefVar("el-sender-group-id", goMiraiEvent.SenderGroup.Group.ID)
@@ -109,7 +109,7 @@ func (event *Event) makeGroupMessageEventTemplate(goMiraiEvent gomirai.InEvent) 
 }
 
 func (event *Event) makeFriendMessageEventTemplate(goMiraiEvent gomirai.InEvent) error {
-	event.Type = EventTypeFriendMessage
+	event.InnerType = EventTypeFriendMessage
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.SenderFriend.ID))
 	event.AddPerDefVar("el-sender-user-id", goMiraiEvent.SenderFriend.ID)
 	event.AddPerDefVar("el-sender-user-name", goMiraiEvent.SenderFriend.NickName)
@@ -117,7 +117,7 @@ func (event *Event) makeFriendMessageEventTemplate(goMiraiEvent gomirai.InEvent)
 }
 
 func (event *Event) makeMemberMuteEventTemplate(goMiraiEvent gomirai.InEvent) error {
-	event.Type = EventTypeMemberMute
+	event.InnerType = EventTypeMemberMute
 	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID))
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.OperatorGroup.ID))
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
@@ -153,7 +153,7 @@ func (event *Event) makeMemberMuteEventTemplate(goMiraiEvent gomirai.InEvent) er
 }
 
 func (event *Event) makeMemberUnmuteEventTemplate(goMiraiEvent gomirai.InEvent) error {
-	event.Type = EventTypeMemberUnmute
+	event.InnerType = EventTypeMemberUnmute
 	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID))
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.OperatorGroup.ID))
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
@@ -188,10 +188,10 @@ func (event *Event) makeMemberUnmuteEventTemplate(goMiraiEvent gomirai.InEvent) 
 func (event *Event) makeGroupMuteAllEventTemplate(goMiraiEvent gomirai.InEvent) error {
 	var operationType OperationType
 	if goMiraiEvent.Origin.(bool) {
-		event.Type = EventTypeGroupUnMuteAll
+		event.InnerType = EventTypeGroupUnMuteAll
 		operationType = OperationTypeGroupUnMuteAll
 	} else {
-		event.Type = EventTypeGroupMuteAll
+		event.InnerType = EventTypeGroupMuteAll
 		operationType = OperationTypeGroupMuteAll
 	}
 	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID))
@@ -222,7 +222,7 @@ func (event *Event) makeGroupMuteAllEventTemplate(goMiraiEvent gomirai.InEvent) 
 }
 
 func (event *Event) makeMemberJoinEventTemplate(goMiraiEvent gomirai.InEvent) error {
-	event.Type = EventTypeMemberJoin
+	event.InnerType = EventTypeMemberJoin
 	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.Member.Group.ID))
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
@@ -247,7 +247,7 @@ func (event *Event) makeMemberJoinEventTemplate(goMiraiEvent gomirai.InEvent) er
 }
 
 func (event *Event) makeMemberLeaveByKickEventTemplate(goMiraiEvent gomirai.InEvent) error {
-	event.Type = EventTypeMemberLeaveByKick
+	event.InnerType = EventTypeMemberLeaveByKick
 	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.Member.Group.ID))
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
@@ -279,7 +279,7 @@ func (event *Event) makeMemberLeaveByKickEventTemplate(goMiraiEvent gomirai.InEv
 }
 
 func (event *Event) makeMemberLeaveByQuitEventTemplate(goMiraiEvent gomirai.InEvent) error {
-	event.Type = EventTypeMemberLeaveByQuit
+	event.InnerType = EventTypeMemberLeaveByQuit
 	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.Member.Group.ID))
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
@@ -340,6 +340,51 @@ func (event *Event) AddPerDefVar(varName string, value interface{}) {
 		event.PreDefVarMap[varName] = strconv.FormatInt(value.(int64), 10)
 	case float64:
 		event.PreDefVarMap[varName] = fmt.Sprintf("%.2f", value.(float64))
+	}
+}
+func (event *Event) CompleteType() {
+	if event.Type != "" {
+		switch event.Type {
+		case "GroupMessage":
+			event.InnerType = EventTypeGroupMessage
+		case "FriendMessage":
+			event.InnerType = EventTypeFriendMessage
+		case "GroupMuteAll":
+			event.InnerType = EventTypeGroupMuteAll
+		case "GroupUnMuteAll":
+			event.InnerType = EventTypeGroupUnMuteAll
+		case "MemberMute":
+			event.InnerType = EventTypeMemberMute
+		case "MemberUnmute":
+			event.InnerType = EventTypeMemberUnmute
+		case "MemberJoin":
+			event.InnerType = EventTypeMemberJoin
+		case "MemberLeaveByKick":
+			event.InnerType = EventTypeMemberLeaveByKick
+		case "MemberLeaveByQuit":
+			event.InnerType = EventTypeMemberLeaveByQuit
+		}
+	}
+
+	switch event.InnerType {
+	case EventTypeGroupMessage:
+		event.Type = "GroupMessage"
+	case EventTypeFriendMessage:
+		event.Type = "FriendMessage"
+	case EventTypeGroupMuteAll:
+		event.Type = "GroupMuteAll"
+	case EventTypeGroupUnMuteAll:
+		event.Type = "GroupUnMuteAll"
+	case EventTypeMemberMute:
+		event.Type = "MemberMute"
+	case EventTypeMemberUnmute:
+		event.Type = "MemberUnmute"
+	case EventTypeMemberJoin:
+		event.Type = "MemberJoin"
+	case EventTypeMemberLeaveByKick:
+		event.Type = "MemberLeaveByKick"
+	case EventTypeMemberLeaveByQuit:
+		event.Type = "MemberLeaveByQuit"
 	}
 }
 

@@ -11,6 +11,7 @@ require (
 	github.com/sirupsen/logrus v1.6.0 // indirect
 	golang.org/x/net v0.0.0-20200226121028-0de0cce0169b // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
+	gopkg.in/eapache/queue.v1 v1.1.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0
 )
 

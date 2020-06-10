@@ -62,7 +62,7 @@ func (receiver *Receiver) CompleteContent(event Event) {
 	}
 	if (receiver.GroupIDList == nil || len(receiver.GroupIDList) == 0) &&
 		(receiver.UserIDList == nil || len(receiver.UserIDList) == 0) {
-		switch event.Type {
+		switch event.InnerType {
 		case EventTypeFriendMessage:
 			receiver.UserIDList = append(receiver.UserIDList, event.Sender.UserIDList[0])
 		default:

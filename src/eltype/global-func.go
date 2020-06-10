@@ -3,11 +3,15 @@ package eltype
 import (
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os/exec"
 	"strconv"
+	"time"
 
 	"github.com/ADD-SP/gomirai"
 )
+
+var r *rand.Rand = rand.New(rand.NewSource(time.Now().Unix()))
 
 func CastInt64ToString(nativeValue int64) string {
 	return strconv.FormatInt(nativeValue, 10)
@@ -130,6 +134,7 @@ func JsonParse(obj interface{}, callDepth int) interface{} {
 	return nil
 }
 
+// ExecCommand 运行一个程序传入启动参数，并读取 stdout 作为返回值
 func ExecCommand(command string, args ...string) (string, error) {
 	var cmd *exec.Cmd
 	switch len(args) {
@@ -156,4 +161,14 @@ func ExecCommand(command string, args ...string) (string, error) {
 	} else {
 		return string(opBytes), nil
 	}
+}
+
+// RandString 生成随机长度的字符串
+func RandString(len int) string {
+	bytes := make([]byte, len)
+	for i := 0; i < len; i++ {
+		b := r.Intn(26) + 65
+		bytes[i] = byte(b)
+	}
+	return string(bytes)
 }
