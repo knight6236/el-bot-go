@@ -65,7 +65,7 @@ func (compiler *Compiler) Compile() {
 }
 
 func (compiler *Compiler) callPlugin(configMap map[string]interface{}) {
-	for _, plugin := range compiler.pluginReader.PluginList {
+	for _, plugin := range compiler.pluginReader.PluginMap {
 		obj := configMap[plugin.ConfigKeyword]
 		if obj == nil {
 			continue

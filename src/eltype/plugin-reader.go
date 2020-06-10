@@ -11,7 +11,8 @@ import (
 type PluginReader struct {
 	os         string
 	arch       string
-	PluginList []Plugin
+	PluginMap  map[string]Plugin
+	randKeySet map[string]bool
 	keywordSet map[string]bool
 }
 
@@ -114,13 +115,21 @@ func (reader *PluginReader) ReadFolder(folder string, pluginType PluginType, isM
 			}
 			reader.keywordSet[keyword] = true
 		}
+
+		randKey := RandString(25)
+		for !reader.randKeySet[randKey] {
+			randKey = RandString(25)
+		}
+		reader.randKeySet[randKey] = true
+
 		path := fmt.Sprintf("%s/%s", folder, fileInfo.Name())
 		plugin := Plugin{
 			Type:          pluginType,
 			Path:          path,
 			ConfigKeyword: keyword,
 			IsProcMsg:     isMsgProc,
+			RandKey:       randKey,
 		}
-		reader.PluginList = append(reader.PluginList, plugin)
+		reader.PluginMap[randKey] = plugin
 	}
 }

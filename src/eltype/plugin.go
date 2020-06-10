@@ -20,8 +20,8 @@ type Plugin struct {
 	Type PluginType
 	// IsProcMsg 是否为消息处理插件
 	IsProcMsg bool
-	// SessionKey 会话密钥
-	SessionKey string
+	// RandKey 会话密钥
+	RandKey string
 	// Path 插件路径
 	Path string
 	// ConfigKeyword 对应配置的顶级关键字
