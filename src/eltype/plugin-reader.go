@@ -25,32 +25,54 @@ func NewPluginReader() (*PluginReader, error) {
 }
 
 func (reader *PluginReader) ReadAllPlugin() {
+	compiledFolder := "compile"
+	msgProcFolder := "msgproc"
 	switch reader.os {
-	case "freebsd":
-		reader.ReadFolder(fmt.Sprintf("%s/%s/%s", PlguinFolder, reader.os, reader.arch), Binary)
-	case "linux":
-		reader.ReadFolder(fmt.Sprintf("%s/%s/%s", PlguinFolder, reader.os, reader.arch), Binary)
-	case "windows":
-		if reader.arch == "386" {
-			reader.ReadFolder(fmt.Sprintf("%s/%s/%s", PlguinFolder, reader.os, "386"), Binary)
-		} else {
-			reader.ReadFolder(fmt.Sprintf("%s/%s/%s", PlguinFolder, reader.os, "386"), Binary)
-			reader.ReadFolder(fmt.Sprintf("%s/%s/%s", PlguinFolder, reader.os, "amd64"), Binary)
-		}
-	case "darwin":
-		if reader.arch == "386" {
-			reader.ReadFolder(fmt.Sprintf("%s/%s/%s", PlguinFolder, reader.os, "386"), Binary)
-		} else {
-			reader.ReadFolder(fmt.Sprintf("%s/%s/%s", PlguinFolder, reader.os, "386"), Binary)
-			reader.ReadFolder(fmt.Sprintf("%s/%s/%s", PlguinFolder, reader.os, "amd64"), Binary)
+	case "freebsd", "linux":
+		reader.ReadFolder(
+			fmt.Sprintf("%s/%s/%s/%s", PlguinFolder, compiledFolder, reader.os, reader.arch),
+			PluginTypeBinary, false)
+		reader.ReadFolder(
+			fmt.Sprintf("%s/%s/%s/%s", PlguinFolder, msgProcFolder, reader.os, reader.arch),
+			PluginTypeBinary, true)
+	case "darwin", "windows":
+		reader.ReadFolder(
+			fmt.Sprintf("%s/%s/%s/%s", PlguinFolder, compiledFolder, reader.os, reader.arch),
+			PluginTypeBinary, false)
+		reader.ReadFolder(
+			fmt.Sprintf("%s/%s/%s/%s", PlguinFolder, msgProcFolder, reader.os, reader.arch),
+			PluginTypeBinary, true)
+
+		if reader.arch == "amd64" {
+			reader.ReadFolder(fmt.Sprintf("%s/%s/%s/%s", PlguinFolder, compiledFolder, reader.os, "amd64"),
+				PluginTypeBinary, false)
+			reader.ReadFolder(fmt.Sprintf("%s/%s/%s/%s", PlguinFolder, msgProcFolder, reader.os, "amd64"),
+				PluginTypeBinary, true)
 		}
 	}
-	reader.ReadFolder(fmt.Sprintf("%s/%s", PlguinFolder, "java"), Java)
-	reader.ReadFolder(fmt.Sprintf("%s/%s", PlguinFolder, "javaScript"), JavaScript)
-	reader.ReadFolder(fmt.Sprintf("%s/%s", PlguinFolder, "python"), Python)
+	reader.ReadFolder(
+		fmt.Sprintf("%s/%s/%s", PlguinFolder, compiledFolder, "java"),
+		PluginTypeJava, false)
+	reader.ReadFolder(
+		fmt.Sprintf("%s/%s/%s", PlguinFolder, msgProcFolder, "java"),
+		PluginTypeJava, true)
+
+	reader.ReadFolder(
+		fmt.Sprintf("%s/%s/%s", PlguinFolder, compiledFolder, "javaScript"),
+		PluginTypeJavaScript, false)
+	reader.ReadFolder(
+		fmt.Sprintf("%s/%s/%s", PlguinFolder, msgProcFolder, "javaScript"),
+		PluginTypeJavaScript, true)
+
+	reader.ReadFolder(
+		fmt.Sprintf("%s/%s/%s", PlguinFolder, compiledFolder, "python"),
+		PluginTypePython, false)
+	reader.ReadFolder(
+		fmt.Sprintf("%s/%s/%s", PlguinFolder, msgProcFolder, "python"),
+		PluginTypePython, true)
 }
 
-func (reader *PluginReader) ReadFolder(folder string, pluginType PluginType) {
+func (reader *PluginReader) ReadFolder(folder string, pluginType PluginType, isMsgProc bool) {
 	fileInfos, err := ioutil.ReadDir(folder)
 	if err != nil {
 		log.Println("PluginReader.ReadAllPlugin: " + err.Error())
@@ -58,17 +80,17 @@ func (reader *PluginReader) ReadFolder(folder string, pluginType PluginType) {
 	}
 	var regex *regexp.Regexp
 	switch pluginType {
-	case Binary:
+	case PluginTypeBinary:
 		if reader.os == "windows" {
 			regex, err = regexp.Compile("(.+?)\\-([^\\-]+)\\.exe")
 		} else {
 			regex, err = regexp.Compile("(.+?)\\-([^\\-]+)\\.bin")
 		}
-	case Java:
+	case PluginTypeJava:
 		regex, err = regexp.Compile("(.+?)\\-([^\\-]+)\\.jar")
-	case JavaScript:
+	case PluginTypeJavaScript:
 		regex, err = regexp.Compile("(.+?)\\-([^\\-]+)\\.js")
-	case Python:
+	case PluginTypePython:
 		regex, err = regexp.Compile("(.+?)\\-([^\\-]+)\\.py")
 	default:
 		return
@@ -80,20 +102,24 @@ func (reader *PluginReader) ReadFolder(folder string, pluginType PluginType) {
 	}
 
 	for _, fileInfo := range fileInfos {
-		matches := regex.FindStringSubmatch(fileInfo.Name())
-		if matches == nil {
-			continue
+		keyword := ""
+		if !isMsgProc {
+			matches := regex.FindStringSubmatch(fileInfo.Name())
+			if matches == nil {
+				continue
+			}
+			keyword := matches[2]
+			if reader.keywordSet[keyword] {
+				continue
+			}
+			reader.keywordSet[keyword] = true
 		}
-		keyword := matches[2]
-		if reader.keywordSet[keyword] {
-			continue
-		}
-		reader.keywordSet[keyword] = true
 		path := fmt.Sprintf("%s/%s", folder, fileInfo.Name())
 		plugin := Plugin{
 			Type:          pluginType,
 			Path:          path,
 			ConfigKeyword: keyword,
+			IsProcMsg:     isMsgProc,
 		}
 		reader.PluginList = append(reader.PluginList, plugin)
 	}

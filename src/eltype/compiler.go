@@ -76,25 +76,25 @@ func (compiler *Compiler) callPlugin(configMap map[string]interface{}) {
 		fmt.Println(string(jsonStr))
 		var ret string
 		switch plugin.Type {
-		case Binary:
+		case PluginTypeBinary:
 			if runtime.GOOS == "windows" {
 				ret, err = ExecCommand(plugin.Path, string(jsonStr))
 			} else {
 				ret, err = ExecCommand("/bin/bash", "-c", string(jsonStr))
 			}
-		case Java:
+		case PluginTypeJava:
 			if runtime.GOOS == "windows" {
 				ret, err = ExecCommand("java", "-jar", plugin.Path, string(jsonStr))
 			} else {
 				ret, err = ExecCommand("/bin/bash", "-c", fmt.Sprintf("java -jar %s %s", plugin.Path, string(jsonStr)))
 			}
-		case Python:
+		case PluginTypePython:
 			if runtime.GOOS == "windows" {
 				ret, err = ExecCommand("python", plugin.Path, string(jsonStr))
 			} else {
 				ret, err = ExecCommand("/bin/bash", "-c", fmt.Sprintf("%s %s %s", PythonCommand, plugin.Path, string(jsonStr)))
 			}
-		case JavaScript:
+		case PluginTypeJavaScript:
 			if runtime.GOOS == "windows" {
 				ret, err = ExecCommand("node", plugin.Path, string(jsonStr))
 			} else {
