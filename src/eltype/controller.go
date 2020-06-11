@@ -592,6 +592,9 @@ func (controller *Controller) listenPluginMessageAndOperation() {
 		case operaiton := <-controller.pluginServer.WillBeSentOperation:
 			operaiton.CompleteType()
 			controller.sendOperation(operaiton)
+		case control := <-controller.pluginServer.WillBeSentControl:
+			control.CompleteType()
+			controller.sendControl(control)
 		}
 	}
 }

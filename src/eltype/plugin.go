@@ -24,6 +24,8 @@ type Plugin struct {
 	RandKey string
 	// Path 插件路径
 	Path string
+	// Name 名称
+	Name string
 	// ConfigKeyword 对应配置的顶级关键字
 	ConfigKeyword string
 }

@@ -83,7 +83,7 @@ func (compiler *Compiler) callPlugin(configMap map[string]interface{}) {
 			if runtime.GOOS == "windows" {
 				ret, err = ExecCommand(plugin.Path, string(jsonStr))
 			} else {
-				ret, err = ExecCommand("/bin/bash", "-c", string(jsonStr))
+				ret, err = ExecCommand("/bin/bash", "-c", plugin.Path, string(jsonStr))
 			}
 		case PluginTypeJava:
 			if runtime.GOOS == "windows" {

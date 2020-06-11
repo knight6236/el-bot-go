@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"runtime"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -20,6 +21,7 @@ type PluginServer struct {
 	ReceivedEvent       chan Event
 	WillBeSentMessage   chan Message
 	WillBeSentOperation chan Operation
+	WillBeSentControl   chan Control
 	MsgQueue            map[string]chan []byte
 	Upgrader            websocket.Upgrader
 }
@@ -32,6 +34,7 @@ func NewPluginServer(pluginReader *PluginReader) (*PluginServer, error) {
 	server.MsgQueue = make(map[string]chan []byte)
 	server.WillBeSentMessage = make(chan Message, 64)
 	server.WillBeSentOperation = make(chan Operation, 64)
+	server.WillBeSentControl = make(chan Control, 64)
 	server.ReceivedEvent = make(chan Event, 64)
 	for key, _ := range pluginReader.randKeySet {
 		server.MsgQueue[key] = make(chan []byte, 64)
@@ -57,16 +60,16 @@ func (server *PluginServer) fetchEvent(w http.ResponseWriter, r *http.Request) {
 		message := <-server.MsgQueue[key]
 		err = c.WriteMessage(1, message)
 		if err != nil {
-			log.Printf("[Error] send event to plugin: %s\n", err.Error())
+			log.Printf("[Error] send event to plugin {%s}: %s\n", pluginName, err.Error())
 			break
 		}
-		log.Printf("[Info] send event to plugin: success\n")
+		log.Printf("[Info] send event to plugin {%s}: Success\n", pluginName)
 	}
 }
 
 func (server *PluginServer) sendMessage(w http.ResponseWriter, r *http.Request) {
 	key := r.URL.Query().Get("key")
-	pluginName := r.URL.Query().Get("name")
+	pluginName := server.pluginReader.PluginMap[key].Name
 	if !server.pluginReader.randKeySet[key] || pluginName == "" {
 		fmt.Fprint(w, "{\"code\":0, \"msg\":\"Wrong key or name\"}")
 		return
@@ -80,9 +83,10 @@ func (server *PluginServer) sendMessage(w http.ResponseWriter, r *http.Request) 
 	for {
 		_, msg, err := c.ReadMessage()
 		if err != nil {
-			log.Println("read:", err)
+			log.Printf("[Error] receive message from plugin {%s}: %s\n", pluginName, err.Error())
 			break
 		}
+		log.Printf("[Info] receive message from plugin {%s}: Success\n", pluginName)
 		var message Message
 		json.Unmarshal(msg, &message)
 		server.WillBeSentMessage <- message
@@ -91,7 +95,7 @@ func (server *PluginServer) sendMessage(w http.ResponseWriter, r *http.Request) 
 
 func (server *PluginServer) sendOperation(w http.ResponseWriter, r *http.Request) {
 	key := r.URL.Query().Get("key")
-	pluginName := r.URL.Query().Get("name")
+	pluginName := server.pluginReader.PluginMap[key].Name
 	if !server.pluginReader.randKeySet[key] || pluginName == "" {
 		fmt.Fprint(w, "{\"code\":0, \"msg\":\"Wrong key or name\"}")
 		return
@@ -105,18 +109,46 @@ func (server *PluginServer) sendOperation(w http.ResponseWriter, r *http.Request
 	for {
 		_, msg, err := c.ReadMessage()
 		if err != nil {
-			log.Println("read:", err)
+			log.Printf("[Error] receive operation from plugin {%s}: %s\n", pluginName, err.Error())
 			break
 		}
+		log.Printf("[Info] receive operation from plugin {%s}: Success\n", pluginName)
 		var operation Operation
 		json.Unmarshal(msg, &operation)
 		server.WillBeSentOperation <- operation
 	}
 }
 
+func (server *PluginServer) sendControl(w http.ResponseWriter, r *http.Request) {
+	key := r.URL.Query().Get("key")
+	pluginName := server.pluginReader.PluginMap[key].Name
+	if !server.pluginReader.randKeySet[key] || pluginName == "" {
+		fmt.Fprint(w, "{\"code\":0, \"msg\":\"Wrong key or name\"}")
+		return
+	}
+	c, err := server.Upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Print("upgrade:", err)
+		return
+	}
+	defer c.Close()
+	for {
+		_, msg, err := c.ReadMessage()
+		if err != nil {
+			log.Printf("[Error] receive control from plugin {%s}: %s\n", pluginName, err.Error())
+			break
+		}
+		log.Printf("[Info] receive control from plugin {%s}: Success\n", pluginName)
+		var control Control
+		json.Unmarshal(msg, &control)
+		server.WillBeSentControl <- control
+	}
+}
+
 func (server *PluginServer) Start() {
 	go server.startServer()
 	go server.listenEvent()
+	time.Sleep(time.Duration(2) * time.Second)
 	go server.startPlugin()
 }
 
@@ -126,11 +158,15 @@ func (server *PluginServer) startServer() {
 	http.HandleFunc("/fetchEvent", server.fetchEvent)
 	http.HandleFunc("/sendMessage", server.sendMessage)
 	http.HandleFunc("/sendOperation", server.sendOperation)
+	http.HandleFunc("/sendControl", server.sendControl)
 	log.Println(http.ListenAndServe(*server.Addr, nil))
 }
 
-func (server PluginServer) startPlugin() {
+func (server *PluginServer) startPlugin() {
 	for key, plugin := range server.pluginReader.PluginMap {
+		if !plugin.IsProcMsg {
+			continue
+		}
 		var err error
 		switch plugin.Type {
 		case PluginTypeBinary:
@@ -159,7 +195,9 @@ func (server PluginServer) startPlugin() {
 			}
 		}
 		if err != nil {
-			log.Printf("[info] Exec plugin %s: %s\n", plugin.Path, err.Error())
+			log.Printf("[Error] Exec plugin {%s}: %s\n", plugin.Path, err.Error())
+		} else {
+			log.Printf("[Info] Exec plugin {%s}: Success\n", plugin.Path)
 		}
 	}
 }

@@ -21,6 +21,8 @@ func NewPluginReader() (*PluginReader, error) {
 	reader.os = runtime.GOOS
 	reader.arch = runtime.GOARCH
 	reader.keywordSet = make(map[string]bool)
+	reader.PluginMap = make(map[string]Plugin)
+	reader.randKeySet = make(map[string]bool)
 	reader.ReadAllPlugin()
 	return reader, nil
 }
@@ -109,9 +111,9 @@ func (reader *PluginReader) ReadFolder(folder string, pluginType PluginType, isM
 		keyword := ""
 		randKey := ""
 		if isMsgProc {
-			randKey = RandStringBytesMaskImpr(25)
-			for !reader.randKeySet[randKey] {
-				randKey = RandStringBytesMaskImpr(25)
+			randKey = RandStringBytesMaskImpr(5)
+			for reader.randKeySet[randKey] {
+				randKey = RandStringBytesMaskImpr(5)
 			}
 			reader.randKeySet[randKey] = true
 
