@@ -41,9 +41,9 @@ const (
 // @property	OperationList	[]Operation			接收到的事件/操作列表
 // @property	PreDefVarMap	map[string]string	预定义变量 Map
 type Event struct {
-	InnerType     EventType
-	Type          string `json:"type"`
-	MessageID     int64
+	InnerType     EventType   `json:"-"`
+	Type          string      `json:"type"`
+	MessageID     int64       `json:"messageID"`
 	Sender        Sender      `json:"sender"`
 	Message       Message     `json:"message"`
 	OperationList []Operation `json:"operation"`
@@ -343,6 +343,7 @@ func (event *Event) AddPerDefVar(varName string, value interface{}) {
 	}
 }
 func (event *Event) CompleteType() {
+	event.Message.CompleteType()
 	if event.Type != "" {
 		switch event.Type {
 		case "GroupMessage":

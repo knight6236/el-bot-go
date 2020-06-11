@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"regexp"
 	"runtime"
 )
@@ -76,40 +77,46 @@ func (reader *PluginReader) ReadAllPlugin() {
 }
 
 func (reader *PluginReader) ReadFolder(folder string, pluginType PluginType, isMsgProc bool) {
-	fileInfos, err := ioutil.ReadDir(folder)
+	dirInfos, err := ioutil.ReadDir(folder)
 	if err != nil {
-		log.Println("PluginReader.ReadAllPlugin: " + err.Error())
+		log.Println("PluginReader.ReadFolder: " + err.Error())
 		return
 	}
 	var regex *regexp.Regexp
-	switch pluginType {
-	case PluginTypeBinary:
-		if reader.os == "windows" {
-			regex, err = regexp.Compile("(.+?)\\-([^\\-]+)\\.exe")
-		} else {
-			regex, err = regexp.Compile("(.+?)\\-([^\\-]+)\\.bin")
-		}
-	case PluginTypeJava:
-		regex, err = regexp.Compile("(.+?)\\-([^\\-]+)\\.jar")
-	case PluginTypeJavaScript:
-		regex, err = regexp.Compile("(.+?)\\-([^\\-]+)\\.js")
-	case PluginTypePython:
-		regex, err = regexp.Compile("(.+?)\\-([^\\-]+)\\.py")
-	default:
-		return
-	}
+	regex, err = regexp.Compile("(.+?)\\-([^\\-]+)")
 
 	if err != nil {
-		log.Println("PluginReader.ReadAllPlugin: " + err.Error())
+		log.Println("PluginReader.ReadFolder: " + err.Error())
 		return
 	}
 
-	for _, fileInfo := range fileInfos {
-		if fileInfo.Name() == ".gitkeep" {
+	for _, dirInfo := range dirInfos {
+		if !dirInfo.IsDir() {
+			continue
+		}
+		if err != nil {
+			log.Println("PluginReader.ReadFolder: " + err.Error())
 			continue
 		}
 		keyword := ""
 		randKey := ""
+		path := ""
+		entry := ""
+		switch pluginType {
+		case PluginTypeBinary:
+			entry = "start.exe"
+		case PluginTypeJava:
+			entry = "start.jar"
+		case PluginTypeJavaScript:
+			entry = "start.js"
+		case PluginTypePython:
+			entry = "start.py"
+		}
+		path = fmt.Sprintf("%s/%s/%s", folder, dirInfo.Name(), entry)
+		if _, err := os.Lstat(path); err != nil {
+			log.Printf("no such file or directory: %s", path)
+			continue
+		}
 		if isMsgProc {
 			randKey = RandStringBytesMaskImpr(5)
 			for reader.randKeySet[randKey] {
@@ -118,7 +125,7 @@ func (reader *PluginReader) ReadFolder(folder string, pluginType PluginType, isM
 			reader.randKeySet[randKey] = true
 
 		} else {
-			matches := regex.FindStringSubmatch(fileInfo.Name())
+			matches := regex.FindStringSubmatch(dirInfo.Name())
 			if matches == nil {
 				continue
 			}
@@ -127,13 +134,11 @@ func (reader *PluginReader) ReadFolder(folder string, pluginType PluginType, isM
 				continue
 			}
 			reader.keywordSet[keyword] = true
-
 		}
-
-		path := fmt.Sprintf("%s/%s", folder, fileInfo.Name())
 		plugin := Plugin{
 			Type:          pluginType,
 			Path:          path,
+			Name:          dirInfo.Name(),
 			ConfigKeyword: keyword,
 			IsProcMsg:     isMsgProc,
 			RandKey:       randKey,
@@ -142,6 +147,5 @@ func (reader *PluginReader) ReadFolder(folder string, pluginType PluginType, isM
 		if isMsgProc {
 			reader.PluginMap[randKey] = plugin
 		}
-
 	}
 }
