@@ -37,7 +37,7 @@ type Operation struct {
 	Type         string        `yaml:"type" json:"type"`
 	GroupID      string        `yaml:"groupID" json:"groupID"`
 	GroupName    string        `json:"-"`
-	OperatorID   int64         `json:"-"`
+	OperatorID   string        `json:"-"`
 	OperatorName string        `json:"-"`
 	UserID       string        `yaml:"userID" json:"userID"`
 	UserName     string

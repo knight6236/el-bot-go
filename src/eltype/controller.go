@@ -91,7 +91,7 @@ func (controller *Controller) Commit(goMiraiEvent gomirai.InEvent) {
 		return
 	}
 
-	controller.pluginServer.ReceivedEvent <- event
+	controller.pluginServer.ReceivedEvent <- event.DeepCopy()
 
 	configRelatedList := controller.getConfigRelatedList(event)
 

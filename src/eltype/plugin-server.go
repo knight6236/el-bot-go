@@ -22,9 +22,9 @@ type PluginServer struct {
 	WillBeSentMessage   chan Message
 	WillBeSentOperation chan Operation
 	WillBeSentControl   chan Control
+	ConnMap             map[string][]*websocket.Conn
 	MsgQueue            map[string]chan []byte
-	ISFirstHearBeat     map[string]bool
-	AliveMap            map[string]chan bool
+	AliveMap            map[string]bool
 	Upgrader            websocket.Upgrader
 }
 
@@ -34,8 +34,8 @@ func NewPluginServer(pluginReader *PluginReader) (*PluginServer, error) {
 	server.Addr = flag.String("addr", "127.0.0.1:9999", "http service address")
 	server.Upgrader = websocket.Upgrader{}
 	server.MsgQueue = make(map[string]chan []byte)
-	server.AliveMap = make(map[string]chan bool)
-	server.ISFirstHearBeat = make(map[string]bool)
+	server.AliveMap = make(map[string]bool)
+	server.ConnMap = make(map[string][]*websocket.Conn)
 	server.WillBeSentMessage = make(chan Message, 64)
 	server.WillBeSentOperation = make(chan Operation, 64)
 	server.WillBeSentControl = make(chan Control, 64)
@@ -43,7 +43,7 @@ func NewPluginServer(pluginReader *PluginReader) (*PluginServer, error) {
 	pluginReader.randKeySet["test"] = true
 	for key, _ := range pluginReader.randKeySet {
 		server.MsgQueue[key] = make(chan []byte, 64)
-		server.AliveMap[key] = make(chan bool, 5)
+		// server.AliveMap[key] = false
 	}
 	return server, nil
 }
@@ -61,11 +61,12 @@ func (server *PluginServer) fetchEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	server.mapMute.RLock()
-	if !server.ISFirstHearBeat[key] {
+	if !server.AliveMap[key] {
 		c.WriteMessage(1, []byte("{\"code\":1, \"msg\":\"no heartbeat connection established\"}"))
 		server.mapMute.RUnlock()
 		return
 	}
+	server.ConnMap[key] = append(server.ConnMap[key], c)
 	server.mapMute.RUnlock()
 	defer c.Close()
 	for {
@@ -92,11 +93,12 @@ func (server *PluginServer) sendMessage(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	server.mapMute.RLock()
-	if !server.ISFirstHearBeat[key] {
+	if !server.AliveMap[key] {
 		c.WriteMessage(1, []byte("{\"code\":1, \"msg\":\"no heartbeat connection established\"}"))
 		server.mapMute.RUnlock()
 		return
 	}
+	server.ConnMap[key] = append(server.ConnMap[key], c)
 	server.mapMute.RUnlock()
 	defer c.Close()
 	for {
@@ -125,11 +127,12 @@ func (server *PluginServer) sendOperation(w http.ResponseWriter, r *http.Request
 		return
 	}
 	server.mapMute.RLock()
-	if !server.ISFirstHearBeat[key] {
+	if !server.AliveMap[key] {
 		c.WriteMessage(1, []byte("{\"code\":1, \"msg\":\"no heartbeat connection established\"}"))
 		server.mapMute.RUnlock()
 		return
 	}
+	server.ConnMap[key] = append(server.ConnMap[key], c)
 	server.mapMute.RUnlock()
 	for {
 		_, msg, err := c.ReadMessage()
@@ -157,11 +160,12 @@ func (server *PluginServer) sendControl(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	server.mapMute.RLock()
-	if !server.ISFirstHearBeat[key] {
+	if !server.AliveMap[key] {
 		c.WriteMessage(1, []byte("{\"code\":1, \"msg\":\"no heartbeat connection established\"}"))
 		server.mapMute.RUnlock()
 		return
 	}
+	server.ConnMap[key] = append(server.ConnMap[key], c)
 	server.mapMute.RUnlock()
 	defer c.Close()
 	for {
@@ -189,6 +193,9 @@ func (server *PluginServer) receiveHeartbeat(w http.ResponseWriter, r *http.Requ
 		c.WriteMessage(1, []byte("{\"code\":1, \"msg\":\"Wrong key\"}"))
 		return
 	}
+	server.mapMute.RLock()
+	server.ConnMap[key] = append(server.ConnMap[key], c)
+	server.mapMute.RUnlock()
 	defer c.Close()
 	for {
 		err = c.WriteMessage(1, []byte("Alive"))
@@ -215,7 +222,7 @@ func (server *PluginServer) sendHeartbeat(w http.ResponseWriter, r *http.Request
 	}
 	defer c.Close()
 	server.mapMute.Lock()
-	server.ISFirstHearBeat[key] = true
+	server.AliveMap[key] = true
 	server.mapMute.Unlock()
 	log.Printf("[Info] receive heartbeat from plugin {%s}: Success\n", pluginName)
 	c.SetReadDeadline(time.Now().Add(time.Duration(20) * time.Second))
@@ -223,9 +230,12 @@ func (server *PluginServer) sendHeartbeat(w http.ResponseWriter, r *http.Request
 		_, _, err := c.ReadMessage()
 		if err != nil {
 			log.Printf("[Error] receive heartbeat from plugin {%s}: %s\n", pluginName, err.Error())
-			for i := 0; i < 6; i++ {
-				server.AliveMap[key] <- false
+			server.mapMute.Lock()
+			server.AliveMap[key] = false
+			for _, conn := range server.ConnMap[key] {
+				_ = conn.Close()
 			}
+			server.mapMute.Unlock()
 			break
 		}
 		log.Printf("[Info] receive heartbeat from plugin {%s}: Success\n", pluginName)
@@ -263,25 +273,25 @@ func (server *PluginServer) startPlugin() {
 			if runtime.GOOS == "windows" {
 				err = Exec(plugin.Path, key)
 			} else {
-				err = Exec("/bin/bash", "-c", fmt.Sprintf("%s %s", plugin.Path, key))
+				err = Exec("/bin/bash", "-c", fmt.Sprintf("%s %s %s", plugin.Path, *server.Addr, key))
 			}
 		case PluginTypeJava:
 			if runtime.GOOS == "windows" {
-				err = Exec("java", "-jar", fmt.Sprintf("%s %s", plugin.Path, key))
+				err = Exec("java", "-jar", fmt.Sprintf("%s %s%s", plugin.Path, *server.Addr, key))
 			} else {
-				err = Exec("/bin/bash", "-c", fmt.Sprintf("java -jar %s %s", plugin.Path, key))
+				err = Exec("/bin/bash", "-c", fmt.Sprintf("java -jar %s %s %s", plugin.Path, *server.Addr, key))
 			}
 		case PluginTypePython:
 			if runtime.GOOS == "windows" {
-				err = Exec("python", plugin.Path, fmt.Sprintf("%s %s", plugin.Path, key))
+				err = Exec("python", plugin.Path, fmt.Sprintf("%s %s %s", plugin.Path, *server.Addr, key))
 			} else {
-				err = Exec("/bin/bash", "-c", fmt.Sprintf("%s %s %s", PythonCommand, plugin.Path, key))
+				err = Exec("/bin/bash", "-c", fmt.Sprintf("%s %s %s %s", PythonCommand, plugin.Path, *server.Addr, key))
 			}
 		case PluginTypeJavaScript:
 			if runtime.GOOS == "windows" {
 				err = Exec("node", plugin.Path, key)
 			} else {
-				err = Exec("/bin/bash", "-c", fmt.Sprintf("node %s %s", plugin.Path, key))
+				err = Exec("/bin/bash", "-c", fmt.Sprintf("node %s %s %s", plugin.Path, *server.Addr, key))
 			}
 		}
 		if err != nil {
@@ -297,14 +307,115 @@ func (server *PluginServer) listenEvent() {
 		select {
 		case event := <-server.ReceivedEvent:
 			event.CompleteType()
-			bytes, err := json.Marshal(event)
-			if err != nil {
-
-			} else {
-				for _, ch := range server.MsgQueue {
-					ch <- bytes
+			bytes := server.castEventToJSONStr(event)
+			fmt.Println(string(bytes))
+			for key, ch := range server.MsgQueue {
+				server.mapMute.RLock()
+				if !server.AliveMap[key] {
+					server.mapMute.RUnlock()
+					continue
 				}
+				server.mapMute.RUnlock()
+				ch <- bytes
 			}
 		}
 	}
+}
+
+func (server *PluginServer) castEventToJSONStr(event Event) []byte {
+	ret := make(map[string]interface{})
+	ret["type"] = event.Type
+
+	if len(event.Message.DetailList) != 0 {
+		switch event.InnerType {
+		case EventTypeGroupMessage:
+			temp := make(map[string]interface{})
+			temp["id"] = CastStringToInt64(event.PreDefVarMap["el-sender-group-id"])
+			temp["name"] = event.PreDefVarMap["el-sender-group-name"]
+			ret["senderGroup"] = temp
+
+			temp = make(map[string]interface{})
+			temp["id"] = CastStringToInt64(event.PreDefVarMap["el-sender-user-id"])
+			temp["name"] = event.PreDefVarMap["el-sender-user-name"]
+			ret["senderUser"] = temp
+		case EventTypeFriendMessage:
+			temp := make(map[string]interface{})
+			temp["id"] = CastStringToInt64(event.PreDefVarMap["el-sender-user-id"])
+			temp["name"] = event.PreDefVarMap["el-sender-user-name"]
+			ret["senderUser"] = temp
+		default:
+			// temp := make(map[string]interface{})
+			// temp["id"] = CastStringToInt64(event.PreDefVarMap["el-sender-group-id"])
+			// temp["name"] = event.PreDefVarMap["el-sender-group-name"]
+			// ret["senderGroup"] = temp
+
+			// temp = make(map[string]interface{})
+			// temp["id"] = CastStringToInt64(event.PreDefVarMap["el-sender-user-id"])
+			// temp["name"] = event.PreDefVarMap["el-sender-user-name"]
+			// ret["senderUser"] = temp
+		}
+	}
+
+	messageMap := make(map[string]interface{})
+
+	messageMap["at"] = event.Message.At
+	messageMap["messageID"] = event.MessageID
+	messageMap["detail"] = make([]map[string]interface{}, 0)
+
+	for _, detail := range event.Message.DetailList {
+		temp := make(map[string]interface{})
+		temp["type"] = detail.Type
+		switch detail.InnerType {
+		case MessageTypePlain:
+			temp["text"] = detail.Text
+		case MessageTypeImage:
+			temp["url"] = detail.URL
+		case MessageTypeFace:
+			temp["faceID"] = detail.FaceID
+			temp["faceName"] = detail.FaceName
+		case MessageTypeAt:
+			temp["target"] = detail.UserID
+		case MessageTypeAtAll:
+		default:
+			continue
+		}
+		messageMap["detail"] = append(messageMap["detail"].([]map[string]interface{}), temp)
+	}
+
+	ret["operation"] = make([]map[string]interface{}, 0)
+
+	for _, operation := range event.OperationList {
+		temp := make(map[string]interface{})
+		temp["type"] = operation.Type
+		switch operation.InnerType {
+		case OperationTypeGroupMuteAll, OperationTypeGroupUnMuteAll:
+			temp["groupID"] = CastStringToInt64(operation.GroupID)
+			temp["groupName"] = operation.GroupName
+			temp["operatorID"] = CastStringToInt64(operation.OperatorID)
+			temp["operatorName"] = operation.OperatorName
+		case OperationTypeMemberJoin:
+			temp["groupID"] = CastStringToInt64(operation.GroupID)
+			temp["groupName"] = operation.GroupName
+			temp["userID"] = CastStringToInt64(operation.UserID)
+			temp["userName"] = operation.UserName
+		case OperationTypeMemberMute, OperationTypeMemberUnMute, OperationTypeMemberLeaveByKick:
+			temp["groupID"] = CastStringToInt64(operation.GroupID)
+			temp["groupName"] = operation.GroupName
+			temp["operatorID"] = CastStringToInt64(operation.OperatorID)
+			temp["operatorName"] = operation.OperatorName
+			temp["userID"] = CastStringToInt64(operation.UserID)
+			temp["userName"] = operation.UserName
+		case OperationTypeMemberLeaveByQuit:
+			temp["groupID"] = CastStringToInt64(operation.GroupID)
+			temp["groupName"] = operation.GroupName
+			temp["userID"] = CastStringToInt64(operation.UserID)
+			temp["userName"] = operation.UserName
+		default:
+			continue
+		}
+		ret["operation"] = append(ret["operation"].([]map[string]interface{}), temp)
+	}
+	ret["message"] = messageMap
+	bytes, _ := json.Marshal(ret)
+	return bytes
 }
