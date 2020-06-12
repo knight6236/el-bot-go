@@ -94,10 +94,6 @@ func (reader *PluginReader) ReadFolder(folder string, pluginType PluginType, isM
 		if !dirInfo.IsDir() {
 			continue
 		}
-		if err != nil {
-			log.Println("PluginReader.ReadFolder: " + err.Error())
-			continue
-		}
 		keyword := ""
 		randKey := ""
 		path := ""
@@ -117,23 +113,23 @@ func (reader *PluginReader) ReadFolder(folder string, pluginType PluginType, isM
 			log.Printf("no such file or directory: %s", path)
 			continue
 		}
-		if isMsgProc {
-			randKey = RandStringBytesMaskImpr(5)
-			for reader.randKeySet[randKey] {
-				randKey = RandStringBytesMaskImpr(5)
-			}
-			reader.randKeySet[randKey] = true
 
-		} else {
+		randKey = RandStringBytesMaskImpr(5)
+		for reader.randKeySet[randKey] {
+			randKey = RandStringBytesMaskImpr(5)
+		}
+		reader.randKeySet[randKey] = true
+		if !isMsgProc {
 			matches := regex.FindStringSubmatch(dirInfo.Name())
 			if matches == nil {
 				continue
 			}
-			keyword := matches[2]
+			keyword = matches[2]
 			if reader.keywordSet[keyword] {
 				continue
 			}
 			reader.keywordSet[keyword] = true
+
 		}
 		plugin := Plugin{
 			Type:          pluginType,
@@ -144,8 +140,6 @@ func (reader *PluginReader) ReadFolder(folder string, pluginType PluginType, isM
 			RandKey:       randKey,
 		}
 
-		if isMsgProc {
-			reader.PluginMap[randKey] = plugin
-		}
+		reader.PluginMap[randKey] = plugin
 	}
 }
