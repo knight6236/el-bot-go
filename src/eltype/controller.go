@@ -29,6 +29,7 @@ type Controller struct {
 	cronChecker       *CronChecker
 	rssListener       *RssListener
 	freqMonitor       *FreqMonitor
+	pluginServer      *PluginServer
 	bot               *gomirai.Bot
 }
 
@@ -53,12 +54,15 @@ func NewController(configReader *ConfigReader, bot *gomirai.Bot) *Controller {
 	controller.cronChecker, _ = NewCronChecker(configReader.CronConfigList)
 	controller.rssListener, _ = NewRssListener(configReader.RssConfigList)
 	controller.freqMonitor, _ = NewFreqMonitor(configReader.FreqUpperLimit)
+	controller.pluginServer, _ = NewPluginServer(configReader.Compiler.pluginReader)
 	controller.cronChecker.Start()
 	controller.rssListener.Start()
 	controller.freqMonitor.Start()
+	controller.pluginServer.Start()
 	go controller.monitorFolder()
 	go controller.listenCron()
 	go controller.listenRss()
+	go controller.listenPluginMessageAndOperation()
 	return controller
 }
 
@@ -87,6 +91,8 @@ func (controller *Controller) Commit(goMiraiEvent gomirai.InEvent) {
 		return
 	}
 
+	controller.pluginServer.ReceivedEvent <- event.DeepCopy()
+
 	configRelatedList := controller.getConfigRelatedList(event)
 
 	configHitList := controller.getConfigHitList(event, configRelatedList)
@@ -101,7 +107,7 @@ func (controller *Controller) Commit(goMiraiEvent gomirai.InEvent) {
 func (controller *Controller) getConfigRelatedList(event Event) []Config {
 	controller.configMute.RLock()
 	var configList []Config
-	switch event.Type {
+	switch event.InnerType {
 	case EventTypeGroupMessage:
 		MergeConfigList(&configList,
 			controller.getConfigRelatedConfigList(event, controller.configReader.GlobalConfigList),
@@ -133,7 +139,7 @@ func (controller *Controller) getConfigRelatedConfigList(event Event, configList
 			continue
 		}
 
-		switch event.Type {
+		switch event.InnerType {
 		case EventTypeFriendMessage:
 			for _, friendID := range config.When.Message.Sender.UserIDList {
 				if friendID == event.Sender.UserIDList[0] {
@@ -564,6 +570,31 @@ func (controller *Controller) listenRss() {
 			if signalType == Destory {
 				return
 			}
+		}
+	}
+}
+
+func (controller *Controller) listenPluginMessageAndOperation() {
+	for true {
+		select {
+		case message := <-controller.pluginServer.WillBeSentMessage:
+			willBeSentGoMiraiMessageList, isSuccess := message.ToGoMiraiMessageList()
+			if isSuccess {
+				for _, groupID := range message.Receiver.GroupIDList {
+					controller.sendMessage(ReceiverTypeGroup, CastStringToInt64(groupID),
+						message.QuoteID, willBeSentGoMiraiMessageList)
+				}
+				for _, userID := range message.Receiver.UserIDList {
+					controller.sendMessage(ReceiverTypeUser, CastStringToInt64(userID),
+						message.QuoteID, willBeSentGoMiraiMessageList)
+				}
+			}
+		case operaiton := <-controller.pluginServer.WillBeSentOperation:
+			operaiton.CompleteType()
+			controller.sendOperation(operaiton)
+		case control := <-controller.pluginServer.WillBeSentControl:
+			control.CompleteType()
+			controller.sendControl(control)
 		}
 	}
 }

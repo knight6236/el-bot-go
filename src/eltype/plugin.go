@@ -1,20 +1,31 @@
 package eltype
 
+// PluginType 插件类型
 type PluginType int
 
 const (
-	// Binary 二进制文件
-	Binary PluginType = iota
-	// Java jar 包
-	Java
-	// JavaScript JS源代码
-	JavaScript
-	// Python .py
-	Python
+	// PluginTypeBinary 二进制文件
+	PluginTypeBinary PluginType = iota
+	// PluginTypeJava jar 包
+	PluginTypeJava
+	// PluginTypeJavaScript JS源代码
+	PluginTypeJavaScript
+	// PluginTypePython .py
+	PluginTypePython
 )
 
+// Plugin 插件
 type Plugin struct {
-	Type          PluginType
-	Path          string
+	// Type 插件类型
+	Type PluginType
+	// IsProcMsg 是否为消息处理插件
+	IsProcMsg bool
+	// RandKey 会话密钥
+	RandKey string
+	// Path 插件路径
+	Path string
+	// Name 名称
+	Name string
+	// ConfigKeyword 对应配置的顶级关键字
 	ConfigKeyword string
 }

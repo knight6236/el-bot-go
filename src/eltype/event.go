@@ -41,16 +41,16 @@ const (
 // @property	OperationList	[]Operation			接收到的事件/操作列表
 // @property	PreDefVarMap	map[string]string	预定义变量 Map
 type Event struct {
-	Type          EventType
-	MessageID     int64
-	Sender        Sender
-	Message       Message
-	OperationList []Operation
-	PreDefVarMap  map[string]string
+	InnerType     EventType         `json:"-"`
+	Type          string            `json:"type"`
+	MessageID     int64             `json:"messageID"`
+	Sender        Sender            `json:"sender"`
+	Message       Message           `json:"message"`
+	OperationList []Operation       `json:"operation"`
+	PreDefVarMap  map[string]string `json:"-"`
 }
 
 // NewEventFromGoMiraiEvent 从 gomirai.InEvent 中构造一个 Event
-// @param	goMiraiEvent	gomirai.InEvent		事件
 func NewEventFromGoMiraiEvent(goMiraiEvent gomirai.InEvent) (Event, error) {
 	var event Event
 	event.PreDefVarMap = make(map[string]string)
@@ -98,18 +98,18 @@ func NewEventFromGoMiraiEvent(goMiraiEvent gomirai.InEvent) (Event, error) {
 }
 
 func (event *Event) makeGroupMessageEventTemplate(goMiraiEvent gomirai.InEvent) error {
-	event.Type = EventTypeGroupMessage
+	event.InnerType = EventTypeGroupMessage
 	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.SenderGroup.Group.ID))
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.SenderGroup.ID))
 	event.AddPerDefVar("el-sender-group-id", goMiraiEvent.SenderGroup.Group.ID)
-	event.AddPerDefVar("el-sender-group-name", goMiraiEvent.OperatorGroup.Group.Name)
+	event.AddPerDefVar("el-sender-group-name", goMiraiEvent.SenderGroup.Group.Name)
 	event.AddPerDefVar("el-sender-user-id", goMiraiEvent.SenderGroup.ID)
 	event.AddPerDefVar("el-sender-user-name", goMiraiEvent.SenderGroup.MemberName)
 	return nil
 }
 
 func (event *Event) makeFriendMessageEventTemplate(goMiraiEvent gomirai.InEvent) error {
-	event.Type = EventTypeFriendMessage
+	event.InnerType = EventTypeFriendMessage
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.SenderFriend.ID))
 	event.AddPerDefVar("el-sender-user-id", goMiraiEvent.SenderFriend.ID)
 	event.AddPerDefVar("el-sender-user-name", goMiraiEvent.SenderFriend.NickName)
@@ -117,7 +117,7 @@ func (event *Event) makeFriendMessageEventTemplate(goMiraiEvent gomirai.InEvent)
 }
 
 func (event *Event) makeMemberMuteEventTemplate(goMiraiEvent gomirai.InEvent) error {
-	event.Type = EventTypeMemberMute
+	event.InnerType = EventTypeMemberMute
 	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID))
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.OperatorGroup.ID))
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
@@ -126,7 +126,7 @@ func (event *Event) makeMemberMuteEventTemplate(goMiraiEvent gomirai.InEvent) er
 		InnerType:    OperationTypeMemberMute,
 		GroupID:      CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID),
 		GroupName:    goMiraiEvent.OperatorGroup.Group.Name,
-		OperatorID:   goMiraiEvent.OperatorGroup.ID,
+		OperatorID:   CastInt64ToString(goMiraiEvent.OperatorGroup.ID),
 		OperatorName: goMiraiEvent.OperatorGroup.MemberName,
 		UserID:       CastInt64ToString(goMiraiEvent.Member.ID),
 		UserName:     goMiraiEvent.Member.MemberName,
@@ -153,7 +153,7 @@ func (event *Event) makeMemberMuteEventTemplate(goMiraiEvent gomirai.InEvent) er
 }
 
 func (event *Event) makeMemberUnmuteEventTemplate(goMiraiEvent gomirai.InEvent) error {
-	event.Type = EventTypeMemberUnmute
+	event.InnerType = EventTypeMemberUnmute
 	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID))
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.OperatorGroup.ID))
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
@@ -162,7 +162,7 @@ func (event *Event) makeMemberUnmuteEventTemplate(goMiraiEvent gomirai.InEvent) 
 		InnerType:    OperationTypeMemberUnMute,
 		GroupID:      CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID),
 		GroupName:    goMiraiEvent.OperatorGroup.Group.Name,
-		OperatorID:   goMiraiEvent.OperatorGroup.ID,
+		OperatorID:   CastInt64ToString(goMiraiEvent.OperatorGroup.ID),
 		OperatorName: goMiraiEvent.OperatorGroup.MemberName,
 		UserID:       CastInt64ToString(goMiraiEvent.Member.ID),
 		UserName:     goMiraiEvent.Member.MemberName,
@@ -188,10 +188,10 @@ func (event *Event) makeMemberUnmuteEventTemplate(goMiraiEvent gomirai.InEvent) 
 func (event *Event) makeGroupMuteAllEventTemplate(goMiraiEvent gomirai.InEvent) error {
 	var operationType OperationType
 	if goMiraiEvent.Origin.(bool) {
-		event.Type = EventTypeGroupUnMuteAll
+		event.InnerType = EventTypeGroupUnMuteAll
 		operationType = OperationTypeGroupUnMuteAll
 	} else {
-		event.Type = EventTypeGroupMuteAll
+		event.InnerType = EventTypeGroupMuteAll
 		operationType = OperationTypeGroupMuteAll
 	}
 	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID))
@@ -202,7 +202,7 @@ func (event *Event) makeGroupMuteAllEventTemplate(goMiraiEvent gomirai.InEvent) 
 		InnerType:    operationType,
 		GroupID:      CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID),
 		GroupName:    goMiraiEvent.OperatorGroup.Group.Name,
-		OperatorID:   goMiraiEvent.OperatorGroup.ID,
+		OperatorID:   CastInt64ToString(goMiraiEvent.OperatorGroup.ID),
 		OperatorName: goMiraiEvent.OperatorGroup.MemberName,
 	}
 
@@ -222,14 +222,14 @@ func (event *Event) makeGroupMuteAllEventTemplate(goMiraiEvent gomirai.InEvent) 
 }
 
 func (event *Event) makeMemberJoinEventTemplate(goMiraiEvent gomirai.InEvent) error {
-	event.Type = EventTypeMemberJoin
+	event.InnerType = EventTypeMemberJoin
 	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.Member.Group.ID))
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
 	operation := Operation{
 		InnerType: OperationTypeMemberJoin,
-		GroupID:   CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID),
-		GroupName: goMiraiEvent.OperatorGroup.Group.Name,
+		GroupID:   CastInt64ToString(goMiraiEvent.SenderGroup.Group.ID),
+		GroupName: goMiraiEvent.SenderGroup.Group.Name,
 		UserID:    CastInt64ToString(goMiraiEvent.Member.ID),
 		UserName:  goMiraiEvent.Member.MemberName,
 	}
@@ -247,7 +247,7 @@ func (event *Event) makeMemberJoinEventTemplate(goMiraiEvent gomirai.InEvent) er
 }
 
 func (event *Event) makeMemberLeaveByKickEventTemplate(goMiraiEvent gomirai.InEvent) error {
-	event.Type = EventTypeMemberLeaveByKick
+	event.InnerType = EventTypeMemberLeaveByKick
 	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.Member.Group.ID))
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
@@ -255,7 +255,7 @@ func (event *Event) makeMemberLeaveByKickEventTemplate(goMiraiEvent gomirai.InEv
 		InnerType:    OperationTypeMemberLeaveByKick,
 		GroupID:      CastInt64ToString(goMiraiEvent.OperatorGroup.Group.ID),
 		GroupName:    goMiraiEvent.OperatorGroup.Group.Name,
-		OperatorID:   goMiraiEvent.OperatorGroup.ID,
+		OperatorID:   CastInt64ToString(goMiraiEvent.OperatorGroup.ID),
 		OperatorName: goMiraiEvent.OperatorGroup.MemberName,
 		UserID:       CastInt64ToString(goMiraiEvent.Member.ID),
 		UserName:     goMiraiEvent.Member.MemberName,
@@ -279,7 +279,7 @@ func (event *Event) makeMemberLeaveByKickEventTemplate(goMiraiEvent gomirai.InEv
 }
 
 func (event *Event) makeMemberLeaveByQuitEventTemplate(goMiraiEvent gomirai.InEvent) error {
-	event.Type = EventTypeMemberLeaveByQuit
+	event.InnerType = EventTypeMemberLeaveByQuit
 	event.Sender.AddGroupID(CastInt64ToString(goMiraiEvent.Member.Group.ID))
 	event.Sender.AddUserID(CastInt64ToString(goMiraiEvent.Member.ID))
 
@@ -341,6 +341,74 @@ func (event *Event) AddPerDefVar(varName string, value interface{}) {
 	case float64:
 		event.PreDefVarMap[varName] = fmt.Sprintf("%.2f", value.(float64))
 	}
+}
+func (event *Event) CompleteType() {
+	event.Message.CompleteType()
+	if event.Type != "" {
+		switch event.Type {
+		case "GroupMessage":
+			event.InnerType = EventTypeGroupMessage
+		case "FriendMessage":
+			event.InnerType = EventTypeFriendMessage
+		case "GroupMuteAll":
+			event.InnerType = EventTypeGroupMuteAll
+		case "GroupUnMuteAll":
+			event.InnerType = EventTypeGroupUnMuteAll
+		case "MemberMute":
+			event.InnerType = EventTypeMemberMute
+		case "MemberUnmute":
+			event.InnerType = EventTypeMemberUnmute
+		case "MemberJoin":
+			event.InnerType = EventTypeMemberJoin
+		case "MemberLeaveByKick":
+			event.InnerType = EventTypeMemberLeaveByKick
+		case "MemberLeaveByQuit":
+			event.InnerType = EventTypeMemberLeaveByQuit
+		}
+	}
+
+	switch event.InnerType {
+	case EventTypeGroupMessage:
+		event.Type = "GroupMessage"
+	case EventTypeFriendMessage:
+		event.Type = "FriendMessage"
+	case EventTypeGroupMuteAll:
+		event.Type = "GroupMuteAll"
+	case EventTypeGroupUnMuteAll:
+		event.Type = "GroupUnMuteAll"
+	case EventTypeMemberMute:
+		event.Type = "MemberMute"
+	case EventTypeMemberUnmute:
+		event.Type = "MemberUnmute"
+	case EventTypeMemberJoin:
+		event.Type = "MemberJoin"
+	case EventTypeMemberLeaveByKick:
+		event.Type = "MemberLeaveByKick"
+	case EventTypeMemberLeaveByQuit:
+		event.Type = "MemberLeaveByQuit"
+	}
+}
+
+func (event *Event) DeepCopy() Event {
+	var newEvent = Event{
+		InnerType: event.InnerType,
+		Type:      event.Type,
+		MessageID: event.MessageID,
+		Message:   event.Message.DeepCopy(),
+		Sender:    event.Sender.DeepCopy(),
+	}
+	var operationList []Operation
+	for _, operation := range event.OperationList {
+		operationList = append(operationList, operation.DeepCopy())
+	}
+
+	var preDefVarMap = make(map[string]string)
+	for key, value := range event.PreDefVarMap {
+		preDefVarMap[key] = value
+	}
+	newEvent.OperationList = operationList
+	newEvent.PreDefVarMap = preDefVarMap
+	return newEvent
 }
 
 // CastGoMiraiEventTypeToEventType 将 GoMiaraiEventType 转化为 EventType

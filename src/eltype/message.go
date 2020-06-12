@@ -22,13 +22,16 @@ const (
 	MessageTypeEvent
 	// MessageTypeXML XML消息类型
 	MessageTypeXML
+	// MessageTypeAt At
 	MessageTypeAt
+	// MessageTypeAtAll AtAll
 	MessageTypeAtAll
 )
 
 type Message struct {
 	At         bool            `yaml:"at" json:"at"`
 	IsQuote    bool            `yaml:"quote" json:"quote"`
+	QuoteID    int64           `yaml:"-" json:"quoteID"`
 	Sender     Sender          `yaml:"sender" json:"sender"`
 	Receiver   Receiver        `yaml:"receiver" json:"receiver"`
 	DetailList []MessageDetail `yaml:"detail" json:"detail"`

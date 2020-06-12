@@ -5,6 +5,7 @@ go 1.14
 require (
 	github.com/ADD-SP/gomirai v0.1.5
 	github.com/fsnotify/fsnotify v1.4.9
+	github.com/gorilla/websocket v1.4.2
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mmcdole/gofeed v0.0.0-00010101000000-000000000000
 	github.com/robfig/cron v1.2.0

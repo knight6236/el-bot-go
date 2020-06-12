@@ -47,8 +47,8 @@ type Compiler struct {
 	folder       string
 }
 
-func NewCompiler(folder string) (Compiler, error) {
-	var compiler Compiler
+func NewCompiler(folder string) (*Compiler, error) {
+	compiler := new(Compiler)
 	compiler.pluginReader, _ = NewPluginReader()
 	compiler.folder = folder
 	return compiler, nil
@@ -65,7 +65,10 @@ func (compiler *Compiler) Compile() {
 }
 
 func (compiler *Compiler) callPlugin(configMap map[string]interface{}) {
-	for _, plugin := range compiler.pluginReader.PluginList {
+	for _, plugin := range compiler.pluginReader.PluginMap {
+		if plugin.IsProcMsg {
+			continue
+		}
 		obj := configMap[plugin.ConfigKeyword]
 		if obj == nil {
 			continue
@@ -76,25 +79,25 @@ func (compiler *Compiler) callPlugin(configMap map[string]interface{}) {
 		fmt.Println(string(jsonStr))
 		var ret string
 		switch plugin.Type {
-		case Binary:
+		case PluginTypeBinary:
 			if runtime.GOOS == "windows" {
 				ret, err = ExecCommand(plugin.Path, string(jsonStr))
 			} else {
-				ret, err = ExecCommand("/bin/bash", "-c", string(jsonStr))
+				ret, err = ExecCommand("/bin/bash", "-c", plugin.Path, string(jsonStr))
 			}
-		case Java:
+		case PluginTypeJava:
 			if runtime.GOOS == "windows" {
 				ret, err = ExecCommand("java", "-jar", plugin.Path, string(jsonStr))
 			} else {
 				ret, err = ExecCommand("/bin/bash", "-c", fmt.Sprintf("java -jar %s %s", plugin.Path, string(jsonStr)))
 			}
-		case Python:
+		case PluginTypePython:
 			if runtime.GOOS == "windows" {
 				ret, err = ExecCommand("python", plugin.Path, string(jsonStr))
 			} else {
 				ret, err = ExecCommand("/bin/bash", "-c", fmt.Sprintf("%s %s %s", PythonCommand, plugin.Path, string(jsonStr)))
 			}
-		case JavaScript:
+		case PluginTypeJavaScript:
 			if runtime.GOOS == "windows" {
 				ret, err = ExecCommand("node", plugin.Path, string(jsonStr))
 			} else {

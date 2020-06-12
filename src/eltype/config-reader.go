@@ -18,6 +18,7 @@ type ConfigReader struct {
 	EnableWebsocket  bool
 	folder           string
 	AuthKey          string
+	Compiler         *Compiler
 	GlobalConfigList []Config `yaml:"global"`
 	FriendConfigList []Config `yaml:"friend"`
 	GroupConfigList  []Config `yaml:"group"`
@@ -34,22 +35,23 @@ func NewConfigReader(folder string) (*ConfigReader, error) {
 }
 
 func (reader *ConfigReader) Load(isDebug bool) {
-	compiler, err := NewCompiler(reader.folder)
+	var err error
+	reader.Compiler, err = NewCompiler(reader.folder)
 	if err != nil {
 		return
 	}
-	compiler.Compile()
+	reader.Compiler.Compile()
 	if isDebug {
-		filePath := compiler.WriteFile()
+		filePath := reader.Compiler.WriteFile()
 		reader.parseThisFile(filePath)
 		reader.CompleteConfigList()
 	} else {
-		reader.FreqUpperLimit = compiler.SourceConfig.FreqUpperLimit
-		reader.GlobalConfigList = compiler.SourceConfig.GlobalConfigList
-		reader.FriendConfigList = compiler.SourceConfig.FriendConfigList
-		reader.GroupConfigList = compiler.SourceConfig.GroupConfigList
-		reader.CronConfigList = compiler.SourceConfig.CronConfigList
-		reader.RssConfigList = compiler.SourceConfig.RssConfigList
+		reader.FreqUpperLimit = reader.Compiler.SourceConfig.FreqUpperLimit
+		reader.GlobalConfigList = reader.Compiler.SourceConfig.GlobalConfigList
+		reader.FriendConfigList = reader.Compiler.SourceConfig.FriendConfigList
+		reader.GroupConfigList = reader.Compiler.SourceConfig.GroupConfigList
+		reader.CronConfigList = reader.Compiler.SourceConfig.CronConfigList
+		reader.RssConfigList = reader.Compiler.SourceConfig.RssConfigList
 	}
 	reader.parseToSetting()
 }

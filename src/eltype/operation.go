@@ -25,22 +25,26 @@ const (
 	OperationTypeMemberLeaveByKick
 	// OperationTypeMemberLeaveByQuit 成员自行退运事件类型
 	OperationTypeMemberLeaveByQuit
+	// OperationTypeAt At
 	OperationTypeAt
+	// OperationTypeAtAll AtAll
 	OperationTypeAtAll
 )
 
+// Operation 事件/操作
 type Operation struct {
 	InnerType    OperationType `json:"-"`
 	Type         string        `yaml:"type" json:"type"`
 	GroupID      string        `yaml:"groupID" json:"groupID"`
 	GroupName    string        `json:"-"`
-	OperatorID   int64         `json:"-"`
+	OperatorID   string        `json:"-"`
 	OperatorName string        `json:"-"`
 	UserID       string        `yaml:"userID" json:"userID"`
 	UserName     string
 	Second       string `yaml:"second" json:"second"`
 }
 
+// ToGoMiraiMessage 转化为 gomirai 支持的 message
 func (operation *Operation) ToGoMiraiMessage() (gomirai.Message, bool) {
 	var goMiraimessage gomirai.Message
 	switch operation.InnerType {
@@ -59,6 +63,7 @@ func (operation *Operation) ToGoMiraiMessage() (gomirai.Message, bool) {
 	return goMiraimessage, true
 }
 
+// ToString 转为 String
 func (operation Operation) ToString() string {
 	// switch operation.Type {
 	// case OperationTypeMemberJoin:
@@ -77,6 +82,7 @@ func (operation Operation) ToString() string {
 	return ""
 }
 
+// CompleteContent 替换预定义变量
 func (operation *Operation) CompleteContent(event Event) {
 	for key, value := range event.PreDefVarMap {
 		varName := fmt.Sprintf("{%s}", key)
@@ -86,13 +92,14 @@ func (operation *Operation) CompleteContent(event Event) {
 	}
 
 	if operation.GroupID == "" {
-		switch event.Type {
+		switch event.InnerType {
 		case EventTypeGroupMessage:
 			operation.GroupID = event.Sender.GroupIDList[0]
 		}
 	}
 }
 
+// CompleteType 填充 InnerType 和 Type
 func (operation *Operation) CompleteType() {
 	if operation.Type != "" {
 		switch operation.Type {
@@ -139,6 +146,7 @@ func (operation *Operation) CompleteType() {
 	}
 }
 
+// DeepCopy 返回一个深拷贝对象
 func (operation *Operation) DeepCopy() Operation {
 	return Operation{
 		InnerType:    operation.InnerType,
