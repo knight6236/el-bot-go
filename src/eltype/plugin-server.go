@@ -109,7 +109,10 @@ func (server *PluginServer) sendMessage(w http.ResponseWriter, r *http.Request) 
 		}
 		log.Printf("[Info] receive message from plugin {%s}: Success\n", pluginName)
 		var message Message
-		json.Unmarshal(msg, &message)
+		err = json.Unmarshal(msg, &message)
+		if err != nil {
+
+		}
 		server.WillBeSentMessage <- message
 	}
 }
@@ -330,17 +333,17 @@ func (server *PluginServer) castEventToJSONStr(event Event) []byte {
 		switch event.InnerType {
 		case EventTypeGroupMessage:
 			temp := make(map[string]interface{})
-			temp["id"] = CastStringToInt64(event.PreDefVarMap["el-sender-group-id"])
+			temp["id"] = event.PreDefVarMap["el-sender-group-id"]
 			temp["name"] = event.PreDefVarMap["el-sender-group-name"]
 			ret["senderGroup"] = temp
 
 			temp = make(map[string]interface{})
-			temp["id"] = CastStringToInt64(event.PreDefVarMap["el-sender-user-id"])
+			temp["id"] = event.PreDefVarMap["el-sender-user-id"]
 			temp["name"] = event.PreDefVarMap["el-sender-user-name"]
 			ret["senderUser"] = temp
 		case EventTypeFriendMessage:
 			temp := make(map[string]interface{})
-			temp["id"] = CastStringToInt64(event.PreDefVarMap["el-sender-user-id"])
+			temp["id"] = event.PreDefVarMap["el-sender-user-id"]
 			temp["name"] = event.PreDefVarMap["el-sender-user-name"]
 			ret["senderUser"] = temp
 		default:
@@ -389,26 +392,26 @@ func (server *PluginServer) castEventToJSONStr(event Event) []byte {
 		temp["type"] = operation.Type
 		switch operation.InnerType {
 		case OperationTypeGroupMuteAll, OperationTypeGroupUnMuteAll:
-			temp["groupID"] = CastStringToInt64(operation.GroupID)
+			temp["groupID"] = operation.GroupID
 			temp["groupName"] = operation.GroupName
-			temp["operatorID"] = CastStringToInt64(operation.OperatorID)
+			temp["operatorID"] = operation.OperatorID
 			temp["operatorName"] = operation.OperatorName
 		case OperationTypeMemberJoin:
-			temp["groupID"] = CastStringToInt64(operation.GroupID)
+			temp["groupID"] = operation.GroupID
 			temp["groupName"] = operation.GroupName
-			temp["userID"] = CastStringToInt64(operation.UserID)
+			temp["userID"] = operation.UserID
 			temp["userName"] = operation.UserName
 		case OperationTypeMemberMute, OperationTypeMemberUnMute, OperationTypeMemberLeaveByKick:
-			temp["groupID"] = CastStringToInt64(operation.GroupID)
+			temp["groupID"] = operation.GroupID
 			temp["groupName"] = operation.GroupName
-			temp["operatorID"] = CastStringToInt64(operation.OperatorID)
+			temp["operatorID"] = operation.OperatorID
 			temp["operatorName"] = operation.OperatorName
-			temp["userID"] = CastStringToInt64(operation.UserID)
+			temp["userID"] = operation.UserID
 			temp["userName"] = operation.UserName
 		case OperationTypeMemberLeaveByQuit:
-			temp["groupID"] = CastStringToInt64(operation.GroupID)
+			temp["groupID"] = operation.GroupID
 			temp["groupName"] = operation.GroupName
-			temp["userID"] = CastStringToInt64(operation.UserID)
+			temp["userID"] = operation.UserID
 			temp["userName"] = operation.UserName
 		default:
 			continue

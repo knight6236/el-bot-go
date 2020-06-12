@@ -398,11 +398,16 @@ func (event *Event) DeepCopy() Event {
 		Sender:    event.Sender.DeepCopy(),
 	}
 	var operationList []Operation
-
 	for _, operation := range event.OperationList {
 		operationList = append(operationList, operation.DeepCopy())
 	}
+
+	var preDefVarMap = make(map[string]string)
+	for key, value := range event.PreDefVarMap {
+		preDefVarMap[key] = value
+	}
 	newEvent.OperationList = operationList
+	newEvent.PreDefVarMap = preDefVarMap
 	return newEvent
 }
 
