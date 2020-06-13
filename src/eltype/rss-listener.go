@@ -13,6 +13,11 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type RssJob struct {
+	rssListener *RssListener
+	Config      Config
+}
+
 type RssListener struct {
 	rssConfigList    []Config
 	cron             *cron.Cron
@@ -58,21 +63,21 @@ func (listener *RssListener) Destory() {
 
 func (listener *RssListener) start() {
 	listener.cron = cron.New()
-	err := listener.cron.AddFunc("0 0/1 * * * *", func() {
-		for _, rssConfig := range listener.rssConfigList {
-			temp := listener.checkUpdate(rssConfig.RssURL)
-			if temp != nil {
-				event := Event{
-					PreDefVarMap: temp,
-				}
-				listener.WillBeSentConfig <- rssConfig
-				listener.WillBeUsedEvent <- event
-			}
+
+	for _, rssConfig := range listener.rssConfigList {
+		var job = RssJob{
+			rssListener: listener,
+			Config:      rssConfig,
 		}
-	})
-	if err != nil {
-		log.Printf("RssListener.start: %s", err.Error())
-		return
+		cron := "0 0/15 * * * *"
+		if rssConfig.Cron != "" {
+			cron = rssConfig.Cron
+		}
+		err := listener.cron.AddJob(cron, job)
+		if err != nil {
+			log.Printf("RssListener.start: %s", err.Error())
+			return
+		}
 	}
 	listener.cron.Start()
 	select {
@@ -89,8 +94,7 @@ func (listener *RssListener) checkUpdate(url string) map[string]string {
 	defer cancel()
 	fp := gofeed.NewParser()
 	feed, _ := fp.ParseURLWithContext(url, ctx)
-	if len(feed.Items) == 0 || listener.rssDataMap[url] == feed.Items[0].Title ||
-		listener.rssDataMap[url] == "" {
+	if len(feed.Items) == 0 || listener.rssDataMap[url] == feed.Items[0].Title {
 		return nil
 	}
 	year := fmt.Sprintf("%02d", feed.Items[0].UpdatedParsed.Year())
@@ -120,4 +124,15 @@ func (listener *RssListener) checkUpdate(url string) map[string]string {
 		log.Printf("RssListener.checkUpdate: %s", err.Error())
 	}
 	return ret
+}
+
+func (job RssJob) Run() {
+	temp := job.rssListener.checkUpdate(job.Config.RssURL)
+	if temp != nil {
+		event := Event{
+			PreDefVarMap: temp,
+		}
+		job.rssListener.WillBeSentConfig <- job.Config
+		job.rssListener.WillBeUsedEvent <- event
+	}
 }
