@@ -45,6 +45,7 @@ func NewPluginServer(pluginReader *PluginReader) (*PluginServer, error) {
 		server.MsgQueue[key] = make(chan []byte, 64)
 		// server.AliveMap[key] = false
 	}
+	server.AliveMap["test"] = true
 	return server, nil
 }
 
@@ -321,6 +322,7 @@ func (server *PluginServer) listenEvent() {
 				server.mapMute.RUnlock()
 				ch <- bytes
 			}
+			// server.MsgQueue["test"] <- bytes
 		}
 	}
 }
