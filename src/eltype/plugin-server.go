@@ -293,7 +293,7 @@ func (server *PluginServer) startPlugin() {
 			}
 		case PluginTypeJavaScript:
 			if runtime.GOOS == "windows" {
-				err = Exec("node", plugin.Path, key)
+				err = Exec("node", plugin.Path, *server.Addr, key)
 			} else {
 				err = Exec("/bin/bash", "-c", fmt.Sprintf("node %s %s %s", plugin.Path, *server.Addr, key))
 			}
